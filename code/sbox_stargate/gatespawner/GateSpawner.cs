@@ -91,6 +91,7 @@ public partial class GateSpawner
 			(e as IGateSpawner).FromJson( o );
 
 			GateSpawnerEntites.Add( e );
+			e.Tags.Add( "physgun-block" );
 		}
 
 		SuccessMessage();

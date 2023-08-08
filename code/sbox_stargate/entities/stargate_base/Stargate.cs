@@ -11,6 +11,8 @@ using Sandbox.UI;
 public abstract partial class Stargate : Prop, IUse
 {
 	[Net] public Vector3 SpawnOffset { get; private set; } = new( 0, 0, 95 );
+	[Net]
+	public Angles SpawnOffsetAng { get; private set; } = new( 0, 180, 0 );
 
 	[Net]
 	public IList<Chevron> Chevrons { get; set; } = new();

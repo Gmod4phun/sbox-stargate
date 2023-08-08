@@ -39,4 +39,12 @@ public partial class StargateSpawnList : Panel
 			Canvas.AddItem( entry );
 		}
 	}
+
+	[Event( "sandbox.hud.loaded" )]
+	public static void Initialize()
+	{
+		var spawnList = SpawnMenu.Instance.SpawnMenuLeftBody.AddChild<StargateSpawnList>();
+		SpawnMenu.Instance.SpawnMenuLeftTabs
+			.AddButtonActive( "Stargate", ( b ) => spawnList.SetClass( "active", b ) );
+	}
 }
