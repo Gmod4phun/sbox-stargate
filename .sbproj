@@ -1,8 +1,8 @@
 {
-  "Title": "Sandbox Stargate",
+  "Title": "Stargate Addon",
   "Type": "addon",
   "Org": "katka",
-  "Ident": "sbox_stargate",
+  "Ident": "stargateaddon",
   "Tags": "",
   "Schema": 1,
   "HasAssets": true,
