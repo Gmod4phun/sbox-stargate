@@ -550,6 +550,13 @@ public partial class Stargate : Prop, IUse
 		return false;
 	}
 
+
+	[Event( "trace.prepare" )]
+	public static void OnTracePrepare( Trace trace, Entity ent, Action<Trace> returnFn )
+	{
+		returnFn( GetAdjustedTraceForClipping( ent, trace ) );
+	}
+
 	public static Trace GetAdjustedTraceForClipping( Entity ent, Trace trace )
 	{
 		if ( ent.Tags.Has( StargateTags.BehindGate ) )
@@ -613,5 +620,51 @@ public partial class Stargate : Prop, IUse
 		var l = GetAllChildrenRecursive( e );
 		l.Add( e );
 		return l;
+	}
+
+	[Event( "weapon.shootbullet" )]
+	public static void OnShootBullet( ShootBulletParams param )
+	{
+		var tr = param.tr;
+		if ( tr.Entity is EventHorizon eh )
+		{
+			param.preventDefault = true;
+			eh.PlayTeleportSound();
+
+			if ( !eh.IsFullyFormed )
+				return;
+
+			var isInbound = eh.Gate.Inbound;
+			var otherEH = eh.GetOther();
+			var otherIrisClosed = otherEH.Gate.IsIrisClosed();
+			var fromBehind = eh.IsPointBehindEventHorizon( tr.HitPosition );
+
+			if ( !isInbound && !fromBehind && otherIrisClosed )
+				otherEH.Gate.Iris.PlayHitSound();
+
+			if ( isInbound || fromBehind || otherIrisClosed )
+				return;
+
+			var newCoords = eh.CalcExitPointAndDir( tr.HitPosition, tr.Direction );
+			var newPos = newCoords.Item1;
+			var newDir = newCoords.Item2;
+
+			//if ( Game.IsClient )
+			//{
+			//	DebugOverlay.Line( tr.StartPosition, tr.EndPosition, 4 );
+			//	DebugOverlay.Line( newPos + newDir * 2, newPos + newDir * 5000, 4 );
+			//}
+
+			// shoot a bullet from the other EH, new pos will be offset forward to avoid hitting itself
+			var offset = newDir * 0.5f;
+			Weapon weapon = param.weapon;
+			var spread = param.spread;
+			var force = param.force;
+			var damage = param.damage;
+			var bulletSize = param.bulletSize;
+			weapon.ShootBullet( newPos + offset, newDir, spread, force, damage, bulletSize );
+			eh.GetOther().PlayTeleportSound();
+
+		}
 	}
 }

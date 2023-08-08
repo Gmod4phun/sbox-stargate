@@ -106,9 +106,9 @@ namespace Sandbox.Tools
 					if ( gateType == null ) return;
 
 					var gate = TypeLibrary.Create<Entity>( gateType ) as Stargate;
-					gate.Position = tr.EndPosition + gate.SpawnOffset;
+					gate.Position = tr.EndPosition;
 					gate.Rotation = new Angles( 0, Owner.EyeRotation.Angles().yaw + 180, 0 ).ToRotation();
-					gate.Tags.Add( "undoable" );
+					Event.Run( "entity.spawned", gate, Owner );
 
 					if ( tr.Entity is IStargateRamp ramp ) Stargate.PutGateOnRamp( gate, ramp );
 				}

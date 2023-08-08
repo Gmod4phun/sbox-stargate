@@ -70,7 +70,7 @@
 					if ( tr.Entity is StargateUniverse gate )
 					{
 						var bearing = Stargate.AddBearing( gate );
-						bearing.Tags.Add( "undoable" );
+						Event.Run( "entity.spawned", bearing, Owner );
 						CreateHitEffects( tr.EndPosition );
 					}
 				}

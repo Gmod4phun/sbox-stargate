@@ -71,7 +71,7 @@
 					{
 						var iris = Stargate.AddIris( gate, Owner, Input.Down( InputButton.Use ) );
 						iris.Close();
-						iris.Tags.Add( "undoable" );
+						Event.Run( "entity.spawned", iris, Owner );
 						CreateHitEffects( tr.EndPosition );
 					}
 				}

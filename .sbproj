@@ -1,6 +1,6 @@
 {
   "Title": "Sandbox Stargate",
-  "Type": "game",
+  "Type": "addon",
   "Org": "katka",
   "Ident": "sbox_stargate",
   "Tags": "",
@@ -11,7 +11,9 @@
   "MenuResources": "models/sbox_stargate/sg_mw/*.vmat_c\nmodels/sbox_stargate/sg_mw/*.vtex_c\nmodels/sbox_stargate/sg_mw/*.vmdl_c\nsbox_stargate/ui/gamemenu/*\n",
   "HasCode": true,
   "CodePath": "code",
-  "PackageReferences": [],
+  "PackageReferences": [
+    "wiremod.sandboxplus"
+  ],
   "EditorReferences": null,
   "Metadata": {
     "MapList": [
@@ -385,6 +387,11 @@
         "PreLaunchCommand": "",
         "PostLaunchCommand": ""
       }
-    ]
+    ],
+    "PrimaryAsset": "",
+    "PhysicsMins": "-1,-1,-1",
+    "PhysicsMaxs": "1,1,1",
+    "RenderMins": "-1,-1,-1",
+    "RenderMaxs": "-1,-1,-1"
   }
 }
