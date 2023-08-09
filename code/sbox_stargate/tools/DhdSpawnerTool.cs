@@ -76,8 +76,8 @@
 					CreateHitEffects( tr.EndPosition );
 
 					var dhd = new DhdMilkyWay();
-					dhd.Position = tr.EndPosition + new Vector3(0, 0, -5);
-					dhd.Rotation = new Angles( 15, Owner.EyeRotation.Angles().yaw + 180, 0 ).ToRotation();
+					dhd.Position = tr.EndPosition;
+					dhd.Rotation = new Angles( 0, Owner.EyeRotation.Angles().yaw + 180, 0 ).ToRotation();
 					Event.Run( "entity.spawned", dhd, Owner );
 				}
 				else if ( Input.Pressed( InputButton.SecondaryAttack ) )
