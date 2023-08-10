@@ -18,7 +18,7 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 	[Net]
 	public float DesiredRingAngleDifference { get; private set; } = 0.0f;
 	[Net]
-	public char CurDialingSymbol { get; private set; } = '!';
+	public char CurDialingSymbol { get; private set; } = ' ';
 	[Net]
 	public char CurRingSymbol { get; private set; } = ' ';
 	public float TargetRingAngle { get; private set; } = 0.0f;

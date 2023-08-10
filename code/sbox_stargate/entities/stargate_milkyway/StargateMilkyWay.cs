@@ -10,6 +10,39 @@ using Sandbox;
 [Title( "Stargate (Milky Way)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class StargateMilkyWay : Stargate
 {
+	/* WIRE SUPPORT */
+	
+	[Event.Hotload]
+	public override void WireInitialize()
+	{
+		base.WireInitialize();
+
+		this.RegisterInputHandler( "Rotate Ring", ( bool value ) =>
+		{
+			if (value && !Ring.IsMoving)
+				Ring.SpinUp();
+			else if ( !value && Ring.IsMoving )
+				Ring.SpinDown();
+		} );
+
+		this.RegisterInputHandler( "Movie Dialing Type", ( bool value ) =>
+		{
+			MovieDialingType = value;
+		} );
+
+		this.RegisterInputHandler( "Chevron Lightup", ( bool value ) =>
+		{
+			ChevronLightup = value;
+		} );
+	}
+
+	public override PortType[] WireGetOutputs()
+	{
+		return base.WireGetOutputs().Concat( new PortType[] {
+			PortType.String("Ring Symbol")
+		} ).ToArray();
+	}
+
 	public const string MODEL = "models/sbox_stargate/sg_mw/sg_mw_gate.vmdl";
 
 	[Net]

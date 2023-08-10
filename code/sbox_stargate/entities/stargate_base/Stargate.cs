@@ -8,8 +8,82 @@ using Sandbox;
 using Sandbox.UI;
 
 [Category( "Stargates" )]
-public abstract partial class Stargate : Prop, IUse
+public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInputEntity
 {
+	/* WIRE SUPPORT */
+
+	// self:CreateWireInputs("Dial Address","Dial String [STRING]","Dial Mode","Start String Dial","Close","Disable Autoclose","Disable Menu","Transmit [STRING]");
+
+	WirePortData IWireEntity.WirePorts { get; } = new WirePortData();
+
+	public virtual void WireInitialize()
+	{
+		var inputs = ((IWireEntity)this).WirePorts.inputs;
+
+		this.RegisterInputHandler( "Dial Mode", ( bool value ) =>
+		{
+		} );
+
+		this.RegisterInputHandler( "Dial String", ( string value ) =>
+		{
+		} );
+
+		this.RegisterInputHandler( "Start Dial", ( bool value ) =>
+		{
+			var addr = inputs["Dial String"].value.ToString();
+			var mode = inputs["Dial Mode"].value;
+
+			if ( value )
+			{
+				if ( (bool) mode )
+				{
+					BeginDialFast( addr );
+				}
+				else
+				{
+					BeginDialSlow( addr );
+				}
+			}
+				
+		} );
+
+		this.RegisterInputHandler( "Close", ( bool value ) =>
+		{
+			if ( value )
+				RequestClose( NetworkIdent );
+		} );
+
+		this.RegisterInputHandler( "Disable Autoclose", ( bool value ) =>
+		{
+			AutoClose = !value;
+		} );
+
+		this.RegisterInputHandler( "Disable Menu", ( bool value ) =>
+		{
+			CanOpenMenu = !value;
+		} );
+	}
+
+	public virtual PortType[] WireGetOutputs()
+	{
+		return new PortType[] {
+			PortType.Bool("Idle"),
+			PortType.Bool("Active"),
+			PortType.Bool("Dialing"),
+			PortType.Bool("Opening"),
+			PortType.Bool("Open"),
+			PortType.Bool("Closing"),
+			PortType.Bool("Inbound"),
+			PortType.Int("Chevrons Encoded"),
+			PortType.Bool("Chevron 7 Locked"),
+			PortType.String("Dialing Address"),
+			PortType.String("Dialing Symbol"),
+			PortType.String("Dialed Symbol"),
+			PortType.String("Ring Symbol"),
+			PortType.Float("Ring Angle")
+		};
+	}
+
 	[Net] public Vector3 SpawnOffset { get; private set; } = new( 0, 0, 95 );
 
 	[Net]
@@ -70,9 +144,10 @@ public abstract partial class Stargate : Prop, IUse
 	[Net] public bool IsLocked { get; set; } = false;
 	[Net] public bool IsLockedInvalid { get; set; } = false;
 
-	[Net] public char CurDialingSymbol { get; set; } = '!';
+	[Net] public char CurDialingSymbol { get; set; } = ' ';
 	[Net] public char CurRingSymbol { get; set; } = ' ';
 	[Net] public float CurRingSymbolOffset { get; set; } = 0;
+	[Net] public bool CanOpenMenu { get; set; } = true;
 
 	public TimeSince TimeSinceDHDAction = 0f;
 	public float DhdDialShutdownTime = 20f;
@@ -101,6 +176,26 @@ public abstract partial class Stargate : Prop, IUse
 		IsLocked = false;
 		IsLockedInvalid = false;
 		AutoCloseTime = -1;
+		CurDialingSymbol = ' ';
+	}
+
+	[GameEvent.Tick.Server]
+	public void WireThink()
+	{
+		this.WireTriggerOutput( "Idle", Idle );
+		this.WireTriggerOutput( "Active", Active );
+		this.WireTriggerOutput( "Dialing", Dialing );
+		this.WireTriggerOutput( "Opening", Opening );
+		this.WireTriggerOutput( "Open", Open );
+		this.WireTriggerOutput( "Closing", Closing );
+		this.WireTriggerOutput( "Inbound", Inbound );
+		this.WireTriggerOutput( "Chevrons Encoded", ActiveChevrons );
+		this.WireTriggerOutput( "Chevron 7 Locked", IsLocked || IsLockedInvalid );
+		this.WireTriggerOutput( "Dialing Address", DialingAddress );
+		this.WireTriggerOutput( "Dialing Symbol", CurDialingSymbol.ToString() );
+		this.WireTriggerOutput( "Dialed Symbol", DialingAddress.Length > 0 ? DialingAddress.Last().ToString() : " " );
+		this.WireTriggerOutput( "Ring Symbol", CurRingSymbol.ToString() );
+		this.WireTriggerOutput( "Ring Angle", GetRingAngle() );
 	}
 
 	// RING ANGLE
@@ -117,7 +212,11 @@ public abstract partial class Stargate : Prop, IUse
 
 	public bool OnUse( Entity user )
 	{
-		OpenStargateMenu(To.Single( user ));
+		if (CanOpenMenu)
+		{
+			OpenStargateMenu( To.Single( user ) );
+		}
+		
 		return false; // aka SIMPLE_USE, not continuously
 	}
 
