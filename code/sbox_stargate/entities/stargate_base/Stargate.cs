@@ -62,6 +62,12 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		{
 			CanOpenMenu = !value;
 		} );
+
+		this.RegisterInputHandler( "Toggle Iris", ( bool value ) =>
+		{
+			if ( value )
+				ToggleIris();
+		} );
 	}
 
 	public virtual PortType[] WireGetOutputs()
@@ -282,6 +288,11 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	public bool IsIrisClosed()
 	{
 		return HasIris() && Iris.Closed;
+	}
+
+	public void ToggleIris()
+	{
+		Iris?.Toggle();
 	}
 
 	// BEARING
