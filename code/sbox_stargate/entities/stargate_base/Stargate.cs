@@ -82,6 +82,11 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 			PortType.Bool("Inbound"),
 			PortType.Int("Chevrons Encoded"),
 			PortType.Bool("Last Chevron Locked"),
+			PortType.String("Gate Address"),
+			PortType.String("Gate Group"),
+			PortType.String("Gate Name"),
+			PortType.String("Gate Local"),
+			PortType.String("Gate Private"),
 			PortType.String("Dialing Address"),
 			PortType.String("Dialing Symbol"),
 			PortType.String("Dialed Symbol"),
@@ -103,6 +108,11 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		this.WireTriggerOutput( "Inbound", Inbound );
 		this.WireTriggerOutput( "Chevrons Encoded", ActiveChevrons );
 		this.WireTriggerOutput( "Last Chevron Locked", IsLocked || IsLockedInvalid );
+		this.WireTriggerOutput( "Gate Address", GateAddress );
+		this.WireTriggerOutput( "Gate Group", GateGroup );
+		this.WireTriggerOutput( "Gate Name", GateName );
+		this.WireTriggerOutput( "Gate Local", GateLocal );
+		this.WireTriggerOutput( "Gate Private", GatePrivate );
 		this.WireTriggerOutput( "Dialing Address", DialingAddress );
 		this.WireTriggerOutput( "Dialing Symbol", CurDialingSymbol.ToString() );
 		this.WireTriggerOutput( "Dialed Symbol", DialingAddress.Length > 0 ? DialingAddress.Last().ToString() : " " );
