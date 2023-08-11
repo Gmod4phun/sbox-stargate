@@ -84,6 +84,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 			PortType.Bool("Last Chevron Locked"),
 			PortType.String("Gate Address"),
 			PortType.String("Gate Group"),
+			PortType.String("Gate Point of Origin"),
 			PortType.String("Gate Name"),
 			PortType.String("Gate Local"),
 			PortType.String("Gate Private"),
@@ -110,6 +111,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		this.WireTriggerOutput( "Last Chevron Locked", IsLocked || IsLockedInvalid );
 		this.WireTriggerOutput( "Gate Address", GateAddress );
 		this.WireTriggerOutput( "Gate Group", GateGroup );
+		this.WireTriggerOutput( "Gate Point of Origin", PointOfOrigin );
 		this.WireTriggerOutput( "Gate Name", GateName );
 		this.WireTriggerOutput( "Gate Local", GateLocal );
 		this.WireTriggerOutput( "Gate Private", GatePrivate );
