@@ -86,8 +86,29 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 			PortType.String("Dialing Symbol"),
 			PortType.String("Dialed Symbol"),
 			PortType.String("Ring Symbol"),
-			PortType.Float("Ring Angle")
+			PortType.Float("Ring Angle"),
+			PortType.Bool("Iris Closed")
 		};
+	}
+
+	[GameEvent.Tick.Server]
+	public void WireThink()
+	{
+		this.WireTriggerOutput( "Idle", Idle );
+		this.WireTriggerOutput( "Active", Active );
+		this.WireTriggerOutput( "Dialing", Dialing );
+		this.WireTriggerOutput( "Opening", Opening );
+		this.WireTriggerOutput( "Open", Open );
+		this.WireTriggerOutput( "Closing", Closing );
+		this.WireTriggerOutput( "Inbound", Inbound );
+		this.WireTriggerOutput( "Chevrons Encoded", ActiveChevrons );
+		this.WireTriggerOutput( "Chevron 7 Locked", IsLocked || IsLockedInvalid );
+		this.WireTriggerOutput( "Dialing Address", DialingAddress );
+		this.WireTriggerOutput( "Dialing Symbol", CurDialingSymbol.ToString() );
+		this.WireTriggerOutput( "Dialed Symbol", DialingAddress.Length > 0 ? DialingAddress.Last().ToString() : " " );
+		this.WireTriggerOutput( "Ring Symbol", CurRingSymbol.ToString() );
+		this.WireTriggerOutput( "Ring Angle", GetRingAngle() );
+		this.WireTriggerOutput( "Iris Closed", IsIrisClosed() );
 	}
 
 	[Net] public Vector3 SpawnOffset { get; private set; } = new( 0, 0, 95 );
@@ -183,25 +204,6 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		IsLockedInvalid = false;
 		AutoCloseTime = -1;
 		CurDialingSymbol = ' ';
-	}
-
-	[GameEvent.Tick.Server]
-	public void WireThink()
-	{
-		this.WireTriggerOutput( "Idle", Idle );
-		this.WireTriggerOutput( "Active", Active );
-		this.WireTriggerOutput( "Dialing", Dialing );
-		this.WireTriggerOutput( "Opening", Opening );
-		this.WireTriggerOutput( "Open", Open );
-		this.WireTriggerOutput( "Closing", Closing );
-		this.WireTriggerOutput( "Inbound", Inbound );
-		this.WireTriggerOutput( "Chevrons Encoded", ActiveChevrons );
-		this.WireTriggerOutput( "Chevron 7 Locked", IsLocked || IsLockedInvalid );
-		this.WireTriggerOutput( "Dialing Address", DialingAddress );
-		this.WireTriggerOutput( "Dialing Symbol", CurDialingSymbol.ToString() );
-		this.WireTriggerOutput( "Dialed Symbol", DialingAddress.Length > 0 ? DialingAddress.Last().ToString() : " " );
-		this.WireTriggerOutput( "Ring Symbol", CurRingSymbol.ToString() );
-		this.WireTriggerOutput( "Ring Angle", GetRingAngle() );
 	}
 
 	// RING ANGLE
