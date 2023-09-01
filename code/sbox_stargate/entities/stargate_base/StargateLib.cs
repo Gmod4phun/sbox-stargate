@@ -253,7 +253,7 @@ public partial class Stargate : Prop, IUse
 				if ( !IsUniverseGate( gate ) && !IsUniverseGate( target ) ) target = null;
 				if ( IsUniverseGate( gate ) && IsUniverseGate( target ) ) target = null;
 
-				if ( gate.GateLocal || target.GateLocal ) target = null;
+				if ( gate.GateLocal || target.IsValid() && target.GateLocal ) target = null;
 			}
 		}
 		else if ( addrLen == 8 ) // 8 chevron connection - different group
