@@ -345,6 +345,10 @@ public partial class Stargate : Prop, IUse
 	{
 		var finalAddress = "";
 
+		// return empty string if either of the gates is null/not valid
+		if ( !gate.IsValid() || !otherGate.IsValid() )
+			return finalAddress;
+
 		if ( !IsUniverseGate(gate) && !IsUniverseGate(otherGate) ) // none of them are universe gates
 		{
 			if ( gate.GateGroup == otherGate.GateGroup ) // if groups are equal, return address

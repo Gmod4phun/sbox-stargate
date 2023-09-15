@@ -648,7 +648,7 @@ public partial class EventHorizon : AnimatedEntity
 			{
 				if ( !Gate.IsIrisClosed() ) // try teleporting only if our iris is open
 				{
-					if ( Gate.OtherGate.IsIrisClosed() ) // if other gate's iris is closed, dissolve
+					if ( Gate.OtherGate.IsValid() && Gate.OtherGate.IsIrisClosed() ) // if other gate's iris is closed, dissolve
 					{
 						DissolveEntity( other );
 						Gate.OtherGate.Iris.PlayHitSound(); // iris goes boom

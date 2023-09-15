@@ -138,6 +138,9 @@ namespace Sandbox.Tools
 
 				if ( Input.Pressed( InputButton.SecondaryAttack ) )
 				{
+					if ( !CopiedGate.IsValid() )
+						return;
+
 					var startPos = Owner.EyePosition;
 					var dir = Owner.EyeRotation.Forward;
 
@@ -149,7 +152,6 @@ namespace Sandbox.Tools
 						return;
 
 					CreateHitEffects( tr.EndPosition );
-
 
 					if ( tr.Entity is Stargate gate )
 					{
