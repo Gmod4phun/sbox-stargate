@@ -12,7 +12,8 @@ public partial class Stargate : Prop, IUse
 		FAST,
 		INSTANT,
 		NOX,
-		DHD
+		DHD,
+		MANUAL
 	}
 
 	public enum GateState

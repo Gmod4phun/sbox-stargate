@@ -211,6 +211,83 @@ public partial class StargateRingPegasus : ModelEntity
 		for ( int i = 0; i <= 35; i++ ) SetSymbolState( i, true );
 	}
 
+	public async Task<bool> RollSymbolSlow( char symbol, int chevNum, bool isLast=false )
+	{
+		try
+		{
+			//ResetSymbols();
+
+			var dataSymbols7 = new int[7, 2] { { 35, 32 }, { 3, 40 }, { 7, 32 }, { 11, 48 }, { 23, 32 }, { 27, 40 }, { 31, 32 } };
+			var dataSymbols8 = new int[8, 2] { { 35, 32 }, { 3, 40 }, { 7, 32 }, { 11, 48 }, { 23, 32 }, { 27, 40 }, { 31, 52 }, { 15, 56 } };
+			var dataSymbols9 = new int[9, 2] { { 35, 32 }, { 3, 40 }, { 7, 32 }, { 11, 48 }, { 23, 32 }, { 27, 40 }, { 31, 52 }, { 15, 40 }, { 19, 56 } };
+
+			//var data = (chevNum == 9) ? dataSymbols9 : ((chevNum == 8) ? dataSymbols8 : dataSymbols7);
+			var data = dataSymbols7;
+			if (chevNum == 8 || chevNum == 7 && !isLast)
+			{
+				data = dataSymbols8;
+			}
+			if ( chevNum == 9 || (chevNum == 8 && !isLast) )
+			{
+				data = dataSymbols9;
+			}
+
+			var rollStartDelay = 0.75f;
+			var startTime = Time.Now;
+
+			var i_copy = chevNum - 1;
+			var startPos = data[i_copy, 0];
+			var symSteps = data[i_copy, 1];
+			var symRollTime = symSteps * 0.05f;
+
+			var rollSoundTaskTime = startTime;
+			var symTaskTime = startTime + rollStartDelay;
+			var finishTime = startTime + rollStartDelay + symRollTime;
+
+			Gate.AddTask( rollSoundTaskTime, () => PlayRollSound(), Stargate.TimedTaskCategory.DIALING );
+			Gate.AddTask( symTaskTime, () => RollSymbol( startPos, symSteps, i_copy % 2 == 0, symRollTime ), Stargate.TimedTaskCategory.DIALING );
+			Gate.AddTask( finishTime, () => StopRollSound(), Stargate.TimedTaskCategory.DIALING );
+
+			if ( i_copy == 0 )
+				Gate.AddTask( symTaskTime, () => SetRingState( false ), Stargate.TimedTaskCategory.DIALING );
+
+			await GameTask.DelaySeconds( finishTime - startTime );
+
+			return true;
+
+			/*
+			void chevTask()
+			{
+				StopRollSound();
+
+				Gate.CurDialingSymbol = symbol;
+
+				var chev = Gate.GetChevronBasedOnAddressLength( chevNum, chevNum );
+				if ( i_copy < chevCount - 1 )
+				{
+					Gate.ChevronActivateDHD( chev, 0, true );
+					Event.Run( StargateEvent.ChevronEncoded, Gate, i_copy + 1 );
+				}
+				else
+				{
+					var isValid = validCheck();
+					Gate.IsLocked = true;
+					Gate.IsLockedInvalid = !isValid;
+
+					Gate.ChevronActivate( chev, 0, isValid, true );
+					Event.Run( StargateEvent.ChevronLocked, Gate, i_copy + 1, isValid );
+				}
+			}
+
+			Gate.AddTask( chevTaskTime, chevTask, Stargate.TimedTaskCategory.DIALING );
+			*/
+		}
+		catch ( Exception )
+		{
+			return false;
+		}
+	}
+
 	// SLOWDIAL
 	public void RollSymbolsDialSlow( string address, Func<bool> validCheck )
 	{

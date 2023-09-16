@@ -55,8 +55,6 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 			var sym = inputs["Input Symbol"].value.ToString().ElementAtOrDefault( 0 );
 			var mode = (bool) inputs["Dial Mode"].value;
 
-			if ( !Symbols.Contains( sym ) ) return;
-
 			if ( value )
 			{
 				DoManualChevronEncode( sym );
@@ -67,8 +65,6 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		{
 			var sym = inputs["Input Symbol"].value.ToString().ElementAtOrDefault( 0 );
 			var mode = (bool) inputs["Dial Mode"].value;
-
-			if ( !Symbols.Contains( sym ) ) return;
 
 			if ( value )
 			{
@@ -230,8 +226,8 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	[Net] public float CurRingSymbolOffset { get; set; } = 0;
 	[Net] public bool CanOpenMenu { get; set; } = true;
 
-	public TimeSince TimeSinceDHDAction = 0f;
-	public float DhdDialShutdownTime = 20f;
+	public TimeSince TimeSinceDialAction = 0f;
+	public float InactiveDialShutdownTime = 20f;
 
 	public IStargateRamp Ramp = null;
 
@@ -403,7 +399,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 
 	public bool CanStargateStartDial()
 	{
-		return ( Idle && !Busy && !Dialing && !Inbound && !Open && !Opening && !Closing );
+		return ( Idle && !Busy && !Dialing && !Inbound && !Open && !Opening && !Closing && !IsLocked );
 	}
 
 	public bool CanStargateStopDial()
@@ -418,7 +414,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		if (!Dialing)
 			return CanStargateStartDial();
 
-		return (!IsManualDialInProgress);
+		return (!IsManualDialInProgress && !IsLocked);
 	}
 
 	public bool ShouldGateStopDialing()
@@ -460,7 +456,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		}
 		else
 		{
-			return ( !Busy && !Open && !Inbound && (CurDialType is DialType.SLOW || CurDialType is DialType.DHD) );
+			return ( !Busy && !Open && !Inbound && (CurDialType is DialType.SLOW || CurDialType is DialType.DHD || CurDialType is DialType.MANUAL) );
 		}
 	}
 
@@ -482,7 +478,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		}
 		else
 		{
-			return (!Busy && !Open && !Inbound && CurDialType == DialType.SLOW);
+			return (!Busy && !Open && !Inbound && (CurDialType == DialType.SLOW || CurDialType is DialType.MANUAL));
 		}
 	}
 
@@ -494,7 +490,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		}
 		else
 		{
-			return (!Busy && !Open && Inbound && CurDialType == DialType.SLOW);
+			return (!Busy && !Open && Inbound && (CurDialType == DialType.SLOW || CurDialType is DialType.MANUAL));
 		}
 	}
 
@@ -679,7 +675,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		if ( Dialing && CurDialType != DialType.DHD )
 			return;
 
-		TimeSinceDHDAction = 0;
+		TimeSinceDialAction = 0;
 
 		if ( !Dialing ) // if gate wasnt dialing, begin dialing
 		{
@@ -700,7 +696,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		if ( CurDialType != DialType.DHD )
 			return;
 
-		TimeSinceDHDAction = 0;
+		TimeSinceDialAction = 0;
 
 		DialingAddress += sym;
 
@@ -716,6 +712,9 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	// Manual/Slow Chevron Encode/Lock
 	public async virtual Task<bool> DoManualChevronEncode( char sym )
 	{
+		if ( !Symbols.Contains( sym ) )
+			return false;
+
 		// if we try to encode 9th symbol, do a lock instead
 		if (DialingAddress.Length == 8)
 		{
@@ -726,8 +725,8 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		if ( !CanStargateStartManualDial() )
 			return false;
 
-		// if we were already dialing but not SLOW, dont do anything
-		if ( Dialing && CurDialType != DialType.SLOW )
+		// if we were already dialing but not MANUAL, dont do anything
+		if ( Dialing && CurDialType != DialType.MANUAL )
 			return false;
 
 		if ( DialingAddress.Contains( sym ) )
@@ -739,14 +738,19 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		if ( !Dialing ) // if gate wasnt dialing, begin dialing
 		{
 			CurGateState = GateState.DIALING;
-			CurDialType = DialType.SLOW;
+			CurDialType = DialType.MANUAL;
 		}
+
+		TimeSinceDialAction = 0;
 
 		return true;
 	}
 
 	public async virtual Task<bool> DoManualChevronLock( char sym )
 	{
+		if ( !Symbols.Contains( sym ) )
+			return false;
+
 		// if we try to lock sooner than 7th symbol, do nothing
 		if ( DialingAddress.Length < 6 )
 		{
@@ -759,8 +763,8 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		if ( !Dialing )
 			return false;
 
-		// if we were already dialing but not SLOW, dont do anything
-		if ( Dialing && CurDialType != DialType.SLOW )
+		// if we were already dialing but not MANUAL, dont do anything
+		if ( Dialing && CurDialType != DialType.MANUAL )
 			return false;
 
 		if ( DialingAddress.Contains( sym ) )
@@ -768,6 +772,8 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 
 		if ( DialingAddress.Length < 6 )
 			return false;
+
+		TimeSinceDialAction = 0;
 
 		return true;
 	}
@@ -794,7 +800,15 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 
 	public void DhdDialTimerThink()
 	{
-		if ( Dialing && CurDialType is DialType.DHD && TimeSinceDHDAction > DhdDialShutdownTime )
+		if ( Dialing && CurDialType is DialType.DHD && TimeSinceDialAction > InactiveDialShutdownTime )
+		{
+			StopDialing();
+		}
+	}
+
+	public void ManualDialTimerThink()
+	{
+		if ( Dialing && CurDialType is DialType.MANUAL && TimeSinceDialAction > InactiveDialShutdownTime )
 		{
 			StopDialing();
 		}
@@ -806,6 +820,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		AutoCloseThink();
 		CloseIfNoOtherGate();
 		DhdDialTimerThink();
+		ManualDialTimerThink();
 	}
 
 	/*

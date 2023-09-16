@@ -856,6 +856,8 @@ public partial class StargateMilkyWay : Stargate
 
 		IsManualDialInProgress = false;
 
+		TimeSinceDialAction = 0;
+
 		return true;
 	}
 
@@ -907,6 +909,8 @@ public partial class StargateMilkyWay : Stargate
 		Event.Run( StargateEvent.ChevronLocked, this, chevNum, valid );
 
 		await GameTask.DelaySeconds( 0.75f );
+
+		TimeSinceDialAction = 0;
 
 		BeginManualOpen( DialingAddress );
 

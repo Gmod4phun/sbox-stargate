@@ -614,8 +614,6 @@ public partial class StargateUniverse : Stargate
 			await DoPreRoll();
 		}
 
-		Log.Info( $"manual chev encode for sym {sym}, chevNum {chevNum}" );
-
 		var success = await RotateRingToSymbol( sym ); // wait for ring to rotate to the target symbol
 		if ( !success || ShouldStopDialing )
 		{
@@ -698,8 +696,6 @@ public partial class StargateUniverse : Stargate
 
 		await GameTask.DelaySeconds( 1.25f );
 
-		IsManualDialInProgress = false;
-
 		BeginManualOpen( DialingAddress );
 
 		return true;
@@ -713,16 +709,17 @@ public partial class StargateUniverse : Stargate
 			if ( otherGate.IsValid() && otherGate != this && otherGate.IsStargateReadyForInboundInstantSlow() )
 			{
 				otherGate.BeginInboundSlow( address.Length );
+				IsManualDialInProgress = false;
+
+				await GameTask.DelaySeconds( 0.5f );
+
+				EstablishWormholeTo( otherGate );
 			}
 			else
 			{
 				StopDialing();
 				return;
 			}
-
-			await GameTask.DelaySeconds( 0.5f );
-
-			EstablishWormholeTo( otherGate );
 		}
 		catch ( Exception )
 		{

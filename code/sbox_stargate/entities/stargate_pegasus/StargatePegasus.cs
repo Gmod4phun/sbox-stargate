@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Editor;
@@ -532,6 +533,112 @@ public partial class StargatePegasus : Stargate
 		var rollTime = 0.6f;
 		Ring.RollSymbolDHDFast( DialingAddress.Length, validCheck, DialingAddress.Length, rollTime );
 		MakeBusy( rollTime );
+	}
+
+	// Manual encode/lock
+	public async override Task<bool> DoManualChevronEncode( char sym )
+	{
+		if ( !await base.DoManualChevronEncode( sym ) )
+			return false;
+
+		IsManualDialInProgress = true;
+
+		var chevNum = DialingAddress.Length + 1;
+
+		CurDialingSymbol = sym;
+
+		var success = await Ring.RollSymbolSlow( sym, chevNum ); // wait for ring to rotate to the target symbol
+		if ( !success || ShouldStopDialing )
+		{
+			StopDialing();
+			return false;
+		}
+
+		DialingAddress += sym;
+		ActiveChevrons++;
+
+		var chev = GetChevronBasedOnAddressLength( chevNum, DialingAddress.Length + 1 ); // addrLen+1 since we are not locking
+		//var chev = GetChevronBasedOnAddressLength( 7, 8 );
+		ChevronActivateDHD( chev, 0, true );
+
+		Event.Run( StargateEvent.ChevronEncoded, this, chevNum );
+
+		IsManualDialInProgress = false;
+
+		TimeSinceDialAction = 0;
+
+		return true;
+	}
+
+	public async override Task<bool> DoManualChevronLock( char sym )
+	{
+		if ( !await base.DoManualChevronLock( sym ) )
+			return false;
+
+		IsManualDialInProgress = true;
+
+		var chevNum = DialingAddress.Length + 1;
+
+		CurDialingSymbol = sym;
+
+		var success = await Ring.RollSymbolSlow( sym, chevNum, true ); // wait for ring to rotate to the target symbol
+		if ( !success || ShouldStopDialing )
+		{
+			StopDialing();
+			return false;
+		}
+
+		DialingAddress += sym;
+
+		var target = FindDestinationGateByDialingAddress( this, DialingAddress );
+
+		bool gateValidCheck() { return target.IsValid() && target != this && target.IsStargateReadyForInboundInstantSlow(); }
+
+		var isValid = gateValidCheck();
+		IsLocked = true;
+		IsLockedInvalid = !isValid;
+
+		var chev = GetChevronBasedOnAddressLength( chevNum, DialingAddress.Length );
+		ChevronActivate( chev, 0, isValid, true );
+
+		if (isValid)
+			ActiveChevrons++;
+
+		Event.Run( StargateEvent.ChevronLocked, this, chevNum, isValid );
+
+		TimeSinceDialAction = 0;
+
+		BeginManualOpen( DialingAddress );
+
+		return true;
+	}
+
+	public async override void BeginManualOpen( string address )
+	{
+		try
+		{
+			var otherGate = FindDestinationGateByDialingAddress( this, address );
+			if ( otherGate.IsValid() && otherGate != this && otherGate.IsStargateReadyForInboundInstantSlow() )
+			{
+				otherGate.BeginInboundSlow( address.Length );
+				IsManualDialInProgress = false;
+
+				await GameTask.DelaySeconds( 0.5f );
+
+				EstablishWormholeTo( otherGate );
+			}
+			else
+			{
+				await GameTask.DelaySeconds( 1f );
+
+				StopDialing();
+				return;
+			}
+		}
+		catch ( Exception )
+		{
+			if ( this.IsValid() ) StopDialing();
+		}
 	}
 
 	public static void DrawGizmos( EditorContext context )
