@@ -366,11 +366,11 @@ public abstract partial class Dhd : Prop
 			// if symbol was already pressed, do nothing, can't deactivate, can only abort the whole sequence with center button
 			if ( !PressedActions.Contains( action ) ) // symbol wasnt pressed, go press it
 			{
-				if ( !Gate.Dialing ) // if gate wasnt dialing, begin dialing
-				{
-					Gate.CurGateState = Stargate.GateState.DIALING;
-					Gate.CurDialType = Stargate.DialType.DHD;
-				}
+				//if ( !Gate.Dialing ) // if gate wasnt dialing, begin dialing
+				//{
+				//	Gate.CurGateState = Stargate.GateState.DIALING;
+				//	Gate.CurDialType = Stargate.DialType.DHD;
+				//}
 
 				if ( PressedActions.Count == 8 || symbol is '#' ) // lock if we are putting Point of Origin or 9th symbol, otherwise encode
 				{
@@ -384,8 +384,6 @@ public abstract partial class Dhd : Prop
 				PressedActions.Add( action );
 				PlayButtonPressAnim( button );
 				Stargate.PlaySound( Position + Rotation.Up * 16, Data.ButtonPressSound);
-
-				Gate.TimeSinceDHDAction = 0;
 			}
 		}
 	}

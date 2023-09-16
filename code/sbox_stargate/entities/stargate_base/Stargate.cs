@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Sandbox;
-using Sandbox.UI;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 [Category( "Stargates" )]
 public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInputEntity
@@ -24,18 +24,18 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		{
 		} );
 
-		this.RegisterInputHandler( "Dial String", ( string value ) =>
+		this.RegisterInputHandler( "Input Address", ( string value ) =>
 		{
 		} );
 
-		this.RegisterInputHandler( "Start Dial", ( bool value ) =>
+		this.RegisterInputHandler( "Dial Address", ( bool value ) =>
 		{
-			var addr = inputs["Dial String"].value.ToString();
-			var mode = inputs["Dial Mode"].value;
+			var addr = inputs["Input Address"].value.ToString();
+			var mode = (bool) inputs["Dial Mode"].value;
 
 			if ( value )
 			{
-				if ( (bool) mode )
+				if ( mode )
 				{
 					BeginDialFast( addr );
 				}
@@ -44,7 +44,42 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 					BeginDialSlow( addr );
 				}
 			}
-				
+		} );
+
+		this.RegisterInputHandler( "Input Symbol", ( string value ) =>
+		{
+		} );
+
+		this.RegisterInputHandler( "Encode Symbol", ( bool value ) =>
+		{
+			var sym = inputs["Input Symbol"].value.ToString().ElementAtOrDefault( 0 );
+			var mode = (bool) inputs["Dial Mode"].value;
+
+			if ( !Symbols.Contains( sym ) ) return;
+
+			if ( value )
+			{
+				DoManualChevronEncode( sym );
+			}
+		} );
+
+		this.RegisterInputHandler( "Lock Symbol", ( bool value ) =>
+		{
+			var sym = inputs["Input Symbol"].value.ToString().ElementAtOrDefault( 0 );
+			var mode = (bool) inputs["Dial Mode"].value;
+
+			if ( !Symbols.Contains( sym ) ) return;
+
+			if ( value )
+			{
+				DoManualChevronLock( sym );
+			}
+		} );
+
+		this.RegisterInputHandler( "Open", ( bool value ) =>
+		{
+			if ( value )
+				BeginManualOpen( DialingAddress );
 		} );
 
 		this.RegisterInputHandler( "Close", ( bool value ) =>
@@ -174,6 +209,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	[Net] public bool ShouldStopDialing { get; set; } = false;
 	[Net] public GateState CurGateState { get; set; } = GateState.IDLE;
 	[Net] public DialType CurDialType { get; set; } = DialType.FAST;
+	[Net] public bool IsManualDialInProgress { get; set; } = false;
 
 	// gate state accessors
 	public bool Idle { get => CurGateState is GateState.IDLE; }
@@ -222,6 +258,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		IsLockedInvalid = false;
 		AutoCloseTime = -1;
 		CurDialingSymbol = ' ';
+		IsManualDialInProgress = false;
 	}
 
 	// RING ANGLE
@@ -366,7 +403,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 
 	public bool CanStargateStartDial()
 	{
-		return ( Idle && !Busy && !Dialing && !Inbound );
+		return ( Idle && !Busy && !Dialing && !Inbound && !Open && !Opening && !Closing );
 	}
 
 	public bool CanStargateStopDial()
@@ -374,6 +411,14 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		if (!Inbound) return (!Busy && Dialing);
 
 		return ( !Busy && Active );
+	}
+
+	public bool CanStargateStartManualDial()
+	{
+		if (!Dialing)
+			return CanStargateStartDial();
+
+		return (!IsManualDialInProgress);
 	}
 
 	public bool ShouldGateStopDialing()
@@ -624,14 +669,39 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		return index - 4;
 	}
 
+	// DHD/Fast Chevron Encode/Lock
 	public virtual void DoDHDChevronEncode(char sym)
 	{
+		if ( DialingAddress.Contains( sym ) )
+			return;
+
+		// if we were already dialing but not via DHD, dont do anything
+		if ( Dialing && CurDialType != DialType.DHD )
+			return;
+
+		TimeSinceDHDAction = 0;
+
+		if ( !Dialing ) // if gate wasnt dialing, begin dialing
+		{
+			CurGateState = GateState.DIALING;
+			CurDialType = DialType.DHD;
+		}
+
 		DialingAddress += sym;
 		Event.Run( StargateEvent.DHDChevronEncoded, this, sym );
 	}
 
 	public virtual void DoDHDChevronLock( char sym )
 	{
+		if ( DialingAddress.Contains( sym ) )
+			return;
+
+		// if we were already dialing but not via DHD, dont do anything
+		if ( CurDialType != DialType.DHD )
+			return;
+
+		TimeSinceDHDAction = 0;
+
 		DialingAddress += sym;
 
 		var gate = FindDestinationGateByDialingAddress( this, DialingAddress );
@@ -643,15 +713,66 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		Event.Run( StargateEvent.DHDChevronLocked, this, sym, valid );
 	}
 
-	public virtual void DoDHDChevronUnlock( char sym )
+	// Manual/Slow Chevron Encode/Lock
+	public async virtual Task<bool> DoManualChevronEncode( char sym )
 	{
-		DialingAddress = DialingAddress.Substring(0, DialingAddress.Length - 1);
+		// if we try to encode 9th symbol, do a lock instead
+		if (DialingAddress.Length == 8)
+		{
+			DoManualChevronLock( sym );
+			return false;
+		}
+			
+		if ( !CanStargateStartManualDial() )
+			return false;
 
-		IsLocked = false;
-		IsLockedInvalid = false;
+		// if we were already dialing but not SLOW, dont do anything
+		if ( Dialing && CurDialType != DialType.SLOW )
+			return false;
 
-		Event.Run( StargateEvent.DHDChevronUnlocked, this, sym );
+		if ( DialingAddress.Contains( sym ) )
+			return false;
+
+		if ( DialingAddress.Length > 8 )
+			return false;
+
+		if ( !Dialing ) // if gate wasnt dialing, begin dialing
+		{
+			CurGateState = GateState.DIALING;
+			CurDialType = DialType.SLOW;
+		}
+
+		return true;
 	}
+
+	public async virtual Task<bool> DoManualChevronLock( char sym )
+	{
+		// if we try to lock sooner than 7th symbol, do nothing
+		if ( DialingAddress.Length < 6 )
+		{
+			return false;
+		}
+
+		if ( !CanStargateStartManualDial() )
+			return false;
+
+		if ( !Dialing )
+			return false;
+
+		// if we were already dialing but not SLOW, dont do anything
+		if ( Dialing && CurDialType != DialType.SLOW )
+			return false;
+
+		if ( DialingAddress.Contains( sym ) )
+			return false;
+
+		if ( DialingAddress.Length < 6 )
+			return false;
+
+		return true;
+	}
+
+	public virtual void BeginManualOpen( string address ) { } // when dialing manually, open the gate do the target address
 
 	// THINK
 	public void AutoCloseThink()
@@ -740,11 +861,18 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	public static void RequestClose(int gateID) {
 		if (FindByIndex( gateID ) is Stargate g && g.IsValid()) {
 			if ( g.Busy || ((g.Open || g.Active || g.Dialing) && g.Inbound) )
+			{
 				return;
+			}
+
 			if (g.Open)
+			{
 				g.DoStargateClose( true );
+			}
 			else if (g.Dialing)
+			{
 				g.StopDialing();
+			}
 		}
 	}
 

@@ -534,24 +534,6 @@ public partial class StargatePegasus : Stargate
 		MakeBusy( rollTime );
 	}
 
-	public override void DoDHDChevronUnlock( char sym )
-	{
-		base.DoDHDChevronUnlock( sym );
-
-		var chev = EncodedChevronsOrdered.Last();
-		EncodedChevronsOrdered.Remove( chev );
-
-		ClearTasksByCategory( TimedTaskCategory.SYMBOL_ROLL_PEGASUS_DHD );
-		ClearTasksByCategory( TimedTaskCategory.DIALING );
-
-		ChevronDeactivate( chev );
-
-		foreach (var c in Chevrons )
-		{
-			if ( !c.On ) Ring.ResetSymbol( Ring.GetSymbolNumFromChevron( GetChevronOrderOnGateFromChevronIndex( Chevrons.IndexOf( c ) + 1 ) ), true );
-		}
-	}
-
 	public static void DrawGizmos( EditorContext context )
 	{
 		Gizmo.Draw.Model( "models/sbox_stargate/sg_peg/sg_peg_ring.vmdl" );

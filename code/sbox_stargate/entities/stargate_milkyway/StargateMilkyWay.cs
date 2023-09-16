@@ -811,37 +811,135 @@ public partial class StargateMilkyWay : Stargate
 		}
 	}
 
-	public override void DoDHDChevronUnlock( char sym )
+	public async override Task<bool> DoManualChevronEncode( char sym )
 	{
-		base.DoDHDChevronUnlock( sym );
+		if ( !await base.DoManualChevronEncode( sym ) )
+			return false;
 
-		var chev = EncodedChevronsOrdered.Last();
-		EncodedChevronsOrdered.Remove( chev );
+		IsManualDialInProgress = true;
+
+		var chevNum = DialingAddress.Length + 1;
+
+		// try to encode each symbol
+		var movieOffset = -ChevronAngles[Chevrons.IndexOf( GetChevronBasedOnAddressLength( chevNum, chevNum ) )];
+
+		var offset = MovieDialingType ? movieOffset : 0;
+		CurRingSymbolOffset = -offset;
+
+		var success = await RotateRingToSymbol( sym, offset ); // wait for ring to rotate to the target symbol
+		if ( !success || ShouldStopDialing )
+		{
+			StopDialing();
+			return false;
+		}
+
+		await GameTask.DelaySeconds( MovieDialingType ? 0.15f : 0.65f ); // wait a bit
+
+		// go do chevron stuff
+		var chev = GetChevronBasedOnAddressLength( chevNum, chevNum );
+		var topChev = GetChevron( 7 );
 
 		if ( MovieDialingType )
 		{
-			ChevronAnimUnlock( chev, 0, true );
+			ChevronAnimLockUnlock( chev, ChevronLightup, true );
 		}
 		else
 		{
-			ChevronDeactivate( chev, 0, true );
+			ChevronAnimLockUnlock( topChev, ChevronLightup );
+			if ( ChevronLightup ) chev.TurnOn( 0.5f );
 		}
+
+		DialingAddress += sym;
+		ActiveChevrons++;
+
+		Event.Run( StargateEvent.ChevronEncoded, this, chevNum );
+
+		IsManualDialInProgress = false;
+
+		return true;
 	}
 
-	//public override bool OnUse( Entity user )
-	//{
+	public async override Task<bool> DoManualChevronLock( char sym )
+	{
+		if ( !await base.DoManualChevronLock( sym ) )
+			return false;
 
-	//	if ( Ring.IsMoving )
-	//	{
-	//		Ring.StopMoving();
-	//	}
-	//	else
-	//	{
-	//		Ring.StartMoving();
-	//	}
+		IsManualDialInProgress = true;
 
-	//	return false; // aka SIMPLE_USE, not continuously
-	//}
+		var chevNum = DialingAddress.Length + 1;
+
+		// try to encode each symbol
+		var movieOffset = -ChevronAngles[Chevrons.IndexOf( GetChevronBasedOnAddressLength( chevNum, chevNum ) )];
+
+		var offset = MovieDialingType ? movieOffset : 0;
+		CurRingSymbolOffset = -offset;
+
+		var success = await RotateRingToSymbol( sym, offset ); // wait for ring to rotate to the target symbol
+		if ( !success || ShouldStopDialing )
+		{
+			StopDialing();
+			return false;
+		}
+
+		await GameTask.DelaySeconds( MovieDialingType ? 0.15f : 0.65f ); // wait a bit
+
+		var target = FindDestinationGateByDialingAddress( this, DialingAddress + sym ); // last chevron, so try to find the target gate
+
+		// go do chevron stuff
+		var topChev = GetChevron( 7 );
+
+		var valid = target.IsValid() && target != this && target.IsStargateReadyForInboundInstantSlow();
+		if ( MovieDialingType )
+		{
+			ChevronAnimLockAll( chevNum, 0, ChevronLightup );
+		}
+		else
+		{
+			ChevronAnimLockUnlock( topChev, valid && ChevronLightup, true );
+		}
+
+		DialingAddress += sym;
+		ActiveChevrons++;
+
+		IsLocked = true;
+		IsLockedInvalid = !valid;
+
+		Event.Run( StargateEvent.ChevronLocked, this, chevNum, valid );
+
+		await GameTask.DelaySeconds( 0.75f );
+
+		BeginManualOpen( DialingAddress );
+
+		return true;
+	}
+
+	public async override void BeginManualOpen( string address )
+	{
+		try
+		{
+			var otherGate = FindDestinationGateByDialingAddress( this, address );
+			if ( otherGate.IsValid() && otherGate != this && otherGate.IsStargateReadyForInboundInstantSlow() )
+			{
+				otherGate.BeginInboundSlow( address.Length );
+				IsManualDialInProgress = false;
+
+				await GameTask.DelaySeconds( 0.5f );
+
+				EstablishWormholeTo( otherGate );
+			}
+			else
+			{
+				await GameTask.DelaySeconds( 0.75f );
+
+				StopDialing();
+				return;
+			}
+		}
+		catch ( Exception )
+		{
+			if ( this.IsValid() ) StopDialing();
+		}
+	}
 
 	public static void DrawGizmos( EditorContext context )
 	{

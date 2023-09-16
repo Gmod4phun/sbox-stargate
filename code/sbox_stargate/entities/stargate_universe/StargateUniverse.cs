@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Editor;
@@ -181,10 +182,12 @@ public partial class StargateUniverse : Stargate
 	}
 
 
-	public void DoPreRoll()
+	public async Task DoPreRoll()
 	{
 		SetChevronsGlowState( true, 0.2f );
 		PlaySound( this, GetSound( "gate_activate" ) );
+
+		await GameTask.DelaySeconds( 1.5f );
 	}
 
 	public bool IsGateUpright(float tolerance = 1f)
@@ -361,9 +364,9 @@ public partial class StargateUniverse : Stargate
 			if ( ShouldStopDialing || !Dialing )
 				return;
 
-			DoPreRoll();
+			await DoPreRoll();
 
-			await GameTask.DelaySeconds( 1.5f );
+			//await GameTask.DelaySeconds( 1.5f );
 
 			Stargate target = null;
 			var readyForOpen = false;
@@ -597,13 +600,134 @@ public partial class StargateUniverse : Stargate
 		AddTask( Time.Now + 0.25f, () => SymbolOn( sym ), TimedTaskCategory.DIALING );
 	}
 
-	public override void DoDHDChevronUnlock( char sym )
+	public async override Task<bool> DoManualChevronEncode( char sym )
 	{
-		base.DoDHDChevronUnlock( sym );
+		if ( !await base.DoManualChevronEncode( sym ) )
+			return false;
 
-		SymbolOff( sym );
+		IsManualDialInProgress = true;
 
-		if ( DialingAddress.Length == 0 ) DoStargateReset();
+		var chevNum = DialingAddress.Length + 1;
+
+		if (chevNum == 1)
+		{
+			await DoPreRoll();
+		}
+
+		Log.Info( $"manual chev encode for sym {sym}, chevNum {chevNum}" );
+
+		var success = await RotateRingToSymbol( sym ); // wait for ring to rotate to the target symbol
+		if ( !success || ShouldStopDialing )
+		{
+			StopDialing();
+			return false;
+		}
+
+		void symbolAction()
+		{
+			SymbolOn( sym );
+			Bearing?.TurnOn( 0.1f );
+
+			CurDialingSymbol = sym;
+
+			DialingAddress += sym;
+			ActiveChevrons++;
+
+			Bearing?.TurnOff( 0.6f );
+			Event.Run( StargateEvent.ChevronEncoded, this, chevNum );
+		}
+
+		AddTask( Time.Now + 0.65f, symbolAction, TimedTaskCategory.DIALING );
+
+		await GameTask.DelaySeconds( 1.25f );
+
+		IsManualDialInProgress = false;
+
+		return true;
+	}
+
+	public async override Task<bool> DoManualChevronLock( char sym )
+	{
+		if ( !await base.DoManualChevronLock( sym ) )
+			return false;
+
+		IsManualDialInProgress = true;
+
+		var chevNum = DialingAddress.Length + 1;
+
+		var success = await RotateRingToSymbol( sym ); // wait for ring to rotate to the target symbol
+		if ( !success || ShouldStopDialing )
+		{
+			StopDialing();
+			return false;
+		}
+
+		bool gateValidCheck( bool noBeginInbound = false )
+		{
+			var target = FindDestinationGateByDialingAddress( this, DialingAddress ); // if its last chevron, try to find the target gate
+			if ( target.IsValid() && target != this && target.IsStargateReadyForInboundInstantSlow() )
+			{
+				if ( !noBeginInbound )
+					target.BeginInboundSlow( DialingAddress.Length );
+
+				return true;
+			}
+
+			return false;
+		}
+
+		void symbolAction()
+		{
+			SymbolOn( sym );
+			Bearing?.TurnOn( 0.1f );
+
+			CurDialingSymbol = sym;
+
+			DialingAddress += sym;
+			ActiveChevrons++;
+
+			var isValid = gateValidCheck( true );
+
+			IsLocked = true;
+			IsLockedInvalid = !isValid;
+
+			Event.Run( StargateEvent.ChevronLocked, this, DialingAddress.Length, isValid );
+		}
+
+		AddTask( Time.Now + 0.65f, symbolAction, TimedTaskCategory.DIALING );
+
+		await GameTask.DelaySeconds( 1.25f );
+
+		IsManualDialInProgress = false;
+
+		BeginManualOpen( DialingAddress );
+
+		return true;
+	}
+
+	public async override void BeginManualOpen( string address )
+	{
+		try
+		{
+			var otherGate = FindDestinationGateByDialingAddress( this, address );
+			if ( otherGate.IsValid() && otherGate != this && otherGate.IsStargateReadyForInboundInstantSlow() )
+			{
+				otherGate.BeginInboundSlow( address.Length );
+			}
+			else
+			{
+				StopDialing();
+				return;
+			}
+
+			await GameTask.DelaySeconds( 0.5f );
+
+			EstablishWormholeTo( otherGate );
+		}
+		catch ( Exception )
+		{
+			if ( this.IsValid() ) StopDialing();
+		}
 	}
 
 	public static void DrawGizmos( EditorContext context )
