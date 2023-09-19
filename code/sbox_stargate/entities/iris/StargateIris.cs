@@ -4,7 +4,7 @@ using Sandbox;
 public partial class StargateIris : AnimatedEntity
 {
 	[Net] public Stargate Gate { get; set; } = null;
-	[Net] public bool Closed { get; private set; } = false;
+	[Net] public bool Closed { get; internal set; } = false;
 	public bool Busy = false;
 
 	private float OpenCloseDleay = 3f;

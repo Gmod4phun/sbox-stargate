@@ -17,7 +17,7 @@ public partial class SGCComputer : ModelEntity, IUse
 	public Stargate Gate { get; set; } = null;
 
 	[Net]
-	public IList<SGCMonitor> Monitors { get; private set; } = new();
+	public IList<SGCMonitor> Monitors { get; private set; } = new List<SGCMonitor>();
 
 	private Sound AlarmSound;
 

@@ -45,9 +45,9 @@ public partial class EventHorizon : AnimatedEntity
 	TimeSince lastSoundTime = 0;
 
 	[Net]
-	private IList<Entity> BufferFront { get; set; } = new();
+	private IList<Entity> BufferFront { get; set; } = new List<Entity>();
 	[Net]
-	private IList<Entity> BufferBack { get; set; } = new();
+	private IList<Entity> BufferBack { get; set; } = new List<Entity>();
 
 	public List<Entity> InTransitPlayers { get; set; } = new();
 

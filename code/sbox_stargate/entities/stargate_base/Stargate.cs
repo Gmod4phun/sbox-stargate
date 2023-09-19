@@ -163,7 +163,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	[Net] public Vector3 SpawnOffset { get; private set; } = new( 0, 0, 95 );
 
 	[Net]
-	public IList<Chevron> Chevrons { get; set; } = new();
+	public IList<Chevron> Chevrons { get; set; } = new List<Chevron>();
 
 	[Net]
 	public EventHorizon EventHorizon { get; private set; } = null;
