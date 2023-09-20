@@ -1,6 +1,5 @@
 ﻿using Sandbox;
 using Sandbox.UI;
-using System;
 
 public class StargateGameMenuModel : Panel
 {
@@ -17,10 +16,7 @@ public class StargateGameMenuModel : Panel
 		Style.AlignContent = Align.Center;
 		Style.Padding = 0;
 
-		var world = new SceneWorld()
-		{
-			ClearColor = Color.Black
-		};
+		var world = new SceneWorld() { ClearColor = Color.Black };
 
 		scenePanel = new ScenePanel();
 		scenePanel.World = world;
@@ -48,7 +44,7 @@ public class StargateGameMenuModel : Panel
 		GateModel.Batchable = false;
 		RingModel.Batchable = false;
 
-		for (var i = 0; i < 9; i++)
+		for ( var i = 0; i < 9; i++ )
 		{
 			var t = Transform.Zero;
 			t.Rotation = t.Rotation.RotateAroundAxis( Vector3.Forward, 40 * i + GateModel.Rotation.Roll() );
@@ -62,7 +58,6 @@ public class StargateGameMenuModel : Panel
 		//scenePanel.Camera.Position = GateModel.Position - GateModel.Rotation.Forward * 512;
 		//scenePanel.Camera.Rotation = GateModel.Rotation; //.RotateAroundAxis( Vector3.Right, -90f );
 
-
 		new SceneLight( world, Vector3.Forward * 128, 512, Color.White * 2.0f );
 		//new SceneLight( world, Vector3.Forward * 64 - Vector3.Up * 256, 1024, Color.Red * 5.0f );
 		//new SceneLight( world, Vector3.Forward * 64 - Vector3.Up * 128 - Vector3.Right * 128, 1024, Color.Green * 5.0f );
@@ -74,7 +69,6 @@ public class StargateGameMenuModel : Panel
 		base.Tick();
 
 		RingModel.Rotation = GateModel.Rotation.RotateAroundAxis( Vector3.Forward, Time.Now * -16 );
-
 
 		var distFromCenter = 90;
 		scenePanel.Camera.Position = Vector3.Forward * 256 + Vector3.Up * distFromCenter + Vector3.Right * distFromCenter;
@@ -91,5 +85,4 @@ public class StargateGameMenuModel : Panel
 		GateModel.Update( Time.Delta );
 		RingModel.Update( Time.Delta );
 	}
-
 }

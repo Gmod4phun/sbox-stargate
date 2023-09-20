@@ -1,18 +1,18 @@
 ﻿using Sandbox;
-using System.Linq;
 
 [Spawnable]
 [Library( "weapon_stargate_noxhands", Title = "Nox Hands", Description = "Instant dialling of the gate, without kawoosh effect.", Group = "Stargate.Weapons" )]
 public partial class StargateNoxHands : Weapon
 {
-	//later add a hand model
-	//public override string ViewModelPath => "hand model";
-	public override float PrimaryRate => 1.0f;
-	public override float SecondaryRate => 1.0f;
 	/// <summary>
 	/// in the future when all settings are globalized, there is this value so that the gate opening distance can be adjusted.
 	/// </summary>
 	public static float MaxDistance = 1500;
+
+	//later add a hand model
+	//public override string ViewModelPath => "hand model";
+	public override float PrimaryRate => 1.0f;
+	public override float SecondaryRate => 1.0f;
 
 	public override void Spawn()
 	{
@@ -31,7 +31,6 @@ public partial class StargateNoxHands : Weapon
 
 		var gate = Stargate.FindClosestGate( Owner.Position, MaxDistance );
 		gate?.OpenStargateMenu();
-
 	}
 
 	public override void AttackSecondary()

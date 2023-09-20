@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Net.NetworkInformation;
-using System.Text;
 using System.Threading.Tasks;
 using Sandbox;
 
 public partial class StargateRingPegasus : ModelEntity
 {
+	private Sound? RollSound = null;
 	// ring variables
 
 	[Net]
@@ -20,9 +17,6 @@ public partial class StargateRingPegasus : ModelEntity
 	public List<ModelEntity> SymbolParts { get; private set; } = new();
 
 	public List<int> DialSequenceActiveSymbols { get; private set; } = new();
-
-	private Sound? RollSound = null;
-
 
 	public override void Spawn()
 	{
@@ -40,7 +34,7 @@ public partial class StargateRingPegasus : ModelEntity
 	// create symbols
 	// symbol models
 
-	public void AddSymbolPart(string name)
+	public void AddSymbolPart( string name )
 	{
 		var part = new ModelEntity( name );
 		part.Position = Position;
@@ -58,29 +52,19 @@ public partial class StargateRingPegasus : ModelEntity
 		AddSymbolPart( "models/sbox_stargate/sg_peg/sg_peg_glyphs_19_36.vmdl" );
 	}
 
-	protected override void OnDestroy()
-	{
-		foreach (var part in SymbolParts)
-		{
-			if ( Game.IsServer && part.IsValid() ) part.Delete();
-		}
-
-		base.OnDestroy();
-	}
-
-	public int GetSymbolNum(int num)
+	public int GetSymbolNum( int num )
 	{
 		return num.UnsignedMod( 36 );
 	}
 
-	public int GetSymbolNumFromChevron(int chevNum)
+	public int GetSymbolNumFromChevron( int chevNum )
 	{
-		return GetSymbolNum((4 * chevNum) - 1);
+		return GetSymbolNum( (4 * chevNum) - 1 );
 	}
 
-	public async void SetSymbolState(int num, bool state, float delay = 0)
+	public async void SetSymbolState( int num, bool state, float delay = 0 )
 	{
-		if (delay > 0)
+		if ( delay > 0 )
 		{
 			await GameTask.DelaySeconds( delay );
 			if ( !this.IsValid() ) return;
@@ -91,7 +75,7 @@ public partial class StargateRingPegasus : ModelEntity
 		SymbolParts[isPart1 ? 0 : 1].SetBodyGroup( (isPart1 ? num : num - 18), state ? 1 : 0 );
 	}
 
-	public async void SetRingState(bool state, float delay = 0)
+	public async void SetRingState( bool state, float delay = 0 )
 	{
 		if ( delay > 0 )
 		{
@@ -99,10 +83,10 @@ public partial class StargateRingPegasus : ModelEntity
 			if ( !this.IsValid() ) return;
 		}
 
-		SetBodyGroup(1, state ? 1 : 0);
+		SetBodyGroup( 1, state ? 1 : 0 );
 	}
 
-	public void RollSymbol(int start, int count, bool counterclockwise = false, float time = 2.0f)
+	public void RollSymbol( int start, int count, bool counterclockwise = false, float time = 2.0f )
 	{
 		if ( start < 0 || start > 35 ) return;
 
@@ -135,12 +119,12 @@ public partial class StargateRingPegasus : ModelEntity
 				Gate.AddTask( taskTime, rollSym, Stargate.TimedTaskCategory.DIALING );
 			}
 		}
-		catch (Exception) { }
+		catch ( Exception ) { }
 	}
 
-	public void ResetSymbols(bool clearDialActive = true)
+	public void ResetSymbols( bool clearDialActive = true )
 	{
-		for ( int i = 0; i <= 35; i++ )	SetSymbolState( i, false );
+		for ( int i = 0; i <= 35; i++ ) SetSymbolState( i, false );
 		if ( clearDialActive ) DialSequenceActiveSymbols.Clear();
 	}
 
@@ -156,7 +140,7 @@ public partial class StargateRingPegasus : ModelEntity
 		for ( int i = 0; i <= 35; i++ ) SetSymbolState( i, true );
 	}
 
-	public void PlayRollSound(bool fast = false)
+	public void PlayRollSound( bool fast = false )
 	{
 		StopRollSound();
 		RollSound = PlaySound( Gate.GetSound( fast ? "gate_roll_fast" : "gate_roll_slow" ) );
@@ -180,7 +164,18 @@ public partial class StargateRingPegasus : ModelEntity
 				SetSymbolState( 0, true );
 			}
 
-			var pegasusSymbolChevrons = new Dictionary<int, int>() { { 3, 1 }, { 7, 2 }, { 11, 3 }, { 15, 8 }, { 19, 9 }, { 23, 4 }, { 27, 5 }, { 31, 6 }, { 35, 7 } };
+			var pegasusSymbolChevrons = new Dictionary<int, int>()
+			{
+				{ 3, 1 },
+				{ 7, 2 },
+				{ 11, 3 },
+				{ 15, 8 },
+				{ 19, 9 },
+				{ 23, 4 },
+				{ 27, 5 },
+				{ 31, 6 },
+				{ 35, 7 }
+			};
 
 			var delay = time / 35f;
 			for ( int i = 0; i <= 35; i++ )
@@ -201,7 +196,6 @@ public partial class StargateRingPegasus : ModelEntity
 					}
 				}
 			}
-
 		}
 		catch ( Exception ) { }
 	}
@@ -211,7 +205,7 @@ public partial class StargateRingPegasus : ModelEntity
 		for ( int i = 0; i <= 35; i++ ) SetSymbolState( i, true );
 	}
 
-	public async Task<bool> RollSymbolSlow( char symbol, int chevNum, bool isLast=false )
+	public async Task<bool> RollSymbolSlow( char symbol, int chevNum, bool isLast = false )
 	{
 		try
 		{
@@ -223,7 +217,7 @@ public partial class StargateRingPegasus : ModelEntity
 
 			//var data = (chevNum == 9) ? dataSymbols9 : ((chevNum == 8) ? dataSymbols8 : dataSymbols7);
 			var data = dataSymbols7;
-			if (chevNum == 8 || chevNum == 7 && !isLast)
+			if ( chevNum == 8 || chevNum == 7 && !isLast )
 			{
 				data = dataSymbols8;
 			}
@@ -349,6 +343,7 @@ public partial class StargateRingPegasus : ModelEntity
 						Event.Run( StargateEvent.ChevronLocked, Gate, i_copy + 1, isValid );
 					}
 				}
+
 				Gate.AddTask( chevTaskTime, chevTask, Stargate.TimedTaskCategory.DIALING );
 			}
 		}
@@ -371,9 +366,39 @@ public partial class StargateRingPegasus : ModelEntity
 			var symRollTime = 5f / chevCount;
 			var delayBetweenSymbols = 1.5f / (chevCount - 1);
 
-			var dataSymbols7 = new List<int>() { 27, 19, 35, 35, 15, 7, 23 };
-			var dataSymbols8 = new List<int>() { 27, 19, 35, 35, 15, 7, 3, 11 };
-			var dataSymbols9 = new List<int>() { 27, 19, 35, 35, 15, 7, 3, 31, 23 };
+			var dataSymbols7 = new List<int>()
+			{
+				27,
+				19,
+				35,
+				35,
+				15,
+				7,
+				23
+			};
+			var dataSymbols8 = new List<int>()
+			{
+				27,
+				19,
+				35,
+				35,
+				15,
+				7,
+				3,
+				11
+			};
+			var dataSymbols9 = new List<int>()
+			{
+				27,
+				19,
+				35,
+				35,
+				15,
+				7,
+				3,
+				31,
+				23
+			};
 
 			var data = (chevCount == 9) ? dataSymbols9 : ((chevCount == 8) ? dataSymbols8 : dataSymbols7);
 
@@ -386,13 +411,13 @@ public partial class StargateRingPegasus : ModelEntity
 				Gate.AddTask( symTaskTime, () => RollSymbol( data[i_copy], 12, i_copy % 2 == 1, symRollTime ), Stargate.TimedTaskCategory.DIALING );
 
 				var chevTaskTime = startTime + (symRollTime + delayBetweenSymbols) * (i_copy + 1) - delayBetweenSymbols;
-				Gate.AddTask( chevTaskTime, () => {
-
+				Gate.AddTask( chevTaskTime, () =>
+				{
 					Gate.CurDialingSymbol = address[i_copy];
 
 					var isLastChev = i_copy == chevCount - 1;
 					Gate.ChevronActivate( Gate.GetChevronBasedOnAddressLength( i_copy + 1, chevCount ), 0, isLastChev ? validCheck() : true, isLastChev );
-					if (!isLastChev)
+					if ( !isLastChev )
 					{
 						Event.Run( StargateEvent.ChevronEncoded, Gate, i_copy + 1 );
 					}
@@ -403,7 +428,6 @@ public partial class StargateRingPegasus : ModelEntity
 
 						Event.Run( StargateEvent.ChevronLocked, Gate, i_copy + 1, validCheck() );
 					}
-					
 				}, Stargate.TimedTaskCategory.DIALING );
 			}
 		}
@@ -416,9 +440,39 @@ public partial class StargateRingPegasus : ModelEntity
 		{
 			SetRingState( false );
 
-			var dataSymbols7 = new List<int>() { 27, 19, 35, 35, 15, 7, 23 };
-			var dataSymbols8 = new List<int>() { 27, 19, 35, 35, 15, 7, 3, 11 };
-			var dataSymbols9 = new List<int>() { 27, 19, 35, 35, 15, 7, 3, 31, 23 };
+			var dataSymbols7 = new List<int>()
+			{
+				27,
+				19,
+				35,
+				35,
+				15,
+				7,
+				23
+			};
+			var dataSymbols8 = new List<int>()
+			{
+				27,
+				19,
+				35,
+				35,
+				15,
+				7,
+				3,
+				11
+			};
+			var dataSymbols9 = new List<int>()
+			{
+				27,
+				19,
+				35,
+				35,
+				15,
+				7,
+				3,
+				31,
+				23
+			};
 
 			var data = (chevCount == 9) ? dataSymbols9 : ((chevCount == 8) ? dataSymbols8 : dataSymbols7);
 
@@ -443,7 +497,7 @@ public partial class StargateRingPegasus : ModelEntity
 		var ang = Rotation.Angles();
 		for ( int i = 0; i < 36; i++ )
 		{
-			var rotAng = ang.WithRoll( ang.roll - (i * deg) - deg);
+			var rotAng = ang.WithRoll( ang.roll - (i * deg) - deg );
 			var newRot = rotAng.ToRotation();
 			var pos = Position + newRot.Forward * 4 + newRot.Up * 117.5f;
 			DebugOverlay.Text( i.ToString(), pos, Color.Yellow );
@@ -456,4 +510,13 @@ public partial class StargateRingPegasus : ModelEntity
 		//DrawSymbols();
 	}
 
+	protected override void OnDestroy()
+	{
+		foreach ( var part in SymbolParts )
+		{
+			if ( Game.IsServer && part.IsValid() ) part.Delete();
+		}
+
+		base.OnDestroy();
+	}
 }

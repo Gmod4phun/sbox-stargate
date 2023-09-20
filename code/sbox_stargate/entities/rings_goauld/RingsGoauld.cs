@@ -1,4 +1,3 @@
-using System.Linq;
 using Editor;
 using Sandbox;
 
@@ -18,6 +17,6 @@ public partial class RingsGoauld : Rings
 		PhysicsBody.BodyType = PhysicsBodyType.Static;
 	}
 
-	protected override void HideBase() {}
-	protected override void ShowBase() {}
+	protected override void HideBase() { }
+	protected override void ShowBase() { }
 }

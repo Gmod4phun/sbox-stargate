@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 using Sandbox;
 
 public partial class StargateRingUniverse : StargateRingMilkyWay
 {
-	// ring variables
-
-	public List<ModelEntity> SymbolParts { get; private set; } = new();
-
 	public StargateRingUniverse()
 	{
 		StopSoundOnSpinDown = false;
@@ -26,6 +19,9 @@ public partial class StargateRingUniverse : StargateRingMilkyWay
 		RingAngToRotate = 270f;
 		RingTargetAngleOffset = 1f;
 	}
+	// ring variables
+
+	public List<ModelEntity> SymbolParts { get; private set; } = new();
 
 	public override void Spawn()
 	{
@@ -59,22 +55,12 @@ public partial class StargateRingUniverse : StargateRingMilkyWay
 		AddSymbolPart( "models/sbox_stargate/gate_universe/gate_universe_symbols_19_36.vmdl" );
 	}
 
-	protected override void OnDestroy()
-	{
-		foreach ( var part in SymbolParts )
-		{
-			if ( Game.IsServer && part.IsValid() ) part.Delete();
-		}
-
-		base.OnDestroy();
-	}
-
 	public override float GetSymbolAngle( char sym )
 	{
 		return sym == ' ' ? 0 : base.GetSymbolAngle( sym );
 	}
 
-	public int GetSymbolNumber(char sym)
+	public int GetSymbolNumber( char sym )
 	{
 		if ( !RingSymbols.Contains( sym ) ) return -1;
 
@@ -102,7 +88,7 @@ public partial class StargateRingUniverse : StargateRingMilkyWay
 	public void SetSymbolState( char sym, bool state )
 	{
 		var symNum = GetSymbolNumber( sym );
-		if (symNum >= 0) SetSymbolState( symNum, state );
+		if ( symNum >= 0 ) SetSymbolState( symNum, state );
 	}
 
 	public void ResetSymbols()
@@ -110,4 +96,13 @@ public partial class StargateRingUniverse : StargateRingMilkyWay
 		for ( int i = 0; i <= 35; i++ ) SetSymbolState( i, false );
 	}
 
+	protected override void OnDestroy()
+	{
+		foreach ( var part in SymbolParts )
+		{
+			if ( Game.IsServer && part.IsValid() ) part.Delete();
+		}
+
+		base.OnDestroy();
+	}
 }

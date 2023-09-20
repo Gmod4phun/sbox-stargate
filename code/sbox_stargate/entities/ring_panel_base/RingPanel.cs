@@ -4,12 +4,12 @@ using Sandbox;
 [Category( "Transportation Rings" )]
 public partial class RingPanel : Prop
 {
-	public Dictionary<string, RingPanelButton> Buttons { get; protected set; } = new();
-
-	protected string ComposedAddress { get; private set; } = "";
 	protected TimeSince TimeSinceButtonPressed = 0;
 	protected float ButtonPressDelay = 0.35f;
 	protected float ButtonGlowDelay = 0.2f;
+	public Dictionary<string, RingPanelButton> Buttons { get; protected set; } = new();
+
+	protected string ComposedAddress { get; private set; } = "";
 
 	protected virtual string[] ButtonsSounds { get; } = { "goauld_button1", "goauld_button2" };
 	protected virtual string ValidButtonActions { get; } = "12345678";
@@ -28,16 +28,6 @@ public partial class RingPanel : Prop
 	{
 		var b = GetButtonByAction( action );
 		SetButtonState( b, glowing );
-	}
-
-	protected async void ToggleButton( string action )
-	{
-		SetButtonState( action, true );
-		PlaySound( action is not "DIAL" ? ButtonsSounds[1] : ButtonsSounds[0] );
-
-		await GameTask.DelaySeconds( ButtonGlowDelay );
-
-		SetButtonState( action, false );
 	}
 
 	public void ResetAddress()
@@ -66,7 +56,6 @@ public partial class RingPanel : Prop
 						ResetAddress();
 					}
 				}
-
 			}
 			else // we pressed number action button
 			{
@@ -93,4 +82,13 @@ public partial class RingPanel : Prop
 		ButtonResetThink();
 	}
 
+	protected async void ToggleButton( string action )
+	{
+		SetButtonState( action, true );
+		PlaySound( action is not "DIAL" ? ButtonsSounds[1] : ButtonsSounds[0] );
+
+		await GameTask.DelaySeconds( ButtonGlowDelay );
+
+		SetButtonState( action, false );
+	}
 }

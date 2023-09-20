@@ -6,17 +6,6 @@
 		PreviewEntity previewModel;
 		private string Model => "models/sbox_stargate/universe_bearing/universe_bearing.vmdl";
 
-		protected override bool IsPreviewTraceValid( TraceResult tr )
-		{
-			if ( !base.IsPreviewTraceValid( tr ) )
-				return false;
-
-			if ( tr.Entity is StargateUniverse )
-				return false;
-
-			return true;
-		}
-
 		public override void CreatePreviews()
 		{
 			if ( TryCreatePreview( ref previewModel, Model ) )
@@ -28,7 +17,6 @@
 					previewModel.PositionOffset = new Vector3( 0, 0, 90 );
 					previewModel.RotationOffset = new Angles( 0, Owner.EyeRotation.Angles().yaw + 180, 0 ).ToRotation();
 				}
-
 			}
 		}
 
@@ -89,8 +77,18 @@
 						CreateHitEffects( tr.EndPosition );
 					}
 				}
-
 			}
+		}
+
+		protected override bool IsPreviewTraceValid( TraceResult tr )
+		{
+			if ( !base.IsPreviewTraceValid( tr ) )
+				return false;
+
+			if ( tr.Entity is StargateUniverse )
+				return false;
+
+			return true;
 		}
 	}
 }

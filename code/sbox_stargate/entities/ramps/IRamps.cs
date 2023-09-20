@@ -4,14 +4,11 @@ using Sandbox;
 
 public interface IStargateRamp
 {
-
 	int AmountOfGates { get; }
 	Vector3[] StargatePositionOffset { get; }
 	Angles[] StargateRotationOffset { get; }
 
 	List<Stargate> Gate { get; set; }
-
-	public bool IsGateSlotFree() => Gate.Count < AmountOfGates;
 
 	public static IStargateRamp GetClosest( Vector3 position, float max = -1f )
 	{
@@ -36,6 +33,8 @@ public interface IStargateRamp
 
 		return ramp;
 	}
+
+	public bool IsGateSlotFree() => Gate.Count < AmountOfGates;
 }
 
 public interface IRingsRamp

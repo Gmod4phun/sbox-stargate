@@ -6,17 +6,6 @@
 		PreviewEntity previewModel;
 		private string Model => "models/sbox_stargate/iris/iris.vmdl";
 
-		protected override bool IsPreviewTraceValid( TraceResult tr )
-		{
-			if ( !base.IsPreviewTraceValid( tr ) )
-				return false;
-
-			if ( tr.Entity is Stargate )
-				return false;
-
-			return true;
-		}
-
 		public override void CreatePreviews()
 		{
 			if ( TryCreatePreview( ref previewModel, Model ) )
@@ -28,7 +17,6 @@
 					previewModel.PositionOffset = new Vector3( 0, 0, 90 );
 					previewModel.RotationOffset = new Angles( 0, Owner.EyeRotation.Angles().yaw + 180, 0 ).ToRotation();
 				}
-
 			}
 		}
 
@@ -84,13 +72,12 @@
 
 					if ( !tr.Hit || !tr.Entity.IsValid() ) return;
 
-					if ( tr.Entity is Stargate gate && gate.Iris.IsValid())
+					if ( tr.Entity is Stargate gate && gate.Iris.IsValid() )
 					{
 						gate.Iris.Toggle();
 						CreateHitEffects( tr.EndPosition );
 					}
 				}
-
 
 				if ( Input.Pressed( InputButton.SecondaryAttack ) )
 				{
@@ -106,8 +93,18 @@
 						CreateHitEffects( tr.EndPosition );
 					}
 				}
-
 			}
+		}
+
+		protected override bool IsPreviewTraceValid( TraceResult tr )
+		{
+			if ( !base.IsPreviewTraceValid( tr ) )
+				return false;
+
+			if ( tr.Entity is Stargate )
+				return false;
+
+			return true;
 		}
 	}
 }

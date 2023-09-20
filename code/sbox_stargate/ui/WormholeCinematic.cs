@@ -21,10 +21,7 @@ public class WormholeCinematic : Panel
 		Style.AlignContent = Align.Center;
 		Style.Padding = 0;
 
-		var world = new SceneWorld()
-		{
-			ClearColor = Color.Black
-		};
+		var world = new SceneWorld() { ClearColor = Color.Black };
 		scenePanel = new ScenePanel();
 		scenePanel.World = world;
 		scenePanel.Camera.FieldOfView = 90;
@@ -64,14 +61,14 @@ public class WormholeCinematic : Panel
 		var bone = WormholeModel.GetBoneWorldTransform( 1 );
 
 		scenePanel.Camera.Position = bone.Position;
-		scenePanel.Camera.Rotation = bone.Rotation.RotateAroundAxis(Vector3.Right, -90f);
+		scenePanel.Camera.Rotation = bone.Rotation.RotateAroundAxis( Vector3.Right, -90f );
 
-		if (sinceStarted.Relative >= 6.0f)
+		if ( sinceStarted.Relative >= 6.0f )
 		{
 			particleObj?.Simulate( RealTime.Delta );
 		}
 
-		if (Game.LocalPawn.Health <= 0)
+		if ( Game.LocalPawn.Health <= 0 )
 		{
 			WormholeSound.Stop();
 

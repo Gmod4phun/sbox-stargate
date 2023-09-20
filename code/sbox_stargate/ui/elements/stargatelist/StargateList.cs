@@ -5,17 +5,12 @@ using Sandbox.UI.Tests;
 using System.Collections.Generic;
 using System.Linq;
 
-[Library(Title = "Stargate Addon")]
+[Library( Title = "Stargate Addon" )]
 public partial class StargateList : Panel
 {
 	//VirtualScrollPanel Canvas;
 
-	private string[] categories = {
-		"Stargate",
-		"Rings",
-		"Weapons",
-		"Other"
-	};
+	private string[] categories = { "Stargate", "Rings", "Weapons", "Other" };
 
 	public StargateList()
 	{
@@ -25,9 +20,10 @@ public partial class StargateList : Panel
 
 		Dictionary<string, VirtualScrollPanel> CategoriesCanvas = new();
 
-		foreach (string cat in categories) {
-			Add.Label(cat, "category");
-			var can = AddChild<VirtualScrollPanel>("canvas");
+		foreach ( string cat in categories )
+		{
+			Add.Label( cat, "category" );
+			var can = AddChild<VirtualScrollPanel>( "canvas" );
 
 			can.Layout.AutoColumns = true;
 			//can.Layout.ItemSize = new Vector2( 120, 120 );
@@ -48,17 +44,20 @@ public partial class StargateList : Panel
 				btn.Style.BackgroundImage = Texture.Load( $"/entity/sbox_stargate/{entry.Name}.png", false );
 			};
 
-			CategoriesCanvas.Add(cat, can);
+			CategoriesCanvas.Add( cat, can );
 		}
 
-		var ents = TypeLibrary.GetTypes<Entity>().Where( x => x.HasTag( "spawnable" ) && x.Group != null && x.Group.StartsWith("Stargate") ).OrderBy( x => x.Title ).ToArray();
+		var ents = TypeLibrary.GetTypes<Entity>().Where( x => x.HasTag( "spawnable" ) && x.Group != null && x.Group.StartsWith( "Stargate" ) ).OrderBy( x => x.Title ).ToArray();
 
 		foreach ( var entry in ents )
 		{
-			var parse = entry.Group.Split("Stargate.");
-			if (parse.Length > 1 && CategoriesCanvas[parse[1]] != null) {
+			var parse = entry.Group.Split( "Stargate." );
+			if ( parse.Length > 1 && CategoriesCanvas[parse[1]] != null )
+			{
 				CategoriesCanvas[parse[1]].AddItem( entry );
-			} else {
+			}
+			else
+			{
 				CategoriesCanvas["Other"].AddItem( entry );
 			}
 

@@ -32,7 +32,7 @@ public partial class StargateSpawnList : Panel
 			}
 		};
 
-		var ents = TypeLibrary.GetTypes<Entity>().Where( x => x.HasTag( "spawnable" ) && x.Group != null && x.Group.StartsWith("Stargate") ).OrderBy( x => x.Title ).ToArray();
+		var ents = TypeLibrary.GetTypes<Entity>().Where( x => x.HasTag( "spawnable" ) && x.Group != null && x.Group.StartsWith( "Stargate" ) ).OrderBy( x => x.Title ).ToArray();
 
 		foreach ( var entry in ents )
 		{

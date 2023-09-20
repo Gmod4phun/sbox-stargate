@@ -1,20 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Sandbox;
-using Sandbox.Internal;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 public partial class EventHorizon : AnimatedEntity
 {
-	[Net]
-	public Stargate Gate { get; set; } = null;
+	private const float FastMovingVelocityThresholdSqr = 400 * 400; // entities with velocity lower than 400 shouldn't be handled
 
-	[Net]
-	public bool IsFullyFormed { get; set; } = false;
+	private static Dictionary<Entity, Vector3> EntityPositionsPrevious = new Dictionary<Entity, Vector3>();
+	private static Dictionary<Entity, TimeSince> EntityTimeSinceTeleported = new Dictionary<Entity, TimeSince>();
+
 	protected Sound WormholeLoop;
 
 	protected Entity CurrentTeleportingEntity;
@@ -44,24 +39,46 @@ public partial class EventHorizon : AnimatedEntity
 
 	TimeSince lastSoundTime = 0;
 
+	private EventHorizonTrigger FrontTrigger = null;
+	private EventHorizonTrigger BackTrigger = null;
+	private EventHorizonTrigger KawooshTrigger = null;
+
+	private EventHorizonCollider ColliderFloor = null;
+
+	private Particles Kawoosh;
+
+	private VideoPlayer EventHorizonVideo = new VideoPlayer();
+	private bool EventHorizonVideoInitialized = false;
+
 	[Net]
-	private IList<Entity> BufferFront { get; set; } = new List<Entity>();
+	public Stargate Gate { get; set; } = null;
+
 	[Net]
-	private IList<Entity> BufferBack { get; set; } = new List<Entity>();
+	public bool IsFullyFormed { get; set; } = false;
 
 	public List<Entity> InTransitPlayers { get; set; } = new();
 
 	[Net]
 	public int EventHorizonSkinGroup { get; set; } = 0;
 
-	private EventHorizonTrigger FrontTrigger = null;
-	private EventHorizonTrigger BackTrigger = null;
-	private EventHorizonTrigger KawooshTrigger = null;
+	[Net]
+	private IList<Entity> BufferFront { get; set; } = new List<Entity>();
+
+	[Net]
+	private IList<Entity> BufferBack { get; set; } = new List<Entity>();
 
 	private List<Entity> InTriggerFront { get; set; } = new();
 	private List<Entity> InTriggerBack { get; set; } = new();
 
-	private EventHorizonCollider ColliderFloor = null;
+	private Plane ClipPlaneFront
+	{
+		get => new Plane( Position - Camera.Position + Rotation.Forward * 0.75f, Rotation.Forward.Normal );
+	}
+
+	private Plane ClipPlaneBack
+	{
+		get => new Plane( Position - Camera.Position - Rotation.Forward * 0.75f, -Rotation.Forward.Normal );
+	}
 
 	public override void Spawn()
 	{
@@ -83,74 +100,15 @@ public partial class EventHorizon : AnimatedEntity
 		PostSpawn();
 	}
 
-	private async void PostSpawn()
-	{
-		await GameTask.NextPhysicsFrame();
-
-		FrontTrigger = new( this )
-		{
-			Position = Position + Rotation.Forward * 2,
-			Rotation = Rotation,
-			Parent = Gate
-		};
-
-		BackTrigger = new( this )
-		{
-			Position = Position - Rotation.Forward * 2,
-			Rotation = Rotation.RotateAroundAxis( Vector3.Up, 180 ),
-			Parent = Gate
-		};
-
-		ColliderFloor = new()
-		{
-			Position = Gate.Position,
-			Rotation = Gate.Rotation,
-			Parent = Gate
-		};
-	}
-
 	public async void CreateKawooshTrigger( float delay )
 	{
 		await GameTask.DelaySeconds( delay );
 
 		if ( !this.IsValid() ) return;
 
-		KawooshTrigger = new( this, "models/sbox_stargate/event_horizon/event_horizon_trigger_kawoosh.vmdl" )
-		{
-			Position = Position + Rotation.Forward * 2,
-			Rotation = Rotation,
-			Parent = Gate
-		};
+		KawooshTrigger = new(this, "models/sbox_stargate/event_horizon/event_horizon_trigger_kawoosh.vmdl") { Position = Position + Rotation.Forward * 2, Rotation = Rotation, Parent = Gate };
 
 		KawooshTrigger?.DeleteAsync( 2.2f );
-	}
-
-	[GameEvent.Physics.PostStep]
-	private void UpdateCollider()
-	{
-		foreach ( var eh in All.OfType<EventHorizon>().Where( x => x.Gate.IsValid() && x.ColliderFloor.IsValid() ) )
-		{
-			var startPos = eh.Position + eh.Rotation.Up * 110;
-			var endPos = eh.Position - eh.Rotation.Up * 110;
-			var tr = Trace.Ray( startPos, endPos ).WithTag( "world" ).Run();
-
-			var shouldUseCollider = tr.Hit && (Math.Abs( eh.Rotation.Angles().pitch )) < 15;
-
-			var collider = eh.ColliderFloor;
-			if (collider.PhysicsBody.IsValid())
-				collider.PhysicsBody.Enabled = shouldUseCollider;
-
-			if ( shouldUseCollider )
-			{
-				//DebugOverlay.TraceResult( tr );
-
-				collider.Position = tr.HitPosition;
-				collider.Rotation = Rotation.From( tr.Normal.EulerAngles )
-					.RotateAroundAxis( Vector3.Right, -90 )
-					.RotateAroundAxis( Vector3.Up, 90 )
-					.RotateAroundAxis(Vector3.Up, eh.Rotation.Angles().yaw - 90);
-			}
-		}
 	}
 
 	public virtual void SkinEventHorizon() { SetMaterialGroup( EventHorizonSkinGroup ); }
@@ -158,7 +116,7 @@ public partial class EventHorizon : AnimatedEntity
 
 	// SERVER CONTROL
 
-	public async void Establish(bool doKawoosh = true)
+	public async void Establish( bool doKawoosh = true )
 	{
 		EstablishClientAnim( To.Everyone ); // clientside animation stuff
 
@@ -185,7 +143,6 @@ public partial class EventHorizon : AnimatedEntity
 
 		WormholeLoop.Stop();
 	}
-
 
 	// UTILITY
 	public void PlayTeleportSound()
@@ -233,7 +190,7 @@ public partial class EventHorizon : AnimatedEntity
 
 	public bool IsCameraBehindEventHorizon()
 	{
-		if ( !this.IsValid()  ) return false;
+		if ( !this.IsValid() ) return false;
 
 		return (Camera.Position - Position).Dot( Rotation.Forward ) < 0;
 	}
@@ -268,8 +225,6 @@ public partial class EventHorizon : AnimatedEntity
 
 		SkinEventHorizon();
 	}
-
-	private Particles Kawoosh;
 
 	public async void CreateKawoosh()
 	{
@@ -382,32 +337,6 @@ public partial class EventHorizon : AnimatedEntity
 		(Game.LocalPawn as Player).ViewAngles = ang;
 	}
 
-	[ClientRpc]
-	private async void PlayWormholeCinematic()
-	{
-		// TODO: Find a way to call this when the EH is deleted before the cinematic end to not keep the player stuck in this
-		var panel = Game.RootPanel.AddChild<WormholeCinematic>();
-
-		await GameTask.DelayRealtimeSeconds( 7.07f );
-
-		panel.Delete( true );
-		OnPlayerEndWormhole( NetworkIdent );
-	}
-
-	[ConCmd.Server]
-	private static void OnPlayerEndWormhole( int netId )
-	{
-		var eh = FindByIndex<EventHorizon>( netId );
-		if ( !eh.IsValid() ) return;
-
-		var pawn = ConsoleSystem.Caller.Pawn as Entity;
-
-		var id = eh.InTransitPlayers.IndexOf( pawn );
-		if ( id == -1 ) return;
-
-		eh.InTransitPlayers.RemoveAt( id );
-	}
-
 	// TELEPORT
 	public void TeleportEntity( Entity ent )
 	{
@@ -510,7 +439,7 @@ public partial class EventHorizon : AnimatedEntity
 		if ( !fromBack && Gate.IsIrisClosed() ) // prevent shit accidentaly touching EH from front if our iris is closed
 			return;
 
-		foreach (var c in Stargate.GetSelfWithAllChildrenRecursive(ent))
+		foreach ( var c in Stargate.GetSelfWithAllChildrenRecursive( ent ) )
 		{
 			var mdl = c as ModelEntity;
 			if ( !mdl.IsValid() )
@@ -613,6 +542,7 @@ public partial class EventHorizon : AnimatedEntity
 			DissolveEntity( ent );
 		}
 	}
+
 	public void OnEntityTriggerEndTouch( EventHorizonTrigger trigger, Entity ent )
 	{
 		if ( !Stargate.IsAllowedForGateTeleport( ent ) ) return;
@@ -669,7 +599,7 @@ public partial class EventHorizon : AnimatedEntity
 		}
 	}
 
-	public bool ShouldTeleportInstantly(Entity ent)
+	public bool ShouldTeleportInstantly( Entity ent )
 	{
 		if ( ent is Player ) return true;
 		if ( ent is EnergyProjectile ) return true;
@@ -759,18 +689,6 @@ public partial class EventHorizon : AnimatedEntity
 		}
 	}
 
-	protected override void OnDestroy()
-	{
-		base.OnDestroy();
-
-		WormholeLoop.Stop();
-
-		FrontTrigger?.Delete();
-		BackTrigger?.Delete();
-		ColliderFloor?.Delete();
-		KawooshTrigger?.Delete();
-	}
-
 	[GameEvent.Tick.Server]
 	public void EventHorizonTick()
 	{
@@ -801,16 +719,6 @@ public partial class EventHorizon : AnimatedEntity
 		}
 	}
 
-	private Plane ClipPlaneFront
-	{
-		get => new Plane( Position - Camera.Position + Rotation.Forward * 0.75f, Rotation.Forward.Normal );
-	}
-
-	private Plane ClipPlaneBack
-	{
-		get => new Plane( Position - Camera.Position - Rotation.Forward * 0.75f, -Rotation.Forward.Normal );
-	}
-
 	[ClientRpc]
 	public void SetModelClippingForEntity( Entity ent, bool enabled, Plane p )
 	{
@@ -838,12 +746,9 @@ public partial class EventHorizon : AnimatedEntity
 		obj.ClipPlane = p;
 	}
 
-	private VideoPlayer EventHorizonVideo = new VideoPlayer();
-	private bool EventHorizonVideoInitialized = false;
-
 	public void UseVideoAsTexture()
 	{
-		if (!EventHorizonVideoInitialized )
+		if ( !EventHorizonVideoInitialized )
 		{
 			EventHorizonVideo.Play( FileSystem.Mounted, "videos/event_horizon/event_horizon_loop.mp4" );
 			EventHorizonVideo.Muted = true;
@@ -872,16 +777,30 @@ public partial class EventHorizon : AnimatedEntity
 		UseVideoAsTexture();
 	}
 
-	private static Dictionary<Entity, Vector3> EntityPositionsPrevious = new Dictionary<Entity, Vector3>();
-	private static Dictionary<Entity, TimeSince> EntityTimeSinceTeleported = new Dictionary<Entity, TimeSince>();
-	private const float FastMovingVelocityThresholdSqr = 400*400; // entities with velocity lower than 400 shouldn't be handled
-
-	private void SetEntLastTeleportTime(Entity ent, float lastTime)
+	protected override void OnDestroy()
 	{
-		if ( EntityTimeSinceTeleported.ContainsKey( ent ) )
-			EntityTimeSinceTeleported[ent] = lastTime;
-		else
-			EntityTimeSinceTeleported.Add( ent, lastTime );
+		base.OnDestroy();
+
+		WormholeLoop.Stop();
+
+		FrontTrigger?.Delete();
+		BackTrigger?.Delete();
+		ColliderFloor?.Delete();
+		KawooshTrigger?.Delete();
+	}
+
+	[ConCmd.Server]
+	private static void OnPlayerEndWormhole( int netId )
+	{
+		var eh = FindByIndex<EventHorizon>( netId );
+		if ( !eh.IsValid() ) return;
+
+		var pawn = ConsoleSystem.Caller.Pawn as Entity;
+
+		var id = eh.InTransitPlayers.IndexOf( pawn );
+		if ( id == -1 ) return;
+
+		eh.InTransitPlayers.RemoveAt( id );
 	}
 
 	[GameEvent.Physics.PostStep]
@@ -890,7 +809,7 @@ public partial class EventHorizon : AnimatedEntity
 		if ( !Game.IsServer )
 			return;
 
-		foreach ( var ent in All.OfType<ModelEntity>().Where( x => x is not Player && x is not Stargate && (x.Tags.Has( StargateTags.BeforeGate ) || x.Tags.Has( StargateTags.BehindGate ) ) && Stargate.IsAllowedForGateTeleport( x ) ) )
+		foreach ( var ent in All.OfType<ModelEntity>().Where( x => x is not Player && x is not Stargate && (x.Tags.Has( StargateTags.BeforeGate ) || x.Tags.Has( StargateTags.BehindGate )) && Stargate.IsAllowedForGateTeleport( x ) ) )
 		{
 			var shouldTeleport = true;
 
@@ -914,7 +833,7 @@ public partial class EventHorizon : AnimatedEntity
 					// trace between old and new position to check if we passed through the EH
 					var tr = Trace.Ray( oldPos, newPos ).WithTag( StargateTags.EventHorizon ).Run();
 
-					if (tr.Hit)
+					if ( tr.Hit )
 					{
 						TimeSince timeSinceTp = -1;
 						EntityTimeSinceTeleported.TryGetValue( ent, out timeSinceTp );
@@ -928,7 +847,7 @@ public partial class EventHorizon : AnimatedEntity
 							}
 
 							// at this point we should be fine to teleport
-							if (shouldTeleport)
+							if ( shouldTeleport )
 							{
 								var fromBack = Stargate.IsPointBehindEventHorizon( oldPos, eh.Gate );
 								var gate = eh.Gate;
@@ -965,6 +884,64 @@ public partial class EventHorizon : AnimatedEntity
 			else
 				EntityPositionsPrevious.TryAdd( ent, prevPos );
 		}
+	}
 
+	private async void PostSpawn()
+	{
+		await GameTask.NextPhysicsFrame();
+
+		FrontTrigger = new(this) { Position = Position + Rotation.Forward * 2, Rotation = Rotation, Parent = Gate };
+
+		BackTrigger = new(this) { Position = Position - Rotation.Forward * 2, Rotation = Rotation.RotateAroundAxis( Vector3.Up, 180 ), Parent = Gate };
+
+		ColliderFloor = new() { Position = Gate.Position, Rotation = Gate.Rotation, Parent = Gate };
+	}
+
+	[GameEvent.Physics.PostStep]
+	private void UpdateCollider()
+	{
+		foreach ( var eh in All.OfType<EventHorizon>().Where( x => x.Gate.IsValid() && x.ColliderFloor.IsValid() ) )
+		{
+			var startPos = eh.Position + eh.Rotation.Up * 110;
+			var endPos = eh.Position - eh.Rotation.Up * 110;
+			var tr = Trace.Ray( startPos, endPos ).WithTag( "world" ).Run();
+
+			var shouldUseCollider = tr.Hit && (Math.Abs( eh.Rotation.Angles().pitch )) < 15;
+
+			var collider = eh.ColliderFloor;
+			if ( collider.PhysicsBody.IsValid() )
+				collider.PhysicsBody.Enabled = shouldUseCollider;
+
+			if ( shouldUseCollider )
+			{
+				//DebugOverlay.TraceResult( tr );
+
+				collider.Position = tr.HitPosition;
+				collider.Rotation = Rotation.From( tr.Normal.EulerAngles )
+					.RotateAroundAxis( Vector3.Right, -90 )
+					.RotateAroundAxis( Vector3.Up, 90 )
+					.RotateAroundAxis( Vector3.Up, eh.Rotation.Angles().yaw - 90 );
+			}
+		}
+	}
+
+	[ClientRpc]
+	private async void PlayWormholeCinematic()
+	{
+		// TODO: Find a way to call this when the EH is deleted before the cinematic end to not keep the player stuck in this
+		var panel = Game.RootPanel.AddChild<WormholeCinematic>();
+
+		await GameTask.DelayRealtimeSeconds( 7.07f );
+
+		panel.Delete( true );
+		OnPlayerEndWormhole( NetworkIdent );
+	}
+
+	private void SetEntLastTeleportTime( Entity ent, float lastTime )
+	{
+		if ( EntityTimeSinceTeleported.ContainsKey( ent ) )
+			EntityTimeSinceTeleported[ent] = lastTime;
+		else
+			EntityTimeSinceTeleported.Add( ent, lastTime );
 	}
 }

@@ -1,20 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Sandbox;
+﻿using Sandbox;
 
 public partial class EventHorizonTrigger : ModelEntity
 {
-	private EventHorizon EventHorizon = null;
 	public string TriggerModel = "models/sbox_stargate/event_horizon/event_horizon_trigger.vmdl";
+	private EventHorizon EventHorizon = null;
 
 	public EventHorizonTrigger()
 	{
 	}
 
-	public EventHorizonTrigger(EventHorizon eh)
+	public EventHorizonTrigger( EventHorizon eh )
 	{
 		EventHorizon = eh;
 	}

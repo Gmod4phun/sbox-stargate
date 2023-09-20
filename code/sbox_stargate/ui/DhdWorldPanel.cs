@@ -5,7 +5,6 @@ using Sandbox.UI.Construct;
 public class DhdWorldPanel : WorldPanel
 {
 	public Dhd Dhd;
-	public string Symbol { get; private set; } = "";
 
 	private Vector3 SymbolPosition;
 
@@ -29,6 +28,8 @@ public class DhdWorldPanel : WorldPanel
 		MaxInteractionDistance = 64;
 	}
 
+	public string Symbol { get; private set; } = "";
+
 	public override void Tick()
 	{
 		base.Tick();
@@ -40,7 +41,6 @@ public class DhdWorldPanel : WorldPanel
 		}
 
 		Position = Dhd.Position + Dhd.Rotation.Forward * SymbolPosition.x + Dhd.Rotation.Left * SymbolPosition.y + Dhd.Rotation.Up * SymbolPosition.z;
-		Rotation = Dhd.Rotation.RotateAroundAxis(Vector3.Right, 90);
+		Rotation = Dhd.Rotation.RotateAroundAxis( Vector3.Right, 90 );
 	}
-
 }

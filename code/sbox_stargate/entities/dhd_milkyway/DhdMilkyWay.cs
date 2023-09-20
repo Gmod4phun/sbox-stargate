@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System;
 using Sandbox;
 using Editor;
 
@@ -7,9 +5,14 @@ using Editor;
 [Title( "DHD (Milky Way)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class DhdMilkyWay : Dhd
 {
-	public Vector3 SpawnOffset { get; private set; } = new( 0, 0, -5 );
 	public const string MODEL = "models/sbox_stargate/dhd/dhd.vmdl";
-	public Angles SpawnOffsetAng { get; private set; } = new( 15, 0, 0 );
+	public Vector3 SpawnOffset { get; private set; } = new(0, 0, -5);
+	public Angles SpawnOffsetAng { get; private set; } = new(15, 0, 0);
+
+	public static void DrawGizmos( EditorContext context )
+	{
+		Gizmo.Draw.Model( "models/sbox_stargate/dhd/buttons/dhd_buttons_all.vmdl" );
+	}
 
 	public override void Spawn()
 	{
@@ -26,10 +29,5 @@ public partial class DhdMilkyWay : Dhd
 		{
 			button.SetMaterialGroup( "mw" );
 		}
-	}
-
-	public static void DrawGizmos( EditorContext context )
-	{
-		Gizmo.Draw.Model( "models/sbox_stargate/dhd/buttons/dhd_buttons_all.vmdl" );
 	}
 }

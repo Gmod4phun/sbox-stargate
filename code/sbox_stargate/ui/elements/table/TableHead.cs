@@ -1,24 +1,24 @@
 using System.Collections.Generic;
-using Sandbox;
-using Sandbox.Html;
 using Sandbox.UI;
 
-public partial class TableHead : Panel {
-
+public partial class TableHead : Panel
+{
 	public List<Panel> Columns = new();
 
-	public TableHead() {
-		AddClass("table-head");
+	public TableHead()
+	{
+		AddClass( "table-head" );
 	}
 
-	public void AddColumn(string name) {
+	public void AddColumn( string name )
+	{
 		var col = new Panel();
-		col.AddClass("head-column");
+		col.AddClass( "head-column" );
 		var label = col.AddChild<Label>();
 		label.Text = name;
 
-		Columns.Add(col);
-		AddChild(col);
+		Columns.Add( col );
+		AddChild( col );
 	}
 
 	//public override bool OnTemplateElement( INode element )
@@ -29,5 +29,4 @@ public partial class TableHead : Panel {
 	//		AddColumn(col);
 	//	return true;
 	//}
-
 }

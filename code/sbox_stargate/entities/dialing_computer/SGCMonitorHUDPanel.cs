@@ -1,6 +1,5 @@
 ﻿using Sandbox;
 using Sandbox.UI;
-using System.Threading;
 
 public class SGCMonitorHUDPanel : Panel
 {
@@ -27,24 +26,9 @@ public class SGCMonitorHUDPanel : Panel
 		}
 
 		AddEventListener( "onrightclick", () =>
-		{
-			SGCMonitor.KickCurrentUser( Monitor.NetworkIdent );
-		}
-		);
-	}
-
-	private async void AddKeyboardEvent()
-	{
-		await GameTask.DelaySeconds(0.1f);
-
-		var drawer = Keyboard.Drawer;
-		if ( !drawer.IsValid() )
-			return;
-
-		Keyboard.Drawer.AddEventListener( "onclick", () =>
-		{
-			Keyboard.SetClass( "hidden", !Keyboard.HasClass( "hidden" ) );
-		}
+			{
+				SGCMonitor.KickCurrentUser( Monitor.NetworkIdent );
+			}
 		);
 	}
 
@@ -64,4 +48,18 @@ public class SGCMonitorHUDPanel : Panel
 		Monitor.ViewPanelOnWorld( To.Single( Game.LocalClient ) );
 	}
 
+	private async void AddKeyboardEvent()
+	{
+		await GameTask.DelaySeconds( 0.1f );
+
+		var drawer = Keyboard.Drawer;
+		if ( !drawer.IsValid() )
+			return;
+
+		Keyboard.Drawer.AddEventListener( "onclick", () =>
+			{
+				Keyboard.SetClass( "hidden", !Keyboard.HasClass( "hidden" ) );
+			}
+		);
+	}
 }

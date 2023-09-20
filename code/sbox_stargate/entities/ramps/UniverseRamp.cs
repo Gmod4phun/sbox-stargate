@@ -8,22 +8,19 @@ using Sandbox;
 [Title( "Universe Ramp" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class UniverseRamp : Prop, IStargateRamp, IGateSpawner
 {
-	[Net]
-	public Vector3 SpawnOffset { get; private set; } = new( 0, 0, 60 );
 	public const string MODEL = "models/sbox_stargate/ramps/sgu_ramp/sgu_ramp.vmdl";
-
-	public int AmountOfGates => 1;
 
 	public List<PointLightEntity> Lights = new();
 	public PointLightEntity CenterLight;
 
-	public Vector3[] StargatePositionOffset => new Vector3[] {
-		new Vector3( 0, 0, 95 )
-	};
+	[Net]
+	public Vector3 SpawnOffset { get; private set; } = new(0, 0, 60);
 
-	public Angles[] StargateRotationOffset => new Angles[] {
-		Angles.Zero
-	};
+	public int AmountOfGates => 1;
+
+	public Vector3[] StargatePositionOffset => new Vector3[] { new Vector3( 0, 0, 95 ) };
+
+	public Angles[] StargateRotationOffset => new Angles[] { Angles.Zero };
 
 	public List<Stargate> Gate { get; set; } = new();
 
@@ -89,11 +86,24 @@ public partial class UniverseRamp : Prop, IStargateRamp, IGateSpawner
 		CenterLight = light_c;
 	}
 
+	public void FromJson( JsonElement data )
+	{
+		Position = Vector3.Parse( data.GetProperty( "Position" ).ToString() );
+		Rotation = Rotation.Parse( data.GetProperty( "Rotation" ).ToString() );
+
+		PhysicsBody.BodyType = PhysicsBodyType.Static;
+	}
+
+	public object ToJson()
+	{
+		return new JsonModel() { EntityName = ClassName, Position = Position, Rotation = Rotation };
+	}
+
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
 
-		foreach (var light in Lights)
+		foreach ( var light in Lights )
 		{
 			light?.Delete();
 		}
@@ -119,23 +129,5 @@ public partial class UniverseRamp : Prop, IStargateRamp, IGateSpawner
 		}
 
 		SetMaterialGroup( shouldCenterGlow ? 2 : 0 );
-	}
-
-	public void FromJson( JsonElement data )
-	{
-		Position = Vector3.Parse( data.GetProperty( "Position" ).ToString() );
-		Rotation = Rotation.Parse( data.GetProperty( "Rotation" ).ToString() );
-
-		PhysicsBody.BodyType = PhysicsBodyType.Static;
-	}
-
-	public object ToJson()
-	{
-		return new JsonModel()
-		{
-			EntityName = ClassName,
-			Position = Position,
-			Rotation = Rotation
-		};
 	}
 }

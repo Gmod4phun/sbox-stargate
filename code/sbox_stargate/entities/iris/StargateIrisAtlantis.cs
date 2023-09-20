@@ -1,10 +1,9 @@
-using System;
 using Sandbox;
 
 public partial class StargateIrisAtlantis : StargateIris
 {
-	private readonly float OpenCloseDleay = 1f;
 	protected Sound IrisLoop;
+	private readonly float OpenCloseDleay = 1f;
 
 	public override void Spawn()
 	{
@@ -19,7 +18,8 @@ public partial class StargateIrisAtlantis : StargateIris
 		Tags.Add( StargateTags.BeforeGate );
 	}
 
-	public async override void Close() {
+	public override async void Close()
+	{
 		if ( Busy || Closed ) return;
 
 		Busy = true;
@@ -27,7 +27,7 @@ public partial class StargateIrisAtlantis : StargateIris
 		Closed = true;
 		EnableAllCollisions = true;
 		EnableDrawing = true;
-		Sound.FromEntity("stargate.iris.atlantis.close", this);
+		Sound.FromEntity( "stargate.iris.atlantis.close", this );
 
 		await GameTask.DelaySeconds( OpenCloseDleay );
 		if ( !this.IsValid() ) return;
@@ -43,7 +43,8 @@ public partial class StargateIrisAtlantis : StargateIris
 		IrisLoop = Sound.FromEntity( "stargate.iris.atlantis.loop", this );
 	}
 
-	public async override void Open() {
+	public override async void Open()
+	{
 		if ( Busy || !Closed ) return;
 
 		IrisLoop.Stop();
@@ -53,7 +54,7 @@ public partial class StargateIrisAtlantis : StargateIris
 		Closed = false;
 		EnableAllCollisions = false;
 		EnableDrawing = false;
-		Sound.FromEntity( "stargate.iris.atlantis.open", this);
+		Sound.FromEntity( "stargate.iris.atlantis.open", this );
 
 		await GameTask.DelaySeconds( OpenCloseDleay );
 		if ( !this.IsValid() ) return;
@@ -61,17 +62,9 @@ public partial class StargateIrisAtlantis : StargateIris
 		Busy = false;
 	}
 
-	public override void PlayHitSound() {
-		Sound.FromEntity( "stargate.iris.atlantis.hit", this );
-	}
-
-	protected override void OnDestroy()
+	public override void PlayHitSound()
 	{
-		base.OnDestroy();
-
-		IrisLoop.Stop();
-
-		if (Closed) Sound.FromEntity( "stargate.iris.atlantis.open", this );
+		Sound.FromEntity( "stargate.iris.atlantis.hit", this );
 	}
 
 	public override void TakeDamage( DamageInfo info )
@@ -81,4 +74,12 @@ public partial class StargateIrisAtlantis : StargateIris
 		PlayHitSound();
 	}
 
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+
+		IrisLoop.Stop();
+
+		if ( Closed ) Sound.FromEntity( "stargate.iris.atlantis.open", this );
+	}
 }

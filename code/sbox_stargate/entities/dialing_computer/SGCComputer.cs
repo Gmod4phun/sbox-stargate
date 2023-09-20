@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Sandbox;
-using Sandbox.UI;
 
 [Title( "SGC Computer" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class SGCComputer : ModelEntity, IUse
@@ -13,13 +9,19 @@ public partial class SGCComputer : ModelEntity, IUse
 	public static readonly Color Color_SG_Blue = Color.FromBytes( 0, 170, 185 );
 	public static readonly Color Color_SG_Yellow = Color.FromBytes( 225, 225, 170 );
 
+	private Sound AlarmSound;
+
 	[Net, Change]
 	public Stargate Gate { get; set; } = null;
 
 	[Net]
 	public IList<SGCMonitor> Monitors { get; private set; } = new List<SGCMonitor>();
 
-	private Sound AlarmSound;
+	public static float GetSinFromTime()
+	{
+		var s = (float)Math.Sin( Time.Now );
+		return s * s;
+	}
 
 	public override void Spawn()
 	{
@@ -59,11 +61,6 @@ public partial class SGCComputer : ModelEntity, IUse
 		Monitors.Remove( monitor );
 	}
 
-	private void OnGateChanged( Stargate oldGate, Stargate newGate )
-	{
-		// update monitors?
-	}
-
 	public bool OnUse( Entity user )
 	{
 		// turn on/off?
@@ -83,10 +80,9 @@ public partial class SGCComputer : ModelEntity, IUse
 		StopAlarmSound();
 	}
 
-	public static float GetSinFromTime()
+	private void OnGateChanged( Stargate oldGate, Stargate newGate )
 	{
-		var s = (float)Math.Sin( Time.Now );
-		return s * s;
+		// update monitors?
 	}
 
 	// Alarm sound
@@ -176,7 +172,7 @@ public partial class SGCComputer : ModelEntity, IUse
 	}
 
 	[ClientRpc]
-	private void DialProgramBox_89_Appear(int num)
+	private void DialProgramBox_89_Appear( int num )
 	{
 		foreach ( var monitor in Monitors )
 		{
@@ -186,7 +182,6 @@ public partial class SGCComputer : ModelEntity, IUse
 			}
 		}
 	}
-
 
 	// Events
 
@@ -210,8 +205,8 @@ public partial class SGCComputer : ModelEntity, IUse
 		{
 			DialProgramAddGlyph( To.Everyone, Gate.CurDialingSymbol );
 			if ( num == 7 )
-				DialProgramBox_89_Appear(To.Everyone, 8 );
-			else if (num == 8)
+				DialProgramBox_89_Appear( To.Everyone, 8 );
+			else if ( num == 8 )
 				DialProgramBox_89_Appear( To.Everyone, 9 );
 		}
 	}
@@ -270,11 +265,11 @@ public partial class SGCComputer : ModelEntity, IUse
 		if ( gate != Gate ) return;
 
 		if ( Gate.CurDialType == Stargate.DialType.SLOW )
-			DialProgramEncodeBoxAppear( To.Everyone, sym);
+			DialProgramEncodeBoxAppear( To.Everyone, sym );
 	}
 
 	[StargateEvent.DialBegin]
-	private void DialBegin(Stargate gate, string address)
+	private void DialBegin( Stargate gate, string address )
 	{
 		if ( gate != Gate ) return;
 
@@ -308,5 +303,4 @@ public partial class SGCComputer : ModelEntity, IUse
 		StopAlarmSound();
 		DialProgramReturnToIdle( To.Everyone );
 	}
-
 }

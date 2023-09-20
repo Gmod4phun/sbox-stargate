@@ -1,15 +1,9 @@
-using System.Collections.Generic;
-using System.Linq;
 using Sandbox;
-using Sandbox.Html;
 using Sandbox.UI;
-using Sandbox.UI.Tests;
-using static Stargate;
 
 //[UseTemplate]
 public class StargateMenuV2 : Panel
 {
-	
 	private Stargate Gate;
 	private Dhd DHD;
 
@@ -60,12 +54,10 @@ public class StargateMenuV2 : Panel
 			var dist = Game.LocalPawn.Position.Distance( DHD.Position );
 			if ( dist > 80 * DHD.Scale ) CloseMenu();
 		}
-
 	}
 
 	public void SetGate( Stargate gate )
 	{
 		Gate = gate;
 	}
-
 }

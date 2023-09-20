@@ -8,6 +8,14 @@ public partial class RingPanelAncient : RingPanel
 	public const string MODEL = "models/sbox_stargate/rings_panel/ancient/ring_panel_ancient.vmdl";
 	protected override string[] ButtonsSounds { get; } = { "ringpanel.ancient.button1", "ringpanel.ancient.button2" };
 
+	public static void DrawGizmos( EditorContext context )
+	{
+		for ( var i = 1; i <= 9; i++ )
+		{
+			Gizmo.Draw.Model( $"models/sbox_stargate/rings_panel/ancient/ring_panel_ancient_button_{i}.vmdl" );
+		}
+	}
+
 	public override void Spawn()
 	{
 		base.Spawn();
@@ -41,14 +49,6 @@ public partial class RingPanelAncient : RingPanel
 			button.Action = action;
 			button.RingPanel = this;
 			Buttons.Add( action, button );
-		}
-	}
-
-	public static void DrawGizmos( EditorContext context )
-	{
-		for ( var i = 1; i <= 9; i++ )
-		{
-			Gizmo.Draw.Model( $"models/sbox_stargate/rings_panel/ancient/ring_panel_ancient_button_{i}.vmdl" );
 		}
 	}
 }

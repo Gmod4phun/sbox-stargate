@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Editor;
 using Sandbox;
 
@@ -10,7 +5,6 @@ using Sandbox;
 [Title( "Stargate (Movie)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class StargateMovie : StargateMilkyWay
 {
-
 	public StargateMovie()
 	{
 		SoundDict = new()
@@ -31,6 +25,16 @@ public partial class StargateMovie : StargateMilkyWay
 		ChevronLightup = false;
 	}
 
+	public static void DrawGizmos( EditorContext context )
+	{
+		Gizmo.Draw.Model( "models/sbox_stargate/sg_mw/sg_mw_ring.vmdl" );
+
+		for ( var i = 0; i < 9; i++ )
+		{
+			Gizmo.Draw.Model( "models/sbox_stargate/sg_mw/sg_mw_chevron.vmdl", new Transform( Vector3.Zero, Rotation.FromRoll( i * 40 ) ) );
+		}
+	}
+
 	// SPAWN
 
 	public override void Spawn()
@@ -49,27 +53,13 @@ public partial class StargateMovie : StargateMilkyWay
 
 	public override Chevron CreateChevron( int n )
 	{
-		var chev = base.CreateChevron(n);
+		var chev = base.CreateChevron( n );
 		chev.UsesDynamicLight = false;
 
-		chev.ChevronStateSkins = new()
-		{
-			{ "Off", 2 },
-			{ "On", ChevronLightup ? 1 : 2 },
-		};
+		chev.ChevronStateSkins = new() { { "Off", 2 }, { "On", ChevronLightup ? 1 : 2 }, };
 
 		if ( n == 7 ) chev.SetBodyGroup( 0, 1 );
 
 		return chev;
-	}
-
-	public static void DrawGizmos( EditorContext context )
-	{
-		Gizmo.Draw.Model( "models/sbox_stargate/sg_mw/sg_mw_ring.vmdl" );
-
-		for ( var i = 0; i < 9; i++ )
-		{
-			Gizmo.Draw.Model( "models/sbox_stargate/sg_mw/sg_mw_chevron.vmdl", new Transform( Vector3.Zero, Rotation.FromRoll( i * 40 ) ) );
-		}
 	}
 }

@@ -2,6 +2,8 @@ using Sandbox;
 
 public partial class DhdButton : AnimatedEntity, IUse
 {
+	float GlowScale = 0;
+
 	[Net]
 	public Dhd DHD { get; set; } = null;
 
@@ -13,8 +15,6 @@ public partial class DhdButton : AnimatedEntity, IUse
 
 	[Net]
 	public bool Disabled { get; set; } = false;
-
-	float GlowScale = 0;
 
 	public override void Spawn()
 	{

@@ -7,19 +7,16 @@ using Sandbox;
 [Title( "Brick Ramp" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class BrickRamp : Prop, IStargateRamp, IGateSpawner
 {
-	[Net]
-	public Vector3 SpawnOffset { get; private set; } = new( 0, 0, 70 );
 	public const string MODEL = "models/sbox_stargate/ramps/brick/brick.vmdl";
+
+	[Net]
+	public Vector3 SpawnOffset { get; private set; } = new(0, 0, 70);
 
 	public int AmountOfGates => 1;
 
-	public Vector3[] StargatePositionOffset => new Vector3[] {
-		new Vector3( 0, 0, 95 )
-	};
+	public Vector3[] StargatePositionOffset => new Vector3[] { new Vector3( 0, 0, 95 ) };
 
-	public Angles[] StargateRotationOffset => new Angles[] {
-		Angles.Zero
-	};
+	public Angles[] StargateRotationOffset => new Angles[] { Angles.Zero };
 
 	public List<Stargate> Gate { get; set; } = new();
 
@@ -44,11 +41,6 @@ public partial class BrickRamp : Prop, IStargateRamp, IGateSpawner
 
 	public object ToJson()
 	{
-		return new JsonModel()
-		{
-			EntityName = ClassName,
-			Position = Position,
-			Rotation = Rotation
-		};
+		return new JsonModel() { EntityName = ClassName, Position = Position, Rotation = Rotation };
 	}
 }

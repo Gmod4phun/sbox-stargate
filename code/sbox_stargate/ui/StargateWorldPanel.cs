@@ -10,7 +10,7 @@ public class StargateWorldPanel : WorldPanel
 	private Label Group;
 	private Label IsLocal;
 
-	public StargateWorldPanel(Stargate gate)
+	public StargateWorldPanel( Stargate gate )
 	{
 		StyleSheet.Load( "/sbox_stargate/ui/StargateWorldPanel.scss" );
 
@@ -47,8 +47,6 @@ public class StargateWorldPanel : WorldPanel
 		if ( player == null ) return;
 
 		//player.Position.DistanceSquared(Gate.Position))
-
-		
 	}
 
 	private void UpdateGateInfo()
@@ -60,5 +58,4 @@ public class StargateWorldPanel : WorldPanel
 		var localText = Gate.GateLocal ? "Yes" : "No";
 		IsLocal.Text = $"Local: {localText}";
 	}
-
 }

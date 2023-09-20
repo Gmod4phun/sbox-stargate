@@ -1,20 +1,315 @@
-﻿using System.Collections;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Sandbox;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 [Category( "Stargates" )]
 public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInputEntity
 {
+	public int EventHorizonSkinGroup = 0;
+
+	public GateBearing Bearing;
+
+	public float AutoCloseTime = -1;
+
+	public Dictionary<string, string> SoundDict = new()
+	{
+		{ "gate_open", "baseValue" },
+		{ "gate_close", "baseValue" },
+		{ "chevron_open", "baseValue" },
+		{ "chevron_close", "baseValue" },
+		{ "dial_fail", "baseValue" },
+		{ "dial_fail_noclose", "baseValue" },
+	};
+
+	public TimeSince TimeSinceDialAction = 0f;
+	public float InactiveDialShutdownTime = 20f;
+
+	public IStargateRamp Ramp = null;
+
+	private StargateWorldPanel WorldPanel;
+
+	[Net]
+	public Vector3 SpawnOffset { get; private set; } = new(0, 0, 95);
+
+	[Net]
+	public IList<Chevron> Chevrons { get; set; } = new List<Chevron>();
+
+	[Net]
+	public EventHorizon EventHorizon { get; private set; } = null;
+
+	[Net]
+	public StargateIris Iris { get; set; } = null;
+
+	[Net]
+	public Stargate OtherGate { get; set; } = null;
+
+	[Net]
+	public string GateAddress { get; set; } = "";
+
+	[Net]
+	public string GateGroup { get; protected set; } = "";
+
+	[Net]
+	public int GateGroupLength { get; set; } = 2;
+
+	[Net]
+	public string GateName { get; set; } = "";
+
+	[Net]
+	public bool AutoClose { get; set; } = true;
+
+	[Net]
+	public bool GatePrivate { get; set; } = false;
+
+	[Net]
+	public bool GateLocal { get; set; } = false;
+
+	[Net]
+	public GlyphType GateGlyphType { get; protected set; } = GlyphType.MILKYWAY;
+
+	// Show Wormhole or not
+	[Net]
+	public bool ShowWormholeCinematic { get; set; } = false;
+
+	[Net]
+	public bool Busy { get; set; } = false; // this is pretty much used anytime the gate is busy to do anything (usually during animations/transitions)
+
+	[Net]
+	public bool Inbound { get; set; } = false;
+
+	[Net]
+	public bool ShouldStopDialing { get; set; } = false;
+
+	[Net]
+	public GateState CurGateState { get; set; } = GateState.IDLE;
+
+	[Net]
+	public DialType CurDialType { get; set; } = DialType.FAST;
+
+	[Net]
+	public bool IsManualDialInProgress { get; set; } = false;
+
+	// gate state accessors
+	public bool Idle { get => CurGateState is GateState.IDLE; }
+	public bool Active { get => CurGateState is GateState.ACTIVE; }
+	public bool Dialing { get => CurGateState is GateState.DIALING; }
+	public bool Opening { get => CurGateState is GateState.OPENING; }
+	public bool Open { get => CurGateState is GateState.OPEN; }
+	public bool Closing { get => CurGateState is GateState.CLOSING; }
+
+	[Net]
+	public string DialingAddress { get; set; } = "";
+
+	[Net]
+	public int ActiveChevrons { get; set; } = 0;
+
+	[Net]
+	public bool IsLocked { get; set; } = false;
+
+	[Net]
+	public bool IsLockedInvalid { get; set; } = false;
+
+	[Net]
+	public char CurDialingSymbol { get; set; } = ' ';
+
+	[Net]
+	public char CurRingSymbol { get; set; } = ' ';
+
+	[Net]
+	public float CurRingSymbolOffset { get; set; } = 0;
+
+	[Net]
+	public bool CanOpenMenu { get; set; } = true;
 	/* WIRE SUPPORT */
 
 	// self:CreateWireInputs("Dial Address","Dial String [STRING]","Dial Mode","Start String Dial","Close","Disable Autoclose","Disable Menu","Transmit [STRING]");
 
 	WirePortData IWireEntity.WirePorts { get; } = new WirePortData();
+
+	[ConCmd.Server]
+	public static void RequestDial( DialType type, string address, int gate, float initialDelay = 0 )
+	{
+		if ( FindByIndex( gate ) is Stargate g && g.IsValid() )
+		{
+			switch ( type )
+			{
+				case DialType.FAST:
+					g.BeginDialFast( address );
+					break;
+
+				case DialType.SLOW:
+					g.BeginDialSlow( address, initialDelay );
+					break;
+
+				case DialType.INSTANT:
+					g.BeginDialInstant( address );
+					break;
+			}
+		}
+	}
+
+	[ConCmd.Server]
+	public static void RequestClose( int gateID )
+	{
+		if ( FindByIndex( gateID ) is Stargate g && g.IsValid() )
+		{
+			if ( g.Busy || ((g.Open || g.Active || g.Dialing) && g.Inbound) )
+			{
+				return;
+			}
+
+			if ( g.Open )
+			{
+				g.DoStargateClose( true );
+			}
+			else if ( g.Dialing )
+			{
+				g.StopDialing();
+			}
+		}
+	}
+
+	[ConCmd.Server]
+	public static void ToggleIris( int gateID, int state )
+	{
+		if ( FindByIndex( gateID ) is Stargate g && g.IsValid() )
+		{
+			if ( g.Iris.IsValid() )
+			{
+				if ( state == -1 )
+					g.Iris.Toggle();
+
+				if ( state == 0 )
+					g.Iris.Close();
+
+				if ( state == 1 )
+					g.Iris.Open();
+			}
+		}
+	}
+
+	[ConCmd.Server]
+	public static void RequestAddressChange( int gateID, string address )
+	{
+		if ( FindByIndex( gateID ) is Stargate g && g.IsValid() )
+		{
+			if ( g.GateAddress == address || !IsValidAddressOnly( address ) )
+				return;
+
+			g.GateAddress = address;
+
+			g.RefreshGateInformation();
+		}
+	}
+
+	[ConCmd.Server]
+	public static void RequestGroupChange( int gateID, string group )
+	{
+		if ( FindByIndex( gateID ) is Stargate g && g.IsValid() )
+		{
+			if ( g.GateGroup == group || !IsValidGroup( group ) || group.Length != g.GateGroupLength )
+				return;
+
+			g.GateGroup = group;
+
+			g.RefreshGateInformation();
+		}
+	}
+
+	[ConCmd.Server]
+	public static void RequestNameChange( int gateID, string name )
+	{
+		if ( FindByIndex( gateID ) is Stargate g && g.IsValid() )
+		{
+			if ( g.GateName == name )
+				return;
+
+			g.GateName = name;
+
+			g.RefreshGateInformation();
+		}
+	}
+
+	[ConCmd.Server]
+	public static void SetAutoClose( int gateID, bool state )
+	{
+		if ( FindByIndex( gateID ) is Stargate g && g.IsValid() )
+		{
+			if ( g.AutoClose == state )
+				return;
+
+			g.AutoClose = state;
+
+			g.RefreshGateInformation();
+		}
+	}
+
+	[ConCmd.Server]
+	public static void SetGatePrivate( int gateID, bool state )
+	{
+		if ( FindByIndex( gateID ) is Stargate g && g.IsValid() )
+		{
+			if ( g.GatePrivate == state )
+				return;
+
+			g.GatePrivate = state;
+
+			g.RefreshGateInformation();
+		}
+	}
+
+	[ConCmd.Server]
+	public static void SetGateLocal( int gateID, bool state )
+	{
+		if ( FindByIndex( gateID ) is Stargate g && g.IsValid() )
+		{
+			if ( g.GateLocal == state )
+				return;
+
+			g.GateLocal = state;
+
+			g.RefreshGateInformation();
+		}
+	}
+
+	[ConCmd.Server]
+	public static void ToggleWormhole( int gateID, bool state )
+	{
+		if ( FindByIndex( gateID ) is Stargate g && g.IsValid() )
+		{
+			if ( g.ShowWormholeCinematic == state )
+				return;
+
+			g.ShowWormholeCinematic = state;
+
+			g.RefreshGateInformation();
+		}
+	}
+
+	public static Stargate FindClosestGate( Vector3 postition, float max_distance = 0, Entity[] exclude = null )
+	{
+		Stargate current = null;
+		float distance = float.PositiveInfinity;
+
+		foreach ( Stargate gate in Entity.All.OfType<Stargate>() )
+		{
+			if ( exclude != null && exclude.Contains( gate ) )
+				continue;
+
+			float currDist = gate.Position.Distance( postition );
+			if ( distance > currDist )
+			{
+				if ( max_distance > 0 && currDist > max_distance )
+					continue;
+
+				distance = currDist;
+				current = gate;
+			}
+		}
+
+		return current;
+	}
 
 	public virtual void WireInitialize()
 	{
@@ -31,7 +326,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		this.RegisterInputHandler( "Dial Address", ( bool value ) =>
 		{
 			var addr = inputs["Input Address"].value.ToString();
-			var mode = (bool) inputs["Dial Mode"].value;
+			var mode = (bool)inputs["Dial Mode"].value;
 
 			if ( value )
 			{
@@ -53,7 +348,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		this.RegisterInputHandler( "Encode Symbol", ( bool value ) =>
 		{
 			var sym = inputs["Input Symbol"].value.ToString().ElementAtOrDefault( 0 );
-			var mode = (bool) inputs["Dial Mode"].value;
+			var mode = (bool)inputs["Dial Mode"].value;
 
 			if ( value )
 			{
@@ -64,7 +359,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		this.RegisterInputHandler( "Lock Symbol", ( bool value ) =>
 		{
 			var sym = inputs["Input Symbol"].value.ToString().ElementAtOrDefault( 0 );
-			var mode = (bool) inputs["Dial Mode"].value;
+			var mode = (bool)inputs["Dial Mode"].value;
 
 			if ( value )
 			{
@@ -103,32 +398,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 
 	public virtual PortType[] WireGetOutputs()
 	{
-		return new PortType[] {
-			PortType.Bool("Idle"),
-			PortType.Bool("Active"),
-			PortType.Bool("Dialing"),
-			PortType.Bool("Opening"),
-			PortType.Bool("Open"),
-			PortType.Bool("Closing"),
-			PortType.Bool("Inbound"),
-			PortType.Int("Chevrons Encoded"),
-			PortType.Bool("Last Chevron Locked"),
-			PortType.String("Gate Address"),
-			PortType.String("Gate Group"),
-			PortType.String("Gate Point of Origin"),
-			PortType.String("Gate Full Address"),
-			PortType.String("Gate Full Address 8"),
-			PortType.String("Gate Full Address 9"),
-			PortType.String("Gate Name"),
-			PortType.String("Gate Local"),
-			PortType.String("Gate Private"),
-			PortType.String("Dialing Address"),
-			PortType.String("Dialing Symbol"),
-			PortType.String("Dialed Symbol"),
-			PortType.String("Ring Symbol"),
-			PortType.Float("Ring Angle"),
-			PortType.Bool("Iris Closed")
-		};
+		return new PortType[] { PortType.Bool( "Idle" ), PortType.Bool( "Active" ), PortType.Bool( "Dialing" ), PortType.Bool( "Opening" ), PortType.Bool( "Open" ), PortType.Bool( "Closing" ), PortType.Bool( "Inbound" ), PortType.Int( "Chevrons Encoded" ), PortType.Bool( "Last Chevron Locked" ), PortType.String( "Gate Address" ), PortType.String( "Gate Group" ), PortType.String( "Gate Point of Origin" ), PortType.String( "Gate Full Address" ), PortType.String( "Gate Full Address 8" ), PortType.String( "Gate Full Address 9" ), PortType.String( "Gate Name" ), PortType.String( "Gate Local" ), PortType.String( "Gate Private" ), PortType.String( "Dialing Address" ), PortType.String( "Dialing Symbol" ), PortType.String( "Dialed Symbol" ), PortType.String( "Ring Symbol" ), PortType.Float( "Ring Angle" ), PortType.Bool( "Iris Closed" ) };
 	}
 
 	[GameEvent.Tick.Server]
@@ -159,79 +429,6 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		this.WireTriggerOutput( "Ring Angle", GetRingAngle() );
 		this.WireTriggerOutput( "Iris Closed", IsIrisClosed() );
 	}
-
-	[Net] public Vector3 SpawnOffset { get; private set; } = new( 0, 0, 95 );
-
-	[Net]
-	public IList<Chevron> Chevrons { get; set; } = new List<Chevron>();
-
-	[Net]
-	public EventHorizon EventHorizon { get; private set; } = null;
-	public int EventHorizonSkinGroup = 0;
-
-	[Net]
-	public StargateIris Iris { get; set; } = null;
-
-	[Net]
-	public Stargate OtherGate { get; set; } = null;
-	public GateBearing Bearing;
-
-	public float AutoCloseTime = -1;
-
-	public Dictionary<string, string> SoundDict = new()
-	{
-		{ "gate_open", "baseValue" },
-		{ "gate_close", "baseValue" },
-		{ "chevron_open", "baseValue" },
-		{ "chevron_close", "baseValue" },
-		{ "dial_fail", "baseValue" },
-		{ "dial_fail_noclose", "baseValue" },
-	};
-
-	[Net] public string GateAddress { get; set; } = "";
-	[Net] public string GateGroup { get; protected set; } = "";
-	[Net] public int GateGroupLength { get; set; } = 2;
-	[Net] public string GateName { get; set; } = "";
-	[Net] public bool AutoClose { get; set; } = true;
-	[Net] public bool GatePrivate { get; set; } = false;
-	[Net] public bool GateLocal { get; set; } = false;
-	[Net] public GlyphType GateGlyphType { get; protected set; } = GlyphType.MILKYWAY;
-	// Show Wormhole or not
-	[Net] public bool ShowWormholeCinematic { get; set; } = false;
-
-	[Net] public bool Busy { get; set; } = false; // this is pretty much used anytime the gate is busy to do anything (usually during animations/transitions)
-	[Net] public bool Inbound { get; set; } = false;
-
-	[Net] public bool ShouldStopDialing { get; set; } = false;
-	[Net] public GateState CurGateState { get; set; } = GateState.IDLE;
-	[Net] public DialType CurDialType { get; set; } = DialType.FAST;
-	[Net] public bool IsManualDialInProgress { get; set; } = false;
-
-	// gate state accessors
-	public bool Idle { get => CurGateState is GateState.IDLE; }
-	public bool Active { get => CurGateState is GateState.ACTIVE; }
-	public bool Dialing { get => CurGateState is GateState.DIALING; }
-	public bool Opening { get => CurGateState is GateState.OPENING; }
-	public bool Open { get => CurGateState is GateState.OPEN; }
-	public bool Closing { get => CurGateState is GateState.CLOSING; }
-
-	[Net] public string DialingAddress { get; set; } = "";
-	[Net] public int ActiveChevrons { get; set; } = 0;
-
-	[Net] public bool IsLocked { get; set; } = false;
-	[Net] public bool IsLockedInvalid { get; set; } = false;
-
-	[Net] public char CurDialingSymbol { get; set; } = ' ';
-	[Net] public char CurRingSymbol { get; set; } = ' ';
-	[Net] public float CurRingSymbolOffset { get; set; } = 0;
-	[Net] public bool CanOpenMenu { get; set; } = true;
-
-	public TimeSince TimeSinceDialAction = 0f;
-	public float InactiveDialShutdownTime = 20f;
-
-	public IStargateRamp Ramp = null;
-
-	private StargateWorldPanel WorldPanel;
 
 	// SOUNDS
 	public virtual string GetSound( string key )
@@ -271,11 +468,11 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 
 	public bool OnUse( Entity user )
 	{
-		if (CanOpenMenu)
+		if ( CanOpenMenu )
 		{
 			OpenStargateMenu( To.Single( user ) );
 		}
-		
+
 		return false; // aka SIMPLE_USE, not continuously
 	}
 
@@ -304,7 +501,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		EventHorizon?.Delete();
 	}
 
-	public async Task EstablishEventHorizon(float delay = 0)
+	public async Task EstablishEventHorizon( float delay = 0 )
 	{
 		await GameTask.DelaySeconds( delay );
 		if ( !this.IsValid() ) return;
@@ -331,7 +528,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 
 		DeleteEventHorizon();
 	}
-  
+
 	// IRIS
 	public bool HasIris()
 	{
@@ -353,31 +550,6 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	{
 		return Bearing.IsValid();
 	}
-  
-	protected override void OnDestroy()
-	{
-		if ( Ramp != null ) Ramp.Gate.Remove( this );
-
-		if ( Game.IsServer && OtherGate.IsValid() )
-		{
-			if (OtherGate.Inbound && !OtherGate.Dialing) OtherGate.StopDialing();
-			if ( OtherGate.Open ) OtherGate.DoStargateClose();
-		}
-
-		KillAllPlayersInTransit();
-
-		base.OnDestroy();
-	}
-
-	private void KillAllPlayersInTransit()
-	{
-		if ( !EventHorizon.IsValid() ) return;
-
-		foreach (var ply in EventHorizon.InTransitPlayers)
-		{
-			EventHorizon.DissolveEntity( ply );
-		}
-	}
 
 	// DIALING -- please don't touch any of these, dialing is heavy WIP
 
@@ -389,29 +561,29 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 
 	public bool CanStargateOpen()
 	{
-		return ( !Busy && !Opening && !Open && !Closing );
+		return (!Busy && !Opening && !Open && !Closing);
 	}
 
 	public bool CanStargateClose()
 	{
-		return ( !Busy && Open );
+		return (!Busy && Open);
 	}
 
 	public bool CanStargateStartDial()
 	{
-		return ( Idle && !Busy && !Dialing && !Inbound && !Open && !Opening && !Closing && !IsLocked );
+		return (Idle && !Busy && !Dialing && !Inbound && !Open && !Opening && !Closing && !IsLocked);
 	}
 
 	public bool CanStargateStopDial()
 	{
-		if (!Inbound) return (!Busy && Dialing);
+		if ( !Inbound ) return (!Busy && Dialing);
 
-		return ( !Busy && Active );
+		return (!Busy && Active);
 	}
 
 	public bool CanStargateStartManualDial()
 	{
-		if (!Dialing)
+		if ( !Dialing )
 			return CanStargateStartDial();
 
 		return (!IsManualDialInProgress && !IsLocked);
@@ -456,18 +628,18 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		}
 		else
 		{
-			return ( !Busy && !Open && !Inbound && (CurDialType is DialType.SLOW || CurDialType is DialType.DHD || CurDialType is DialType.MANUAL) );
+			return (!Busy && !Open && !Inbound && (CurDialType is DialType.SLOW || CurDialType is DialType.DHD || CurDialType is DialType.MANUAL));
 		}
 	}
 
 	public bool IsStargateReadyForInboundFastEnd() // checks if the gate is ready to open when finishing fast dial?
 	{
-		return ( !Busy && !Open && !Dialing && Inbound );
+		return (!Busy && !Open && !Dialing && Inbound);
 	}
 
 	public bool IsStargateReadyForInboundInstantSlow() // checks if the gate is ready to do inbound for instant or slow dial
 	{
-		return ( !Busy && !Open && !Inbound );
+		return (!Busy && !Open && !Inbound);
 	}
 
 	public bool IsStargateReadyForInboundDHD() // checks if the gate is ready to be locked onto by dhd dial
@@ -496,7 +668,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 
 	// begin dial
 	public virtual void BeginDialFast( string address ) { }
-	public virtual void BeginDialSlow( string address, float initialDelay=0 ) { }
+	public virtual void BeginDialSlow( string address, float initialDelay = 0 ) { }
 	public virtual void BeginDialInstant( string address ) { } // instant gate open, with kawoosh
 	public virtual void BeginDialNox( string address ) { } // instant gate open without kawoosh - asgard/ancient/nox style
 
@@ -515,7 +687,6 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	public virtual void BeginOpenByDHD( string address ) { } // when dhd dial button is pressed
 	public virtual void BeginInboundDHD( int numChevs ) { } // when a dhd dialing gate locks onto another gate
 
-
 	// stop dial
 	public async void StopDialing()
 	{
@@ -533,7 +704,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		Busy = true;
 		ShouldStopDialing = true; // can be used in ring/gate logic to to stop ring/gate rotation
 
-		if (Inbound)
+		if ( Inbound )
 		{
 			Event.Run( StargateEvent.InboundAbort, this );
 		}
@@ -586,7 +757,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	public virtual void OnStargateClosed()
 	{
 		ResetGateVariablesToIdle();
-		Event.Run( StargateEvent.GateClosed, this);
+		Event.Run( StargateEvent.GateClosed, this );
 	}
 
 	// reset
@@ -598,7 +769,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		Event.Run( StargateEvent.Reset, this );
 	}
 
-	public virtual void EstablishWormholeTo(Stargate target)
+	public virtual void EstablishWormholeTo( Stargate target )
 	{
 		target.OtherGate = this;
 		OtherGate = target;
@@ -621,7 +792,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		return GetChevron( 7 );
 	}
 
-	public bool IsChevronActive(int num)
+	public bool IsChevronActive( int num )
 	{
 		var chev = GetChevron( num );
 
@@ -666,7 +837,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	}
 
 	// DHD/Fast Chevron Encode/Lock
-	public virtual void DoDHDChevronEncode(char sym)
+	public virtual void DoDHDChevronEncode( char sym )
 	{
 		if ( DialingAddress.Contains( sym ) )
 			return;
@@ -710,18 +881,18 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	}
 
 	// Manual/Slow Chevron Encode/Lock
-	public async virtual Task<bool> DoManualChevronEncode( char sym )
+	public virtual async Task<bool> DoManualChevronEncode( char sym )
 	{
 		if ( !Symbols.Contains( sym ) )
 			return false;
 
 		// if we try to encode 9th symbol, do a lock instead
-		if (DialingAddress.Length == 8)
+		if ( DialingAddress.Length == 8 )
 		{
 			DoManualChevronLock( sym );
 			return false;
 		}
-			
+
 		if ( !CanStargateStartManualDial() )
 			return false;
 
@@ -746,7 +917,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		return true;
 	}
 
-	public async virtual Task<bool> DoManualChevronLock( char sym )
+	public virtual async Task<bool> DoManualChevronLock( char sym )
 	{
 		if ( !Symbols.Contains( sym ) )
 			return false;
@@ -838,7 +1009,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	// UI Related stuff
 
 	[ClientRpc]
-	public void OpenStargateMenu(Dhd dhd = null)
+	public void OpenStargateMenu( Dhd dhd = null )
 	{
 		var hud = Game.RootPanel;
 		var count = 0;
@@ -849,177 +1020,38 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	}
 
 	[ClientRpc]
-	public void RefreshGateInformation() {
-		Event.Run("stargate.refreshgateinformation");
-	}
-
-	[ConCmd.Server]
-	public static void RequestDial(DialType type, string address, int gate, float initialDelay=0) {
-		if (FindByIndex( gate ) is Stargate g && g.IsValid()) {
-			switch ( type ) {
-				case DialType.FAST:
-					g.BeginDialFast( address );
-					break;
-
-				case DialType.SLOW:
-					g.BeginDialSlow( address, initialDelay );
-					break;
-
-				case DialType.INSTANT:
-					g.BeginDialInstant( address );
-					break;
-			}
-		}
-	}
-
-	[ConCmd.Server]
-	public static void RequestClose(int gateID) {
-		if (FindByIndex( gateID ) is Stargate g && g.IsValid()) {
-			if ( g.Busy || ((g.Open || g.Active || g.Dialing) && g.Inbound) )
-			{
-				return;
-			}
-
-			if (g.Open)
-			{
-				g.DoStargateClose( true );
-			}
-			else if (g.Dialing)
-			{
-				g.StopDialing();
-			}
-		}
-	}
-
-	[ConCmd.Server]
-	public static void ToggleIris(int gateID, int state) {
-		if (FindByIndex( gateID ) is Stargate g && g.IsValid()) {
-			if (g.Iris.IsValid()) {
-				if (state == -1)
-					g.Iris.Toggle();
-
-				if (state == 0)
-					g.Iris.Close();
-
-				if (state == 1)
-					g.Iris.Open();
-			}
-		}
-	}
-
-	[ConCmd.Server]
-	public static void RequestAddressChange(int gateID, string address) {
-		if (FindByIndex( gateID ) is Stargate g && g.IsValid()) {
-			if (g.GateAddress == address || !IsValidAddressOnly( address ))
-				return;
-
-			g.GateAddress = address;
-
-			g.RefreshGateInformation();
-		}
-	}
-
-	[ConCmd.Server]
-	public static void RequestGroupChange( int gateID, string group )
+	public void RefreshGateInformation()
 	{
-		if ( FindByIndex( gateID ) is Stargate g && g.IsValid() )
-		{
-			if ( g.GateGroup == group || !IsValidGroup( group ) || group.Length != g.GateGroupLength )
-				return;
-
-			g.GateGroup = group;
-
-			g.RefreshGateInformation();
-		}
+		Event.Run( "stargate.refreshgateinformation" );
 	}
 
-	[ConCmd.Server]
-	public static void RequestNameChange(int gateID, string name) {
-		if (FindByIndex( gateID ) is Stargate g && g.IsValid()) {
-			if (g.GateName == name)
-				return;
-
-			g.GateName = name;
-
-			g.RefreshGateInformation();
-		}
-	}
-
-	[ConCmd.Server]
-	public static void SetAutoClose(int gateID, bool state) {
-		if (FindByIndex( gateID ) is Stargate g && g.IsValid()) {
-			if (g.AutoClose == state)
-				return;
-
-			g.AutoClose = state;
-
-			g.RefreshGateInformation();
-		}
-	}
-
-	[ConCmd.Server]
-	public static void SetGatePrivate(int gateID, bool state) {
-		if (FindByIndex( gateID ) is Stargate g && g.IsValid()) {
-			if (g.GatePrivate == state)
-				return;
-
-			g.GatePrivate = state;
-
-			g.RefreshGateInformation();
-		}
-	}
-
-	[ConCmd.Server]
-	public static void SetGateLocal( int gateID, bool state )
+	public Stargate FindClosestGate()
 	{
-		if ( FindByIndex( gateID ) is Stargate g && g.IsValid() )
-		{
-			if ( g.GateLocal == state )
-				return;
-
-			g.GateLocal = state;
-
-			g.RefreshGateInformation();
-		}
+		return Stargate.FindClosestGate( this.Position, 0, new Entity[] { this } );
 	}
 
-	[ConCmd.Server]
-	public static void ToggleWormhole( int gateID, bool state )
+	protected override void OnDestroy()
 	{
-		if ( FindByIndex( gateID ) is Stargate g && g.IsValid() )
+		if ( Ramp != null ) Ramp.Gate.Remove( this );
+
+		if ( Game.IsServer && OtherGate.IsValid() )
 		{
-			if ( g.ShowWormholeCinematic == state )
-				return;
-
-			g.ShowWormholeCinematic = state;
-
-			g.RefreshGateInformation();
-		}
-	}
-
-	public Stargate FindClosestGate() {
-		return Stargate.FindClosestGate(this.Position, 0, new Entity[] { this });
-	}
-
-	public static Stargate FindClosestGate(Vector3 postition, float max_distance = 0, Entity[] exclude = null) {
-		Stargate current = null;
-		float distance = float.PositiveInfinity;
-
-		foreach ( Stargate gate in Entity.All.OfType<Stargate>() ) {
-			if (exclude != null && exclude.Contains(gate))
-				continue;
-
-			float currDist = gate.Position.Distance(postition);
-			if (distance > currDist) {
-
-				if ( max_distance > 0 && currDist > max_distance )
-					continue;
-
-				distance = currDist;
-				current = gate;
-			}
+			if ( OtherGate.Inbound && !OtherGate.Dialing ) OtherGate.StopDialing();
+			if ( OtherGate.Open ) OtherGate.DoStargateClose();
 		}
 
-		return current;
+		KillAllPlayersInTransit();
+
+		base.OnDestroy();
+	}
+
+	private void KillAllPlayersInTransit()
+	{
+		if ( !EventHorizon.IsValid() ) return;
+
+		foreach ( var ply in EventHorizon.InTransitPlayers )
+		{
+			EventHorizon.DissolveEntity( ply );
+		}
 	}
 }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Sandbox;
@@ -6,31 +5,6 @@ using Sandbox;
 [Category( "Stargates" )]
 public abstract partial class Dhd : Prop
 {
-	public struct DhdData
-	{
-		public DhdData( int skinOff, int skinOn, string pressSnd, string dialSnd )
-		{
-			ButtonSkinOff = skinOff;
-			ButtonSkinOn = skinOn;
-			ButtonPressSound = pressSnd;
-			DialPressSound = dialSnd;
-		}
-
-		public int ButtonSkinOff { get; }
-		public int ButtonSkinOn { get; }
-		public string ButtonPressSound { get; }
-		public string DialPressSound { get; }
-	}
-
-	//[Net]
-	public DhdData Data { get; set; } = new( 0, 1, "dhd.milkyway.press", "dhd.press_dial" );
-
-	[Net] public Stargate Gate { get; set; }
-
-	protected virtual string ButtonSymbols => "ABCDEFGHI0123456789STUVWXYZ@JKLMNO#PQR";
-
-	public Dictionary<string, DhdButton> Buttons { get; protected set; } = new();
-
 	public float lastPressTime = 0;
 	public float pressDelay = 0.5f;
 
@@ -39,8 +13,20 @@ public abstract partial class Dhd : Prop
 	protected bool DialIsLock = false;
 	protected bool IsDialLocking = false;
 
+	private List<DhdWorldPanel> WorldPanels = new List<DhdWorldPanel>();
+
+	//[Net]
+	public DhdData Data { get; set; } = new(0, 1, "dhd.milkyway.press", "dhd.press_dial");
+
+	[Net]
+	public Stargate Gate { get; set; }
+
+	public Dictionary<string, DhdButton> Buttons { get; protected set; } = new();
+
 	[Net]
 	public IList<int> ButtonSkins { get; set; } = new List<int> { 0, 0 };
+
+	protected virtual string ButtonSymbols => "ABCDEFGHI0123456789STUVWXYZ@JKLMNO#PQR";
 
 	// Button positions for DhdWorldPanel
 	protected virtual Dictionary<string, Vector3> ButtonPositions => new()
@@ -91,8 +77,6 @@ public abstract partial class Dhd : Prop
 
 	protected virtual Vector3 ButtonPositionsOffset => new Vector3( -14.8088f, -1.75652f, 7.5f );
 
-	private List<DhdWorldPanel> WorldPanels = new List<DhdWorldPanel>();
-
 	public override void ClientSpawn()
 	{
 		base.ClientSpawn();
@@ -102,7 +86,7 @@ public abstract partial class Dhd : Prop
 
 	public virtual void CreateWorldPanels()
 	{
-		foreach (var item in ButtonPositions)
+		foreach ( var item in ButtonPositions )
 		{
 			var sym = item.Key;
 			var pos = item.Value - ButtonPositionsOffset;
@@ -151,10 +135,10 @@ public abstract partial class Dhd : Prop
 
 		Gate = gate;
 
-		if (!Gate.Idle)
+		if ( !Gate.Idle )
 		{
 			PressedActions.Clear();
-			foreach (var sym in Gate.DialingAddress)
+			foreach ( var sym in Gate.DialingAddress )
 			{
 				PressedActions.Add( sym.ToString() );
 			}
@@ -163,7 +147,7 @@ public abstract partial class Dhd : Prop
 		return true;
 	}
 
-	public virtual void CreateSingleButton( string model, string action, bool disabled = false) // visible model of buttons that turn on/off and animate
+	public virtual void CreateSingleButton( string model, string action, bool disabled = false ) // visible model of buttons that turn on/off and animate
 	{
 		var button = new DhdButton();
 		button.SetModel( model );
@@ -199,12 +183,12 @@ public abstract partial class Dhd : Prop
 		CreateSingleButton( "models/sbox_stargate/dhd/buttons/dhd_button_39.vmdl", "DIAL" );
 	}
 
-	public DhdButton GetButtonByAction(string action)
+	public DhdButton GetButtonByAction( string action )
 	{
 		return Buttons.GetValueOrDefault( action );
 	}
 
-	public void PlayButtonPressAnim(DhdButton button)
+	public void PlayButtonPressAnim( DhdButton button )
 	{
 		if ( button.IsValid() ) button.CurrentSequence.Name = "button_press";
 	}
@@ -223,8 +207,9 @@ public abstract partial class Dhd : Prop
 	public void ToggleButton( string action )
 	{
 		var b = GetButtonByAction( action );
-		if ( b.IsValid() ) SetButtonState( b, !b.On);
+		if ( b.IsValid() ) SetButtonState( b, !b.On );
 	}
+
 	public void ToggleButton( DhdButton b )
 	{
 		if ( b.IsValid() ) SetButtonState( b, !b.On );
@@ -250,11 +235,12 @@ public abstract partial class Dhd : Prop
 	{
 		if ( !Gate.IsValid() )
 		{
-			DisableAllButtons(); return;
+			DisableAllButtons();
+			return;
 		}
 
 		DisableAllButtons();
-		foreach (char sym in Gate.DialingAddress) SetButtonState( sym.ToString() , true);
+		foreach ( char sym in Gate.DialingAddress ) SetButtonState( sym.ToString(), true );
 
 		if ( Gate.Open || Gate.Opening || Gate.Closing )
 		{
@@ -301,9 +287,9 @@ public abstract partial class Dhd : Prop
 				return;
 			}
 
-			if (Gate.Open) // if gate is open, close the gate
+			if ( Gate.Open ) // if gate is open, close the gate
 			{
-				if (Gate.CanStargateClose())
+				if ( Gate.CanStargateClose() )
 				{
 					Gate.DoStargateClose( true );
 					PressedActions.Clear();
@@ -312,7 +298,7 @@ public abstract partial class Dhd : Prop
 				return;
 			}
 
-			if ( DialIsLock && PressedActions.Count >= 6 && !IsDialLocking) // if the DIAL button should also lock the last symbol, do that (Atlantis City DHD)
+			if ( DialIsLock && PressedActions.Count >= 6 && !IsDialLocking ) // if the DIAL button should also lock the last symbol, do that (Atlantis City DHD)
 			{
 				IsDialLocking = true;
 				TriggerAction( "#", user );
@@ -320,9 +306,9 @@ public abstract partial class Dhd : Prop
 				return;
 			}
 
-			if (PressedActions.Count < 7) // if we pressed less than 7 symbols, we should cancel dial
+			if ( PressedActions.Count < 7 ) // if we pressed less than 7 symbols, we should cancel dial
 			{
-				if (Gate.Dialing && Gate.CurDialType is Stargate.DialType.DHD)
+				if ( Gate.Dialing && Gate.CurDialType is Stargate.DialType.DHD )
 				{
 					PlayButtonPressAnim( button );
 
@@ -355,7 +341,6 @@ public abstract partial class Dhd : Prop
 					return;
 				}
 			}
-
 		}
 		else // we pressed a symbol
 		{
@@ -383,7 +368,7 @@ public abstract partial class Dhd : Prop
 
 				PressedActions.Add( action );
 				PlayButtonPressAnim( button );
-				Stargate.PlaySound( Position + Rotation.Up * 16, Data.ButtonPressSound);
+				Stargate.PlaySound( Position + Rotation.Up * 16, Data.ButtonPressSound );
 			}
 		}
 	}
@@ -412,4 +397,19 @@ public abstract partial class Dhd : Prop
 			DeleteWorldPanels();
 	}
 
+	public struct DhdData
+	{
+		public DhdData( int skinOff, int skinOn, string pressSnd, string dialSnd )
+		{
+			ButtonSkinOff = skinOff;
+			ButtonSkinOn = skinOn;
+			ButtonPressSound = pressSnd;
+			DialPressSound = dialSnd;
+		}
+
+		public int ButtonSkinOff { get; }
+		public int ButtonSkinOn { get; }
+		public string ButtonPressSound { get; }
+		public string DialPressSound { get; }
+	}
 }

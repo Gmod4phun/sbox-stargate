@@ -1,29 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Sandbox;
 
 public partial class Chevron : AnimatedEntity
 {
-	[Net]
-	public bool On { get; private set; } = false;
-	private float selfillumscale = 0;
-
-	[Net]
-	public bool Open { get; private set; } = false;
 	public bool UsesDynamicLight = true;
 
 	public Stargate Gate;
 
 	public PointLightEntity Light;
 
-	public Dictionary<string, int> ChevronStateSkins = new()
-	{
-		{ "Off", 0 },
-		{ "On", 1 }
-	};
+	public Dictionary<string, int> ChevronStateSkins = new() { { "Off", 0 }, { "On", 1 } };
+
+	private float selfillumscale = 0;
+
+	[Net]
+	public bool On { get; private set; } = false;
+
+	[Net]
+	public bool Open { get; private set; } = false;
 
 	public override void Spawn()
 	{
@@ -37,7 +31,7 @@ public partial class Chevron : AnimatedEntity
 
 	public void CreateLight()
 	{
-		var att = (Transform) GetAttachment( "light" );
+		var att = (Transform)GetAttachment( "light" );
 
 		Light = new PointLightEntity();
 		Light.Position = att.Position;
@@ -50,16 +44,9 @@ public partial class Chevron : AnimatedEntity
 		Light.Enabled = On;
 	}
 
-	protected override void OnDestroy()
-	{
-		base.OnDestroy();
-
-		if ( Light.IsValid() ) Light.Delete();
-	}
-
 	// ANIMS
 
-	public async void ChevronAnim(string name, float delay = 0)
+	public async void ChevronAnim( string name, float delay = 0 )
 	{
 		if ( delay > 0 )
 		{
@@ -70,18 +57,18 @@ public partial class Chevron : AnimatedEntity
 		CurrentSequence.Name = name;
 	}
 
-	public async void TurnOn(float delay = 0)
+	public async void TurnOn( float delay = 0 )
 	{
 		if ( delay > 0 )
 		{
 			await GameTask.DelaySeconds( delay );
 			if ( !this.IsValid() ) return;
 		}
-		
+
 		On = true;
 	}
 
-	public async void TurnOff(float delay = 0)
+	public async void TurnOff( float delay = 0 )
 	{
 		if ( delay > 0 )
 		{
@@ -91,6 +78,7 @@ public partial class Chevron : AnimatedEntity
 
 		On = false;
 	}
+
 	public async void SetOpen( bool open, float delay = 0 )
 	{
 		if ( delay > 0 )
@@ -117,9 +105,9 @@ public partial class Chevron : AnimatedEntity
 	}
 
 	[GameEvent.Tick.Server]
-	public void ChevronThink( )
+	public void ChevronThink()
 	{
-		var group = ChevronStateSkins.GetValueOrDefault(On ? "On" : "Off", 0);
+		var group = ChevronStateSkins.GetValueOrDefault( On ? "On" : "Off", 0 );
 		if ( GetMaterialGroup() != group ) SetMaterialGroup( group );
 		if ( Light.IsValid() ) Light.Enabled = UsesDynamicLight && On;
 	}
@@ -130,5 +118,12 @@ public partial class Chevron : AnimatedEntity
 		selfillumscale = selfillumscale.Approach( On ? 1 : 0, Time.Delta * 5 );
 		SceneObject.Attributes.Set( "selfillumscale", selfillumscale );
 		SceneObject.Batchable = false;
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+
+		if ( Light.IsValid() ) Light.Delete();
 	}
 }

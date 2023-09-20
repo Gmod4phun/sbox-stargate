@@ -1,14 +1,11 @@
 ﻿using Sandbox;
 using Sandbox.UI;
-using Sandbox.UI.Construct;
-using System;
 
 public class SGCMonitorWorldPanel : WorldPanel
 {
-	private SGCMonitor Monitor;
-
 	public float RenderSize = 1600;
 	public float ActualSize = 496;
+	private SGCMonitor Monitor;
 
 	private Panel ProgramScreen = null;
 
@@ -27,7 +24,7 @@ public class SGCMonitorWorldPanel : WorldPanel
 		AddProgram( program );
 	}
 
-	public void AddProgram(SGCProgram program)
+	public void AddProgram( SGCProgram program )
 	{
 		ProgramScreen.AddChild( program );
 	}
@@ -49,5 +46,4 @@ public class SGCMonitorWorldPanel : WorldPanel
 
 		Transform = Transform.WithScale( scaleFactor );
 	}
-	
 }

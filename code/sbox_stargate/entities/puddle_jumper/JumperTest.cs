@@ -1,56 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Sandbox;
+﻿using Sandbox;
 
 [Title( "Test Jumper" ), Category( "Stargate" ), Icon( "chair" )]
 public partial class JumperTest : Prop, IUse
 {
-	[Net] public Vector3 SpawnOffset { get; private set; } = new( 0, 0, 65 );
-
-	[Net] public Player Driver { get; private set; }
-
-	private struct InputState
-	{
-		public bool forward;
-		public bool back;
-		public bool left;
-		public bool right;
-		public bool up;
-		public bool down;
-		public bool boost;
-
-		public void Reset()
-		{
-			forward = false;
-			back = false;
-			left = false;
-			right = false;
-			up = false;
-			down = false;
-			boost = false;
-		}
-	}
-
 	private InputState currentInput;
 
-	private struct MovementState
-	{
-		public float accelForward;
-		public float accelRight;
-		public float accelUp;
-
-		public MovementState()
-		{
-			accelForward = 0;
-			accelRight = 0;
-			accelUp = 0;
-		}
-	}
-
 	private MovementState currentMovement;
+
+	[Net]
+	public Vector3 SpawnOffset { get; private set; } = new(0, 0, 65);
+
+	[Net]
+	public Player Driver { get; private set; }
 
 	public override void Spawn()
 	{
@@ -100,7 +61,7 @@ public partial class JumperTest : Prop, IUse
 		else if ( currentInput.down )
 			desiredUp = -1;
 
-		if (currentInput.boost)
+		if ( currentInput.boost )
 		{
 			desiredForward = desiredForward * 4f;
 		}
@@ -108,9 +69,9 @@ public partial class JumperTest : Prop, IUse
 		currentMovement.accelForward = currentMovement.accelForward.LerpTo( desiredForward, dt );
 		currentMovement.accelRight = currentMovement.accelRight.LerpTo( desiredRight, dt );
 		currentMovement.accelUp = currentMovement.accelUp.LerpTo( desiredUp, dt );
-		
 
-		if (currentMovement.accelForward > 0.01 || currentMovement.accelForward < -0.01) {
+		if ( currentMovement.accelForward > 0.01 || currentMovement.accelForward < -0.01 )
+		{
 			body.Position += rot.Forward * currentMovement.accelForward;
 		}
 
@@ -123,14 +84,61 @@ public partial class JumperTest : Prop, IUse
 		{
 			body.Position += rot.Up * currentMovement.accelUp;
 		}
-
-
-
 	}
 
 	public override void Simulate( IClient client )
 	{
 		SimulateDriver( client );
+	}
+
+	public override void FrameSimulate( IClient client )
+	{
+		base.FrameSimulate( client );
+
+		Driver?.FrameSimulate( client );
+	}
+
+	public bool OnUse( Entity user )
+	{
+		if ( user is SandboxPlayer player )
+		{
+			player.Parent = this;
+			player.LocalPosition = Vector3.Up * -50 + Vector3.Forward * 10;
+			player.LocalRotation = Rotation.Identity;
+			player.LocalScale = 1;
+			player.PhysicsBody.Enabled = false;
+
+			Driver = player;
+			Driver.Client.Pawn = this;
+
+			PhysicsBody.GravityEnabled = false;
+		}
+
+		return false;
+	}
+
+	public bool IsUsable( Entity user )
+	{
+		return !Driver.IsValid();
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+
+		if ( Driver is SandboxPlayer player )
+		{
+			RemoveDriver( player );
+		}
+	}
+
+	[GameEvent.Tick.Server]
+	protected void PlayerAliveCheck()
+	{
+		if ( Driver is SandboxPlayer player && player.LifeState != LifeState.Alive )
+		{
+			RemoveDriver( player );
+		}
 	}
 
 	void SimulateDriver( IClient client )
@@ -158,37 +166,6 @@ public partial class JumperTest : Prop, IUse
 		}
 	}
 
-	public override void FrameSimulate( IClient client )
-	{
-		base.FrameSimulate( client );
-
-		Driver?.FrameSimulate( client );
-	}
-
-	public bool OnUse( Entity user )
-	{
-		if (user is SandboxPlayer player)
-		{
-			player.Parent = this;
-			player.LocalPosition = Vector3.Up * -50 + Vector3.Forward * 10;
-			player.LocalRotation = Rotation.Identity;
-			player.LocalScale = 1;
-			player.PhysicsBody.Enabled = false;
-
-			Driver = player;
-			Driver.Client.Pawn = this;
-
-			PhysicsBody.GravityEnabled = false;
-		}
-
-		return false;
-	}
-
-	public bool IsUsable( Entity user )
-	{
-		return !Driver.IsValid();
-	}
-
 	private void RemoveDriver( SandboxPlayer player )
 	{
 		Driver = null;
@@ -212,22 +189,39 @@ public partial class JumperTest : Prop, IUse
 		PhysicsBody.GravityEnabled = true;
 	}
 
-	protected override void OnDestroy()
+	private struct InputState
 	{
-		base.OnDestroy();
+		public bool forward;
+		public bool back;
+		public bool left;
+		public bool right;
+		public bool up;
+		public bool down;
+		public bool boost;
 
-		if ( Driver is SandboxPlayer player )
+		public void Reset()
 		{
-			RemoveDriver( player );
+			forward = false;
+			back = false;
+			left = false;
+			right = false;
+			up = false;
+			down = false;
+			boost = false;
 		}
 	}
 
-	[GameEvent.Tick.Server]
-	protected void PlayerAliveCheck()
+	private struct MovementState
 	{
-		if ( Driver is SandboxPlayer player && player.LifeState != LifeState.Alive )
+		public float accelForward;
+		public float accelRight;
+		public float accelUp;
+
+		public MovementState()
 		{
-			RemoveDriver( player );
+			accelForward = 0;
+			accelRight = 0;
+			accelUp = 0;
 		}
 	}
 }
