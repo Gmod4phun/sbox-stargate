@@ -3,12 +3,12 @@ using Sandbox.UI;
 
 public class SGCMonitorHUDPanel : Panel
 {
-	private SGCMonitor Monitor;
-	private KeyboardDialing Keyboard;
+	private SGCMonitor _monitor;
+	private KeyboardDialing _keyboard;
 
 	public SGCMonitorHUDPanel( SGCMonitor monitor, SGCProgram program )
 	{
-		Monitor = monitor;
+		_monitor = monitor;
 
 		StyleSheet.Load( "sbox_stargate/entities/dialing_computer/SGCMonitorHUDPanel.scss" );
 		var programscreen = Add.Panel( "programscreen" );
@@ -16,18 +16,18 @@ public class SGCMonitorHUDPanel : Panel
 
 		if ( program is SGCProgram_Dialing dialprog )
 		{
-			Keyboard = new KeyboardDialing();
-			Keyboard.Program = dialprog;
-			Keyboard.AddClass( "keyboard hidden" );
+			_keyboard = new KeyboardDialing();
+			_keyboard.Program = dialprog;
+			_keyboard.AddClass( "keyboard hidden" );
 
-			programscreen.AddChild( Keyboard );
+			programscreen.AddChild( _keyboard );
 
 			AddKeyboardEvent();
 		}
 
 		AddEventListener( "onrightclick", () =>
 			{
-				SGCMonitor.KickCurrentUser( Monitor.NetworkIdent );
+				SGCMonitor.KickCurrentUser( _monitor.NetworkIdent );
 			}
 		);
 	}
@@ -36,7 +36,7 @@ public class SGCMonitorHUDPanel : Panel
 	{
 		base.Tick();
 
-		if ( !Monitor.IsValid() )
+		if ( !_monitor.IsValid() )
 		{
 			Delete( true );
 			return;
@@ -45,20 +45,20 @@ public class SGCMonitorHUDPanel : Panel
 
 	public void ClosePanel()
 	{
-		Monitor.ViewPanelOnWorld( To.Single( Game.LocalClient ) );
+		_monitor.ViewPanelOnWorld( To.Single( Game.LocalClient ) );
 	}
 
 	private async void AddKeyboardEvent()
 	{
 		await GameTask.DelaySeconds( 0.1f );
 
-		var drawer = Keyboard.Drawer;
+		var drawer = _keyboard.Drawer;
 		if ( !drawer.IsValid() )
 			return;
 
-		Keyboard.Drawer.AddEventListener( "onclick", () =>
+		_keyboard.Drawer.AddEventListener( "onclick", () =>
 			{
-				Keyboard.SetClass( "hidden", !Keyboard.HasClass( "hidden" ) );
+				_keyboard.SetClass( "hidden", !_keyboard.HasClass( "hidden" ) );
 			}
 		);
 	}

@@ -7,48 +7,38 @@ public partial class EventHorizon : AnimatedEntity
 {
 	private const float FastMovingVelocityThresholdSqr = 400 * 400; // entities with velocity lower than 400 shouldn't be handled
 
-	private static Dictionary<Entity, Vector3> EntityPositionsPrevious = new Dictionary<Entity, Vector3>();
-	private static Dictionary<Entity, TimeSince> EntityTimeSinceTeleported = new Dictionary<Entity, TimeSince>();
-
-	protected Sound WormholeLoop;
-
-	protected Entity CurrentTeleportingEntity;
+	private readonly VideoPlayer _eventHorizonVideo = new();
 
 	// material VARIABLES - probably name this better one day
 
 	// establish material variables
-	float minFrame = 0f;
-	float maxFrame = 18f;
-	float curFrame = 0f;
-	bool shouldBeOn = false;
-	bool isOn = false;
-
-	bool shouldBeOff = false;
-	bool isOff = false;
+	private float _minFrame = 0f;
+	private float _maxFrame = 18f;
+	private float _curFrame = 0f;
+	private bool _shouldBeOn = false;
+	private bool _isOn = false;
+	private bool _shouldBeOff = false;
+	private bool _isOff = false;
 
 	// puddle material variables
-	float minBrightness = 1f;
-	float maxBrightness = 8f;
-	float curBrightness = 1f;
+	private float _minBrightness = 1f;
+	private float _maxBrightness = 8f;
+	private float _curBrightness = 1f;
 
-	bool shouldEstablish = false;
-	bool isEstablished = false;
+	private bool _shouldEstablish = false;
+	private bool _isEstablished = false;
 
-	bool shouldCollapse = false;
-	bool isCollapsed = false;
+	private bool _shouldCollapse = false;
+	private bool _isCollapsed = false;
 
-	TimeSince lastSoundTime = 0;
+	private TimeSince _lastSoundTime = 0;
 
-	private EventHorizonTrigger FrontTrigger = null;
-	private EventHorizonTrigger BackTrigger = null;
-	private EventHorizonTrigger KawooshTrigger = null;
-
-	private EventHorizonCollider ColliderFloor = null;
-
-	private Particles Kawoosh;
-
-	private VideoPlayer EventHorizonVideo = new VideoPlayer();
-	private bool EventHorizonVideoInitialized = false;
+	private EventHorizonTrigger _frontTrigger = null;
+	private EventHorizonTrigger _backTrigger = null;
+	private EventHorizonTrigger _kawooshTrigger = null;
+	private EventHorizonCollider _colliderFloor = null;
+	private Particles _kawoosh;
+	private bool _eventHorizonVideoInitialized = false;
 
 	[Net]
 	public Stargate Gate { get; set; } = null;
@@ -61,23 +51,31 @@ public partial class EventHorizon : AnimatedEntity
 	[Net]
 	public int EventHorizonSkinGroup { get; set; } = 0;
 
+	protected Sound WormholeLoop { get; set; }
+
+	protected Entity CurrentTeleportingEntity { get; set; }
+
+	private static Dictionary<Entity, Vector3> EntityPositionsPrevious { get; } = new Dictionary<Entity, Vector3>();
+
+	private static Dictionary<Entity, TimeSince> EntityTimeSinceTeleported { get; } = new Dictionary<Entity, TimeSince>();
+
 	[Net]
 	private IList<Entity> BufferFront { get; set; } = new List<Entity>();
 
 	[Net]
 	private IList<Entity> BufferBack { get; set; } = new List<Entity>();
 
-	private List<Entity> InTriggerFront { get; set; } = new();
-	private List<Entity> InTriggerBack { get; set; } = new();
+	private List<Entity> InTriggerFront { get; } = new();
+	private List<Entity> InTriggerBack { get; } = new();
 
 	private Plane ClipPlaneFront
 	{
-		get => new Plane( Position - Camera.Position + Rotation.Forward * 0.75f, Rotation.Forward.Normal );
+		get => new( Position - Camera.Position + Rotation.Forward * 0.75f, Rotation.Forward.Normal );
 	}
 
 	private Plane ClipPlaneBack
 	{
-		get => new Plane( Position - Camera.Position - Rotation.Forward * 0.75f, -Rotation.Forward.Normal );
+		get => new( Position - Camera.Position - Rotation.Forward * 0.75f, -Rotation.Forward.Normal );
 	}
 
 	public override void Spawn()
@@ -106,12 +104,16 @@ public partial class EventHorizon : AnimatedEntity
 
 		if ( !this.IsValid() ) return;
 
-		KawooshTrigger = new(this, "models/sbox_stargate/event_horizon/event_horizon_trigger_kawoosh.vmdl") { Position = Position + Rotation.Forward * 2, Rotation = Rotation, Parent = Gate };
+		_kawooshTrigger = new EventHorizonTrigger(this, "models/sbox_stargate/event_horizon/event_horizon_trigger_kawoosh.vmdl") { Position = Position + Rotation.Forward * 2, Rotation = Rotation, Parent = Gate };
 
-		KawooshTrigger?.DeleteAsync( 2.2f );
+		_kawooshTrigger?.DeleteAsync( 2.2f );
 	}
 
-	public virtual void SkinEventHorizon() { SetMaterialGroup( EventHorizonSkinGroup ); }
+	public virtual void SkinEventHorizon()
+	{
+		SetMaterialGroup( EventHorizonSkinGroup );
+	}
+
 	public void SkinEstablish() { SetMaterialGroup( 2 ); }
 
 	// SERVER CONTROL
@@ -147,9 +149,9 @@ public partial class EventHorizon : AnimatedEntity
 	// UTILITY
 	public void PlayTeleportSound()
 	{
-		if ( lastSoundTime > 0.1f ) // delay for playing sounds to avoid constant spam
+		if ( _lastSoundTime > 0.1f ) // delay for playing sounds to avoid constant spam
 		{
-			lastSoundTime = 0;
+			_lastSoundTime = 0;
 			Sound.FromEntity( "stargate.event_horizon.enter", this );
 		}
 	}
@@ -207,10 +209,10 @@ public partial class EventHorizon : AnimatedEntity
 	[ClientRpc]
 	public void EstablishClientAnim()
 	{
-		curFrame = minFrame;
-		curBrightness = 0;
-		shouldBeOn = true;
-		shouldBeOff = false;
+		_curFrame = _minFrame;
+		_curBrightness = 0;
+		_shouldBeOn = true;
+		_shouldBeOff = false;
 
 		SkinEstablish();
 	}
@@ -218,10 +220,10 @@ public partial class EventHorizon : AnimatedEntity
 	[ClientRpc]
 	public void CollapseClientAnim()
 	{
-		curFrame = maxFrame;
-		curBrightness = 1;
-		shouldCollapse = true;
-		shouldEstablish = false;
+		_curFrame = _maxFrame;
+		_curBrightness = 1;
+		_shouldCollapse = true;
+		_shouldEstablish = false;
 
 		SkinEventHorizon();
 	}
@@ -230,28 +232,28 @@ public partial class EventHorizon : AnimatedEntity
 	{
 		var a = Rotation.RotateAroundAxis( Vector3.Right, -90 ).Angles();
 		var type = Gate is StargateUniverse ? "_universe" : "";
-		Kawoosh = Particles.Create( $"particles/sbox_stargate/kawoosh{type}.vpcf", Position );
-		Kawoosh.SetPosition( 1, Rotation.Forward );
-		Kawoosh.SetPosition( 2, new Vector3( a.roll, a.pitch, a.yaw ) );
+		_kawoosh = Particles.Create( $"particles/sbox_stargate/kawoosh{type}.vpcf", Position );
+		_kawoosh.SetPosition( 1, Rotation.Forward );
+		_kawoosh.SetPosition( 2, new Vector3( a.roll, a.pitch, a.yaw ) );
 
 		await GameTask.DelaySeconds( 3f );
-		Kawoosh?.Destroy( true );
+		_kawoosh?.Destroy( true );
 	}
 
 	public async void ClientAnimLogic()
 	{
 		SceneObject.Batchable = false;
 
-		if ( shouldBeOn && !isOn )
+		if ( _shouldBeOn && !_isOn )
 		{
-			curFrame = MathX.Approach( curFrame, maxFrame, Time.Delta * 30 );
-			SceneObject.Attributes.Set( "frame", curFrame.FloorToInt() ); // TODO check this
+			_curFrame = MathX.Approach( _curFrame, _maxFrame, Time.Delta * 30 );
+			SceneObject.Attributes.Set( "frame", _curFrame.FloorToInt() ); // TODO check this
 
-			if ( curFrame == maxFrame )
+			if ( _curFrame == _maxFrame )
 			{
-				isOn = true;
-				shouldEstablish = true;
-				curBrightness = maxBrightness;
+				_isOn = true;
+				_shouldEstablish = true;
+				_curBrightness = _maxBrightness;
 				SkinEventHorizon();
 
 				if ( !Gate.IsIrisClosed() )
@@ -261,30 +263,30 @@ public partial class EventHorizon : AnimatedEntity
 			}
 		}
 
-		if ( shouldBeOff && !isOff )
+		if ( _shouldBeOff && !_isOff )
 		{
-			curFrame = MathX.Approach( curFrame, minFrame, Time.Delta * 30 );
-			SceneObject.Attributes.Set( "frame", curFrame.FloorToInt() );
-			if ( curFrame == minFrame ) isOff = true;
+			_curFrame = MathX.Approach( _curFrame, _minFrame, Time.Delta * 30 );
+			SceneObject.Attributes.Set( "frame", _curFrame.FloorToInt() );
+			if ( _curFrame == _minFrame ) _isOff = true;
 		}
 
-		if ( shouldEstablish && !isEstablished )
+		if ( _shouldEstablish && !_isEstablished )
 		{
-			SceneObject.Attributes.Set( "illumbrightness", curBrightness );
-			curBrightness = MathX.Approach( curBrightness, minBrightness, Time.Delta * 3f );
-			if ( curBrightness == minBrightness ) isEstablished = true;
+			SceneObject.Attributes.Set( "illumbrightness", _curBrightness );
+			_curBrightness = MathX.Approach( _curBrightness, _minBrightness, Time.Delta * 3f );
+			if ( _curBrightness == _minBrightness ) _isEstablished = true;
 		}
 
-		if ( shouldCollapse && !isCollapsed )
+		if ( _shouldCollapse && !_isCollapsed )
 		{
-			SceneObject.Attributes.Set( "illumbrightness", curBrightness );
-			curBrightness = MathX.Approach( curBrightness, maxBrightness, Time.Delta * 5f );
+			SceneObject.Attributes.Set( "illumbrightness", _curBrightness );
+			_curBrightness = MathX.Approach( _curBrightness, _maxBrightness, Time.Delta * 5f );
 
-			if ( curBrightness == maxBrightness )
+			if ( _curBrightness == _maxBrightness )
 			{
-				isCollapsed = true;
-				shouldBeOff = true;
-				curBrightness = minBrightness;
+				_isCollapsed = true;
+				_shouldBeOff = true;
+				_curBrightness = _minBrightness;
 				SkinEstablish();
 			}
 		}
@@ -501,7 +503,7 @@ public partial class EventHorizon : AnimatedEntity
 			{
 				var otherEH = GetOther();
 				otherEH.OnEntityEntered( ent, false );
-				otherEH.OnEntityTriggerStartTouch( otherEH.FrontTrigger, ent );
+				otherEH.OnEntityTriggerStartTouch( otherEH._frontTrigger, ent );
 
 				ent.EnableDrawing = false;
 				TeleportEntity( ent );
@@ -525,19 +527,19 @@ public partial class EventHorizon : AnimatedEntity
 	{
 		if ( !Stargate.IsAllowedForGateTeleport( ent ) ) return;
 
-		if ( trigger == BackTrigger && !BufferFront.Contains( ent ) )
+		if ( trigger == _backTrigger && !BufferFront.Contains( ent ) )
 		{
 			InTriggerBack.Add( ent );
 			ent.Tags.Add( StargateTags.BehindGate );
 		}
 
-		else if ( trigger == FrontTrigger && !BufferBack.Contains( ent ) )
+		else if ( trigger == _frontTrigger && !BufferBack.Contains( ent ) )
 		{
 			InTriggerFront.Add( ent );
 			ent.Tags.Add( StargateTags.BeforeGate );
 		}
 
-		else if ( trigger == KawooshTrigger )
+		else if ( trigger == _kawooshTrigger )
 		{
 			DissolveEntity( ent );
 		}
@@ -547,12 +549,12 @@ public partial class EventHorizon : AnimatedEntity
 	{
 		if ( !Stargate.IsAllowedForGateTeleport( ent ) ) return;
 
-		if ( trigger == BackTrigger )
+		if ( trigger == _backTrigger )
 		{
 			InTriggerBack.Remove( ent );
 			ent.Tags.Remove( StargateTags.BehindGate );
 		}
-		else if ( trigger == FrontTrigger )
+		else if ( trigger == _frontTrigger )
 		{
 			InTriggerFront.Remove( ent );
 			ent.Tags.Remove( StargateTags.BeforeGate );
@@ -748,20 +750,20 @@ public partial class EventHorizon : AnimatedEntity
 
 	public void UseVideoAsTexture()
 	{
-		if ( !EventHorizonVideoInitialized )
+		if ( !_eventHorizonVideoInitialized )
 		{
-			EventHorizonVideo.Play( FileSystem.Mounted, "videos/event_horizon/event_horizon_loop.mp4" );
-			EventHorizonVideo.Muted = true;
-			EventHorizonVideo.Repeat = true;
+			_eventHorizonVideo.Play( FileSystem.Mounted, "videos/event_horizon/event_horizon_loop.mp4" );
+			_eventHorizonVideo.Muted = true;
+			_eventHorizonVideo.Repeat = true;
 
-			EventHorizonVideoInitialized = true;
+			_eventHorizonVideoInitialized = true;
 		}
 
-		EventHorizonVideo?.Present();
+		_eventHorizonVideo?.Present();
 
-		if ( SceneObject.IsValid() && EventHorizonVideo.Texture.IsLoaded )
+		if ( SceneObject.IsValid() && _eventHorizonVideo.Texture.IsLoaded )
 		{
-			SceneObject.Attributes.Set( "texture", EventHorizonVideo.Texture );
+			SceneObject.Attributes.Set( "texture", _eventHorizonVideo.Texture );
 		}
 	}
 
@@ -783,10 +785,10 @@ public partial class EventHorizon : AnimatedEntity
 
 		WormholeLoop.Stop();
 
-		FrontTrigger?.Delete();
-		BackTrigger?.Delete();
-		ColliderFloor?.Delete();
-		KawooshTrigger?.Delete();
+		_frontTrigger?.Delete();
+		_backTrigger?.Delete();
+		_colliderFloor?.Delete();
+		_kawooshTrigger?.Delete();
 	}
 
 	[ConCmd.Server]
@@ -890,17 +892,17 @@ public partial class EventHorizon : AnimatedEntity
 	{
 		await GameTask.NextPhysicsFrame();
 
-		FrontTrigger = new(this) { Position = Position + Rotation.Forward * 2, Rotation = Rotation, Parent = Gate };
+		_frontTrigger = new(this) { Position = Position + Rotation.Forward * 2, Rotation = Rotation, Parent = Gate };
 
-		BackTrigger = new(this) { Position = Position - Rotation.Forward * 2, Rotation = Rotation.RotateAroundAxis( Vector3.Up, 180 ), Parent = Gate };
+		_backTrigger = new(this) { Position = Position - Rotation.Forward * 2, Rotation = Rotation.RotateAroundAxis( Vector3.Up, 180 ), Parent = Gate };
 
-		ColliderFloor = new() { Position = Gate.Position, Rotation = Gate.Rotation, Parent = Gate };
+		_colliderFloor = new() { Position = Gate.Position, Rotation = Gate.Rotation, Parent = Gate };
 	}
 
 	[GameEvent.Physics.PostStep]
 	private void UpdateCollider()
 	{
-		foreach ( var eh in All.OfType<EventHorizon>().Where( x => x.Gate.IsValid() && x.ColliderFloor.IsValid() ) )
+		foreach ( var eh in All.OfType<EventHorizon>().Where( x => x.Gate.IsValid() && x._colliderFloor.IsValid() ) )
 		{
 			var startPos = eh.Position + eh.Rotation.Up * 110;
 			var endPos = eh.Position - eh.Rotation.Up * 110;
@@ -908,7 +910,7 @@ public partial class EventHorizon : AnimatedEntity
 
 			var shouldUseCollider = tr.Hit && (Math.Abs( eh.Rotation.Angles().pitch )) < 15;
 
-			var collider = eh.ColliderFloor;
+			var collider = eh._colliderFloor;
 			if ( collider.PhysicsBody.IsValid() )
 				collider.PhysicsBody.Enabled = shouldUseCollider;
 

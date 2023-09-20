@@ -7,18 +7,18 @@ using System.Linq;
 [Library]
 public partial class StargateSpawnList : Panel
 {
-	VirtualScrollPanel Canvas;
+	private VirtualScrollPanel _canvas;
 
 	public StargateSpawnList()
 	{
 		AddClass( "spawnpage" );
-		AddChild( out Canvas, "canvas" );
+		AddChild( out _canvas, "canvas" );
 
-		Canvas.Layout.AutoColumns = true;
-		Canvas.Layout.ItemWidth = 128;
-		Canvas.Layout.ItemHeight = 128;
+		_canvas.Layout.AutoColumns = true;
+		_canvas.Layout.ItemWidth = 128;
+		_canvas.Layout.ItemHeight = 128;
 
-		Canvas.OnCreateCell = ( cell, data ) =>
+		_canvas.OnCreateCell = ( cell, data ) =>
 		{
 			if ( data is TypeDescription type )
 			{
@@ -36,7 +36,7 @@ public partial class StargateSpawnList : Panel
 
 		foreach ( var entry in ents )
 		{
-			Canvas.AddItem( entry );
+			_canvas.AddItem( entry );
 		}
 	}
 

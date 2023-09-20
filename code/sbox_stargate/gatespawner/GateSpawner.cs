@@ -5,7 +5,7 @@ using Sandbox;
 
 public partial class GateSpawner
 {
-	public static List<Entity> GateSpawnerEntites = new();
+	public static List<Entity> GateSpawnerEntites { get; set; } = new();
 
 	[ConVar.Replicated( "gatespawner_enabled" )]
 	public static bool Enabled { get; set; }

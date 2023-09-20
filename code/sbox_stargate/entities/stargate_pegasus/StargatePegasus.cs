@@ -4,14 +4,11 @@ using System.Threading.Tasks;
 using Editor;
 using Sandbox;
 
-[HammerEntity, SupportsSolid, EditorModel( MODEL )]
+[HammerEntity, SupportsSolid, EditorModel( Model )]
 [Title( "Stargate (Pegasus)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class StargatePegasus : Stargate
 {
-	public const string MODEL = "models/sbox_stargate/sg_peg/sg_peg_gate.vmdl";
-
-	public StargateRingPegasus Ring;
-	public List<Chevron> EncodedChevronsOrdered = new();
+	public const string Model = "models/sbox_stargate/sg_peg/sg_peg_gate.vmdl";
 
 	public StargatePegasus()
 	{
@@ -36,6 +33,10 @@ public partial class StargatePegasus : Stargate
 		EventHorizonSkinGroup = 3;
 	}
 
+	public StargateRingPegasus Ring { get; set; }
+
+	public List<Chevron> EncodedChevronsOrdered { get; set; } = new();
+
 	public static void DrawGizmos( EditorContext context )
 	{
 		Gizmo.Draw.Model( "models/sbox_stargate/sg_peg/sg_peg_ring.vmdl" );
@@ -53,7 +54,7 @@ public partial class StargatePegasus : Stargate
 		base.Spawn();
 
 		Transmit = TransmitType.Always;
-		SetModel( MODEL );
+		SetModel( Model );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
 		PhysicsBody.BodyType = PhysicsBodyType.Static;
 

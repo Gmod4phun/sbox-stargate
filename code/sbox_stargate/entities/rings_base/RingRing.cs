@@ -3,23 +3,17 @@ using Sandbox.Utility;
 
 public partial class RingRing : KeyframeEntity
 {
-	public Rings RingParent;
+	public Rings RingParent { get; set; }
 
-	public bool isUpsideDown = false;
+	public bool IsUpsideDown { get; set; } = false;
 
-	public Vector3 desiredPos;
+	public Vector3 desiredPos { get; set; }
 
-	public bool ShouldRetract = false;
+	public bool ShouldRetract { get; set; } = false;
 
-	private bool reachedPos = false;
+	public bool Ready => ReachedPos;
 
-	public bool Ready
-	{
-		get
-		{
-			return reachedPos;
-		}
-	}
+	private bool ReachedPos { get; set; } = false;
 
 	public override void Spawn()
 	{
@@ -37,7 +31,7 @@ public partial class RingRing : KeyframeEntity
 
 	public void MoveFinished()
 	{
-		reachedPos = true;
+		ReachedPos = true;
 
 		if ( ShouldRetract )
 		{

@@ -5,15 +5,10 @@ using Sandbox;
 [Category( "Stargates" )]
 public abstract partial class Dhd : Prop
 {
-	public float lastPressTime = 0;
-	public float pressDelay = 0.5f;
-
 	public List<string> PressedActions = new();
 
 	protected bool DialIsLock = false;
 	protected bool IsDialLocking = false;
-
-	private List<DhdWorldPanel> WorldPanels = new List<DhdWorldPanel>();
 
 	//[Net]
 	public DhdData Data { get; set; } = new(0, 1, "dhd.milkyway.press", "dhd.press_dial");
@@ -75,7 +70,11 @@ public abstract partial class Dhd : Prop
 		// ["DIAL"] = new Vector3( -15.0280f, -1.5217f, 55.1249f ),
 	};
 
-	protected virtual Vector3 ButtonPositionsOffset => new Vector3( -14.8088f, -1.75652f, 7.5f );
+	protected virtual Vector3 ButtonPositionsOffset => new( -14.8088f, -1.75652f, 7.5f );
+	internal float LastPressTime { get; set; } = 0;
+	internal float PressDelay { get; set; } = 0.5f;
+
+	private List<DhdWorldPanel> WorldPanels { get; } = new();
 
 	public override void ClientSpawn()
 	{
@@ -396,20 +395,20 @@ public abstract partial class Dhd : Prop
 		else if ( !isNearDhd && WorldPanels.Count != 0 )
 			DeleteWorldPanels();
 	}
+}
 
-	public struct DhdData
+public struct DhdData
+{
+	public DhdData( int skinOff, int skinOn, string pressSnd, string dialSnd )
 	{
-		public DhdData( int skinOff, int skinOn, string pressSnd, string dialSnd )
-		{
-			ButtonSkinOff = skinOff;
-			ButtonSkinOn = skinOn;
-			ButtonPressSound = pressSnd;
-			DialPressSound = dialSnd;
-		}
-
-		public int ButtonSkinOff { get; }
-		public int ButtonSkinOn { get; }
-		public string ButtonPressSound { get; }
-		public string DialPressSound { get; }
+		ButtonSkinOff = skinOff;
+		ButtonSkinOn = skinOn;
+		ButtonPressSound = pressSnd;
+		DialPressSound = dialSnd;
 	}
+
+	public int ButtonSkinOff { get; }
+	public int ButtonSkinOn { get; }
+	public string ButtonPressSound { get; }
+	public string DialPressSound { get; }
 }

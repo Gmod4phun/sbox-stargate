@@ -3,15 +3,14 @@ using Sandbox;
 
 public partial class Chevron : AnimatedEntity
 {
-	public bool UsesDynamicLight = true;
-
-	public Stargate Gate;
-
-	public PointLightEntity Light;
-
 	public Dictionary<string, int> ChevronStateSkins = new() { { "Off", 0 }, { "On", 1 } };
 
-	private float selfillumscale = 0;
+	private float _selfillumscale = 0;
+	public bool UsesDynamicLight { get; set; } = true;
+
+	public Stargate Gate { get; set; }
+
+	public PointLightEntity Light { get; set; }
 
 	[Net]
 	public bool On { get; private set; } = false;
@@ -115,8 +114,8 @@ public partial class Chevron : AnimatedEntity
 	[GameEvent.Client.Frame]
 	public void LightLogic()
 	{
-		selfillumscale = selfillumscale.Approach( On ? 1 : 0, Time.Delta * 5 );
-		SceneObject.Attributes.Set( "selfillumscale", selfillumscale );
+		_selfillumscale = _selfillumscale.Approach( On ? 1 : 0, Time.Delta * 5 );
+		SceneObject.Attributes.Set( "selfillumscale", _selfillumscale );
 		SceneObject.Batchable = false;
 	}
 

@@ -2,8 +2,9 @@
 
 public partial class EventHorizonTrigger : ModelEntity
 {
-	public string TriggerModel = "models/sbox_stargate/event_horizon/event_horizon_trigger.vmdl";
-	private EventHorizon EventHorizon = null;
+	private readonly string _triggerModel = "models/sbox_stargate/event_horizon/event_horizon_trigger.vmdl";
+
+	private EventHorizon _eventHorizon = null;
 
 	public EventHorizonTrigger()
 	{
@@ -11,13 +12,13 @@ public partial class EventHorizonTrigger : ModelEntity
 
 	public EventHorizonTrigger( EventHorizon eh )
 	{
-		EventHorizon = eh;
+		_eventHorizon = eh;
 	}
 
 	public EventHorizonTrigger( EventHorizon eh, string model )
 	{
-		EventHorizon = eh;
-		TriggerModel = model;
+		_eventHorizon = eh;
+		_triggerModel = model;
 
 		Spawn();
 	}
@@ -28,7 +29,7 @@ public partial class EventHorizonTrigger : ModelEntity
 
 		Transmit = TransmitType.Always;
 
-		SetModel( TriggerModel );
+		SetModel( _triggerModel );
 		SetupPhysicsFromModel( PhysicsMotionType.Static, true );
 
 		Tags.Add( "trigger" );
@@ -44,7 +45,7 @@ public partial class EventHorizonTrigger : ModelEntity
 
 		if ( !Game.IsServer ) return;
 
-		EventHorizon.OnEntityTriggerStartTouch( this, other );
+		_eventHorizon.OnEntityTriggerStartTouch( this, other );
 	}
 
 	public override void EndTouch( Entity other )
@@ -53,6 +54,6 @@ public partial class EventHorizonTrigger : ModelEntity
 
 		if ( !Game.IsServer ) return;
 
-		EventHorizon.OnEntityTriggerEndTouch( this, other );
+		_eventHorizon.OnEntityTriggerEndTouch( this, other );
 	}
 }

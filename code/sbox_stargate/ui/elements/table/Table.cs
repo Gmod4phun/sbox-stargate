@@ -3,7 +3,8 @@ using Sandbox.UI.Tests;
 
 public partial class Table : Panel
 {
-	public TableHead Head = new();
+	public TableHead Head { get; set; } = new();
+	// TODO: Cant be convert to properties because "out rows in constructor"
 	public VirtualScrollPanel Rows;
 
 	public Table()

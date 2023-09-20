@@ -1,19 +1,19 @@
 using Sandbox;
 using Editor;
 
-[HammerEntity, SupportsSolid, EditorModel( MODEL )]
+[HammerEntity, SupportsSolid, EditorModel( Model )]
 [Title( "DHD (Pegasus)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class DhdPegasus : Dhd
 {
-	public const string MODEL = "models/sbox_stargate/dhd/dhd.vmdl";
+	public const string Model = "models/sbox_stargate/dhd/dhd.vmdl";
 
 	public DhdPegasus()
 	{
-		Data = new(1, 1, "dhd.atlantis.press", "dhd.press_dial");
+		Data = new DhdData(1, 1, "dhd.atlantis.press", "dhd.press_dial");
 	}
 
-	public Vector3 SpawnOffset { get; private set; } = new(0, 0, -5);
-	public Angles SpawnOffsetAng { get; private set; } = new(15, 0, 0);
+	public Vector3 SpawnOffset { get; } = new(0, 0, -5);
+	public Angles SpawnOffsetAng { get; } = new(15, 0, 0);
 
 	public static void DrawGizmos( EditorContext context )
 	{
@@ -26,7 +26,7 @@ public partial class DhdPegasus : Dhd
 		base.Spawn();
 
 		Transmit = TransmitType.Always;
-		SetModel( MODEL );
+		SetModel( Model );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
 		PhysicsBody.BodyType = PhysicsBodyType.Static;
 

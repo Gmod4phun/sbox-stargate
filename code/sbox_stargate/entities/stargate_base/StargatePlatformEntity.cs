@@ -4,11 +4,10 @@ using System.Threading.Tasks;
 
 public partial class StargatePlatformEntity : KeyframeEntity
 {
-	Rotation RotationA;
-
-	bool isWaitingToMove = false;
-	int movement = 0;
-	Sound? MoveSoundInstance = null;
+	private Rotation _rotationA;
+	private bool _isWaitingToMove = false;
+	private int _movement = 0;
+	private Sound? _moveSoundInstance = null;
 
 	// The values correspond to DoorHelper.
 	public enum PlatformMoveType
@@ -94,6 +93,7 @@ public partial class StargatePlatformEntity : KeyframeEntity
 	public string MovingSound { get; set; }
 
 	public bool IsMoving { get; protected set; }
+
 	public bool IsMovingForwards { get; protected set; }
 
 	/// <summary>
@@ -109,7 +109,7 @@ public partial class StargatePlatformEntity : KeyframeEntity
 
 		// PlatformMoveType.Rotating
 		{
-			RotationA = LocalRotation;
+			_rotationA = LocalRotation;
 		}
 
 		IsMoving = false;
@@ -184,9 +184,9 @@ public partial class StargatePlatformEntity : KeyframeEntity
 	[Input]
 	public void StopMoving()
 	{
-		if ( !IsMoving && !isWaitingToMove ) return;
+		if ( !IsMoving && !_isWaitingToMove ) return;
 
-		movement++;
+		_movement++;
 		_ = LocalKeyframeTo( LocalPosition, 0, null ); // Bad
 		_ = LocalRotateKeyframeTo( LocalRotation, 0, null );
 
@@ -198,10 +198,10 @@ public partial class StargatePlatformEntity : KeyframeEntity
 		IsMoving = false;
 		PlaySound( StopMoveSound );
 
-		if ( MoveSoundInstance.HasValue )
+		if ( _moveSoundInstance.HasValue )
 		{
-			MoveSoundInstance.Value.Stop();
-			MoveSoundInstance = null;
+			_moveSoundInstance.Value.Stop();
+			_moveSoundInstance = null;
 		}
 	}
 
@@ -211,7 +211,7 @@ public partial class StargatePlatformEntity : KeyframeEntity
 	[Input]
 	public void ToggleMoving()
 	{
-		if ( IsMoving || isWaitingToMove )
+		if ( IsMoving || _isWaitingToMove )
 		{
 			StopMoving();
 			return;
@@ -231,16 +231,16 @@ public partial class StargatePlatformEntity : KeyframeEntity
 
 	protected override void OnDestroy()
 	{
-		if ( MoveSoundInstance.HasValue )
+		if ( _moveSoundInstance.HasValue )
 		{
-			MoveSoundInstance.Value.Stop();
-			MoveSoundInstance = null;
+			_moveSoundInstance.Value.Stop();
+			_moveSoundInstance = null;
 		}
 
 		base.OnDestroy();
 	}
 
-	Vector3 GetRotationAxis()
+	private Vector3 GetRotationAxis()
 	{
 		var axis = Rotation.From( MoveDir ).Up;
 		if ( !MoveDirIsLocal ) axis = Transform.NormalToLocal( axis );
@@ -248,16 +248,16 @@ public partial class StargatePlatformEntity : KeyframeEntity
 		return axis;
 	}
 
-	async Task DoMove()
+	private async Task DoMove()
 	{
 		if ( !IsMoving ) Sound.FromEntity( StartMoveSound, this );
 
 		IsMoving = true;
-		var moveId = ++movement;
+		var moveId = ++_movement;
 
-		if ( !MoveSoundInstance.HasValue && !string.IsNullOrEmpty( MovingSound ) )
+		if ( !_moveSoundInstance.HasValue && !string.IsNullOrEmpty( MovingSound ) )
 		{
-			MoveSoundInstance = PlaySound( MovingSound );
+			_moveSoundInstance = PlaySound( MovingSound );
 		}
 
 		if ( MoveDirType == PlatformMoveType.RotatingContinious || MoveDirType == PlatformMoveType.Rotating )
@@ -277,7 +277,7 @@ public partial class StargatePlatformEntity : KeyframeEntity
 			// TODO: Move the platform via MoveWithVelocity( Angles, timeToTake )
 
 			var axis_rot = GetRotationAxis();
-			var finalRot = RotationA.RotateAroundAxis( axis_rot, initialRotation + moveDist );
+			var finalRot = _rotationA.RotateAroundAxis( axis_rot, initialRotation + moveDist );
 			var lastTime = Time.Now;
 			for ( float f = CurrentRotation % moveDist / moveDist; f < 1; )
 			{
@@ -285,12 +285,12 @@ public partial class StargatePlatformEntity : KeyframeEntity
 				var diff = Math.Max( Time.Now - lastTime, 0 );
 				lastTime = Time.Now;
 
-				if ( moveId != movement || !this.IsValid() ) return;
+				if ( moveId != _movement || !this.IsValid() ) return;
 
 				var timeToTake = Math.Abs( moveDist ) / Math.Abs( Speed ); // Get the fresh speed
 				var delta = diff / timeToTake;
 				CurrentRotation += delta * moveDist;
-				LocalRotation = RotationA.RotateAroundAxis( axis_rot, CurrentRotation );
+				LocalRotation = _rotationA.RotateAroundAxis( axis_rot, CurrentRotation );
 				f += delta;
 			}
 
@@ -304,16 +304,16 @@ public partial class StargatePlatformEntity : KeyframeEntity
 			await GameTask.Delay( 100 );
 		}
 
-		if ( moveId != movement || !this.IsValid() ) return;
+		if ( moveId != _movement || !this.IsValid() ) return;
 
 		if ( MoveDirType != PlatformMoveType.RotatingContinious || TimeToHold > 0 )
 		{
 			IsMoving = false;
 
-			if ( MoveSoundInstance.HasValue )
+			if ( _moveSoundInstance.HasValue )
 			{
-				MoveSoundInstance.Value.Stop();
-				MoveSoundInstance = null;
+				_moveSoundInstance.Value.Stop();
+				_moveSoundInstance = null;
 			}
 
 			// Do not play the stop sound for instant changing direction
@@ -326,11 +326,11 @@ public partial class StargatePlatformEntity : KeyframeEntity
 		if ( !LoopMovement ) return;
 
 		// ToggleMovement input during this time causes unexpected behavior
-		isWaitingToMove = true;
+		_isWaitingToMove = true;
 		if ( TimeToHold > 0 ) await GameTask.DelaySeconds( TimeToHold );
-		isWaitingToMove = false;
+		_isWaitingToMove = false;
 
-		if ( moveId != movement || !this.IsValid() ) return;
+		if ( moveId != _movement || !this.IsValid() ) return;
 
 		if ( MoveDirType != PlatformMoveType.RotatingContinious )
 		{
@@ -344,11 +344,11 @@ public partial class StargatePlatformEntity : KeyframeEntity
 	/// Sets the platforms's position to given percentage between start and end positions. The expected input range is 0..1
 	/// </summary>
 	[Input]
-	void SetPosition( float progress )
+	private void SetPosition( float progress )
 	{
 		progress = Math.Clamp( progress, 0.0f, 1.0f );
 
-		LocalRotation = Rotation.Lerp( RotationA, RotationA.RotateAroundAxis( GetRotationAxis(), MoveDistance != 0 ? MoveDistance : 360.0f ), progress );
+		LocalRotation = Rotation.Lerp( _rotationA, _rotationA.RotateAroundAxis( GetRotationAxis(), MoveDistance != 0 ? MoveDistance : 360.0f ), progress );
 		CurrentRotation = 0.0f.LerpTo( MoveDistance != 0 ? MoveDistance : 360.0f, progress );
 	}
 }

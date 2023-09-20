@@ -1,7 +1,7 @@
 using Editor;
 using Sandbox;
 
-[HammerEntity, SupportsSolid, EditorModel( MODEL )]
+[HammerEntity, SupportsSolid, EditorModel( Model )]
 [Title( "Stargate (Movie)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class StargateMovie : StargateMilkyWay
 {

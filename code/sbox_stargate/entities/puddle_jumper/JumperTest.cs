@@ -3,9 +3,9 @@
 [Title( "Test Jumper" ), Category( "Stargate" ), Icon( "chair" )]
 public partial class JumperTest : Prop, IUse
 {
-	private InputState currentInput;
+	private InputState _currentInput;
 
-	private MovementState currentMovement;
+	private MovementState _currentMovement;
 
 	[Net]
 	public Vector3 SpawnOffset { get; private set; } = new(0, 0, 65);
@@ -46,43 +46,43 @@ public partial class JumperTest : Prop, IUse
 		float desiredRight = 0;
 		float desiredUp = 0;
 
-		if ( currentInput.forward )
+		if ( _currentInput.Forward )
 			desiredForward = 1;
-		else if ( currentInput.back )
+		else if ( _currentInput.Back )
 			desiredForward = -1;
 
-		if ( currentInput.right )
+		if ( _currentInput.Right )
 			desiredRight = 1;
-		else if ( currentInput.left )
+		else if ( _currentInput.Left )
 			desiredRight = -1;
 
-		if ( currentInput.up )
+		if ( _currentInput.Up )
 			desiredUp = 1;
-		else if ( currentInput.down )
+		else if ( _currentInput.Down )
 			desiredUp = -1;
 
-		if ( currentInput.boost )
+		if ( _currentInput.Boost )
 		{
 			desiredForward = desiredForward * 4f;
 		}
 
-		currentMovement.accelForward = currentMovement.accelForward.LerpTo( desiredForward, dt );
-		currentMovement.accelRight = currentMovement.accelRight.LerpTo( desiredRight, dt );
-		currentMovement.accelUp = currentMovement.accelUp.LerpTo( desiredUp, dt );
+		_currentMovement.AccelForward = _currentMovement.AccelForward.LerpTo( desiredForward, dt );
+		_currentMovement.AccelRight = _currentMovement.AccelRight.LerpTo( desiredRight, dt );
+		_currentMovement.AccelUp = _currentMovement.AccelUp.LerpTo( desiredUp, dt );
 
-		if ( currentMovement.accelForward > 0.01 || currentMovement.accelForward < -0.01 )
+		if ( _currentMovement.AccelForward > 0.01 || _currentMovement.AccelForward < -0.01 )
 		{
-			body.Position += rot.Forward * currentMovement.accelForward;
+			body.Position += rot.Forward * _currentMovement.AccelForward;
 		}
 
-		if ( currentMovement.accelRight > 0.01 || currentMovement.accelRight < -0.01 )
+		if ( _currentMovement.AccelRight > 0.01 || _currentMovement.AccelRight < -0.01 )
 		{
-			body.Position += rot.Right * currentMovement.accelRight;
+			body.Position += rot.Right * _currentMovement.AccelRight;
 		}
 
-		if ( currentMovement.accelUp > 0.01 || currentMovement.accelUp < -0.01 )
+		if ( _currentMovement.AccelUp > 0.01 || _currentMovement.AccelUp < -0.01 )
 		{
-			body.Position += rot.Up * currentMovement.accelUp;
+			body.Position += rot.Up * _currentMovement.AccelUp;
 		}
 	}
 
@@ -154,14 +154,14 @@ public partial class JumperTest : Prop, IUse
 			}
 			else
 			{
-				currentInput.Reset();
-				currentInput.forward = Input.Down( InputButton.Forward );
-				currentInput.back = Input.Down( InputButton.Back );
-				currentInput.left = Input.Down( InputButton.Left );
-				currentInput.right = Input.Down( InputButton.Right );
-				currentInput.up = Input.Down( InputButton.Jump );
-				currentInput.down = Input.Down( InputButton.Duck );
-				currentInput.boost = Input.Down( InputButton.Run );
+				_currentInput.Reset();
+				_currentInput.Forward = Input.Down( InputButton.Forward );
+				_currentInput.Back = Input.Down( InputButton.Back );
+				_currentInput.Left = Input.Down( InputButton.Left );
+				_currentInput.Right = Input.Down( InputButton.Right );
+				_currentInput.Up = Input.Down( InputButton.Jump );
+				_currentInput.Down = Input.Down( InputButton.Duck );
+				_currentInput.Boost = Input.Down( InputButton.Run );
 			}
 		}
 	}
@@ -170,7 +170,7 @@ public partial class JumperTest : Prop, IUse
 	{
 		Driver = null;
 
-		currentInput.Reset();
+		_currentInput.Reset();
 
 		if ( !player.IsValid() )
 			return;
@@ -191,37 +191,37 @@ public partial class JumperTest : Prop, IUse
 
 	private struct InputState
 	{
-		public bool forward;
-		public bool back;
-		public bool left;
-		public bool right;
-		public bool up;
-		public bool down;
-		public bool boost;
+		public bool Forward { get; set; }
+		public bool Back { get; set; }
+		public bool Left { get; set; }
+		public bool Right { get; set; }
+		public bool Up { get; set; }
+		public bool Down { get; set; }
+		public bool Boost { get; set; }
 
 		public void Reset()
 		{
-			forward = false;
-			back = false;
-			left = false;
-			right = false;
-			up = false;
-			down = false;
-			boost = false;
+			Forward = false;
+			Back = false;
+			Left = false;
+			Right = false;
+			Up = false;
+			Down = false;
+			Boost = false;
 		}
 	}
 
 	private struct MovementState
 	{
-		public float accelForward;
-		public float accelRight;
-		public float accelUp;
+		public float AccelForward { get; set; }
+		public float AccelRight { get; set; }
+		public float AccelUp { get; set; }
 
 		public MovementState()
 		{
-			accelForward = 0;
-			accelRight = 0;
-			accelUp = 0;
+			AccelForward = 0;
+			AccelRight = 0;
+			AccelUp = 0;
 		}
 	}
 }

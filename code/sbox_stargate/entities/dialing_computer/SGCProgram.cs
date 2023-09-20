@@ -3,10 +3,9 @@ using Sandbox.UI;
 
 public class SGCProgram : Panel
 {
-	public SGCMonitor Monitor;
-	public SGCComputer Computer;
-
-	protected Stargate Gate;
+	public SGCMonitor Monitor { get; set; }
+	public SGCComputer Computer { get; set; }
+	protected Stargate Gate { get; set; }
 
 	public virtual void UpdateProgram( SGCMonitor monitor, SGCComputer computer )
 	{

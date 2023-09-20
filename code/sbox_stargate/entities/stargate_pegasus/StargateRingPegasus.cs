@@ -5,7 +5,6 @@ using Sandbox;
 
 public partial class StargateRingPegasus : ModelEntity
 {
-	private Sound? RollSound = null;
 	// ring variables
 
 	[Net]
@@ -17,6 +16,7 @@ public partial class StargateRingPegasus : ModelEntity
 	public List<ModelEntity> SymbolParts { get; private set; } = new();
 
 	public List<int> DialSequenceActiveSymbols { get; private set; } = new();
+	private Sound? RollSound { get; set; } = null;
 
 	public override void Spawn()
 	{

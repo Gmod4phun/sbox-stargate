@@ -1,13 +1,13 @@
 using Sandbox;
 using Editor;
 
-[HammerEntity, SupportsSolid, EditorModel( MODEL )]
+[HammerEntity, SupportsSolid, EditorModel( Model )]
 [Title( "DHD (Milky Way)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class DhdMilkyWay : Dhd
 {
-	public const string MODEL = "models/sbox_stargate/dhd/dhd.vmdl";
-	public Vector3 SpawnOffset { get; private set; } = new(0, 0, -5);
-	public Angles SpawnOffsetAng { get; private set; } = new(15, 0, 0);
+	public const string Model = "models/sbox_stargate/dhd/dhd.vmdl";
+	public Vector3 SpawnOffset { get; } = new(0, 0, -5);
+	public Angles SpawnOffsetAng { get; } = new(15, 0, 0);
 
 	public static void DrawGizmos( EditorContext context )
 	{
@@ -19,7 +19,7 @@ public partial class DhdMilkyWay : Dhd
 		base.Spawn();
 
 		Transmit = TransmitType.Always;
-		SetModel( MODEL );
+		SetModel( Model );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
 		PhysicsBody.BodyType = PhysicsBodyType.Static;
 

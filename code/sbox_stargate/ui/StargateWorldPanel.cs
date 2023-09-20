@@ -4,11 +4,9 @@ using Sandbox.UI.Construct;
 
 public class StargateWorldPanel : WorldPanel
 {
-	public Stargate Gate;
-
-	private Label Address;
-	private Label Group;
-	private Label IsLocal;
+	private Label _address;
+	private Label _group;
+	private Label _isLocal;
 
 	public StargateWorldPanel( Stargate gate )
 	{
@@ -16,9 +14,9 @@ public class StargateWorldPanel : WorldPanel
 
 		Gate = gate;
 
-		Address = Add.Label( "Address" );
-		Group = Add.Label( "Group" );
-		IsLocal = Add.Label( "Local" );
+		_address = Add.Label( "Address" );
+		_group = Add.Label( "Group" );
+		_isLocal = Add.Label( "Local" );
 
 		float width = 2048;
 		float height = 2048;
@@ -27,6 +25,8 @@ public class StargateWorldPanel : WorldPanel
 
 		SceneObject.Flags.BloomLayer = false;
 	}
+
+	public Stargate Gate { get; set; }
 
 	public override void Tick()
 	{
@@ -53,9 +53,9 @@ public class StargateWorldPanel : WorldPanel
 	{
 		if ( !Gate.IsValid() ) return;
 
-		Address.Text = $"Address: {Gate.GateAddress}";
-		Group.Text = $"Group: {Gate.GateGroup}";
+		_address.Text = $"Address: {Gate.GateAddress}";
+		_group.Text = $"Group: {Gate.GateGroup}";
 		var localText = Gate.GateLocal ? "Yes" : "No";
-		IsLocal.Text = $"Local: {localText}";
+		_isLocal.Text = $"Local: {localText}";
 	}
 }

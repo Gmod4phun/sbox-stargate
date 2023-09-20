@@ -10,7 +10,7 @@ public partial class StargateList : Panel
 {
 	//VirtualScrollPanel Canvas;
 
-	private string[] categories = { "Stargate", "Rings", "Weapons", "Other" };
+	private readonly string[] _categories = { "Stargate", "Rings", "Weapons", "Other" };
 
 	public StargateList()
 	{
@@ -20,7 +20,7 @@ public partial class StargateList : Panel
 
 		Dictionary<string, VirtualScrollPanel> CategoriesCanvas = new();
 
-		foreach ( string cat in categories )
+		foreach ( string cat in _categories )
 		{
 			Add.Label( cat, "category" );
 			var can = AddChild<VirtualScrollPanel>( "canvas" );

@@ -1,11 +1,11 @@
 using Editor;
 using Sandbox;
 
-[HammerEntity, SupportsSolid, EditorModel( MODEL )]
+[HammerEntity, SupportsSolid, EditorModel( Model )]
 [Title( "Transportation Rings (Ancient)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class RingsAncient : Rings
 {
-	public const string MODEL = "models/sbox_stargate/rings_ancient/ring_ancient_cover.vmdl";
+	public const string Model = "models/sbox_stargate/rings_ancient/ring_ancient_cover.vmdl";
 
 	public override void Spawn()
 	{

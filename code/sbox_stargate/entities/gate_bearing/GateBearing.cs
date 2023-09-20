@@ -3,7 +3,7 @@
 [Title( "Gate Bearing" ), Category( "Stargate" ), Icon( "chair" )]
 public partial class GateBearing : ModelEntity
 {
-	private float glow = 0;
+	private float _glow = 0;
 
 	[Net]
 	public bool On { get; private set; } = false;
@@ -51,7 +51,7 @@ public partial class GateBearing : ModelEntity
 		if ( !Gate.IsValid() )
 			return;
 
-		glow = MathX.Approach( glow, On ? 1 : 0, (On ? 8f : 4f) * Time.Delta );
-		SceneObject.Attributes.Set( "selfillumscale", glow );
+		_glow = MathX.Approach( _glow, On ? 1 : 0, (On ? 8f : 4f) * Time.Delta );
+		SceneObject.Attributes.Set( "selfillumscale", _glow );
 	}
 }

@@ -2,7 +2,7 @@ using Sandbox;
 
 public partial class RingPanelButton : AnimatedEntity, IUse
 {
-	float GlowScale = 0;
+	private float _glowScale = 0;
 	public RingPanel RingPanel { get; set; } = null;
 
 	[Net]
@@ -34,10 +34,10 @@ public partial class RingPanelButton : AnimatedEntity, IUse
 		var so = SceneObject;
 		if ( !so.IsValid() ) return;
 
-		GlowScale = GlowScale.LerpTo( On ? 1 : 0, Time.Delta * (On ? 20f : 10f) );
+		_glowScale = _glowScale.LerpTo( On ? 1 : 0, Time.Delta * (On ? 20f : 10f) );
 
 		so.Batchable = false;
-		so.Attributes.Set( "selfillumscale", GlowScale );
+		so.Attributes.Set( "selfillumscale", _glowScale );
 	}
 
 	[GameEvent.Client.Frame]

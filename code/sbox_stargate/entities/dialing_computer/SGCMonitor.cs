@@ -5,13 +5,13 @@ using Sandbox;
 [Title( "SGC Monitor" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class SGCMonitor : ModelEntity, IUse
 {
-	private SGCMonitorHUDPanel HUDPanel;
-	private SGCMonitorWorldPanel WorldPanel;
+	private SGCMonitorHUDPanel _hudPanel;
+	private SGCMonitorWorldPanel _worldPanel;
 
 	[Net]
 	public SGCComputer Computer { get; private set; } = null;
 
-	public List<SGCProgram> Programs { get; private set; } = new();
+	public List<SGCProgram> Programs { get; } = new();
 	public SGCProgram CurrentProgram { get; private set; } = null;
 
 	[Net]
@@ -67,7 +67,7 @@ public partial class SGCMonitor : ModelEntity, IUse
 		UpdatePrograms( Computer, this );
 
 		CurrentProgram = Programs.First();
-		WorldPanel = new(this, CurrentProgram);
+		_worldPanel = new(this, CurrentProgram);
 	}
 
 	public override void StartTouch( Entity other )
@@ -87,24 +87,24 @@ public partial class SGCMonitor : ModelEntity, IUse
 	public void ViewPanelOnHud()
 	{
 		CurrentProgram.Parent = null;
-		HUDPanel = new(this, CurrentProgram);
-		Game.RootPanel.AddChild( HUDPanel );
+		_hudPanel = new(this, CurrentProgram);
+		Game.RootPanel.AddChild( _hudPanel );
 	}
 
 	[ClientRpc]
 	public void ViewPanelOnWorld()
 	{
 		CurrentProgram.Parent = null;
-		HUDPanel?.Delete( true );
-		WorldPanel.AddProgram( CurrentProgram );
+		_hudPanel?.Delete( true );
+		_worldPanel.AddProgram( CurrentProgram );
 	}
 
 	[ClientRpc]
 	public void DeleteBothPanels()
 	{
 		CurrentProgram?.Delete( true );
-		HUDPanel?.Delete( true );
-		WorldPanel?.Delete( true );
+		_hudPanel?.Delete( true );
+		_worldPanel?.Delete( true );
 	}
 
 	public bool OnUse( Entity user )
@@ -131,14 +131,14 @@ public partial class SGCMonitor : ModelEntity, IUse
 
 	public bool IsWorldPanelInScreen()
 	{
-		var bounds = WorldPanel.PanelBounds;
-		var scaleFactor = (WorldPanel.ActualSize / WorldPanel.RenderSize) / 40.0f;
+		var bounds = _worldPanel.PanelBounds;
+		var scaleFactor = (_worldPanel.ActualSize / _worldPanel.RenderSize) / 40.0f;
 		var heightScaleModifier = 0.65f;
 
-		var p1 = WorldPanel.Position + WorldPanel.Rotation.Up * (bounds.Height * heightScaleModifier * scaleFactor) + WorldPanel.Rotation.Right * (bounds.Width * scaleFactor);
-		var p2 = WorldPanel.Position + WorldPanel.Rotation.Up * (bounds.Height * heightScaleModifier * scaleFactor) + WorldPanel.Rotation.Right * (-bounds.Width * scaleFactor);
-		var p3 = WorldPanel.Position + WorldPanel.Rotation.Up * (-bounds.Height * heightScaleModifier * scaleFactor) + WorldPanel.Rotation.Right * (bounds.Width * scaleFactor);
-		var p4 = WorldPanel.Position + WorldPanel.Rotation.Up * (-bounds.Height * heightScaleModifier * scaleFactor) + WorldPanel.Rotation.Right * (-bounds.Width * scaleFactor);
+		var p1 = _worldPanel.Position + _worldPanel.Rotation.Up * (bounds.Height * heightScaleModifier * scaleFactor) + _worldPanel.Rotation.Right * (bounds.Width * scaleFactor);
+		var p2 = _worldPanel.Position + _worldPanel.Rotation.Up * (bounds.Height * heightScaleModifier * scaleFactor) + _worldPanel.Rotation.Right * (-bounds.Width * scaleFactor);
+		var p3 = _worldPanel.Position + _worldPanel.Rotation.Up * (-bounds.Height * heightScaleModifier * scaleFactor) + _worldPanel.Rotation.Right * (bounds.Width * scaleFactor);
+		var p4 = _worldPanel.Position + _worldPanel.Rotation.Up * (-bounds.Height * heightScaleModifier * scaleFactor) + _worldPanel.Rotation.Right * (-bounds.Width * scaleFactor);
 
 		var p1s = p1.ToScreen();
 		var p2s = p2.ToScreen();
@@ -159,14 +159,14 @@ public partial class SGCMonitor : ModelEntity, IUse
 
 	public bool IsWorldPanelBehindScreen()
 	{
-		var bounds = WorldPanel.PanelBounds;
-		var scaleFactor = (WorldPanel.ActualSize / WorldPanel.RenderSize) / 40.0f;
+		var bounds = _worldPanel.PanelBounds;
+		var scaleFactor = (_worldPanel.ActualSize / _worldPanel.RenderSize) / 40.0f;
 		var heightScaleModifier = 0.65f;
 
-		var p1 = WorldPanel.Position + WorldPanel.Rotation.Up * (bounds.Height * heightScaleModifier * scaleFactor) + WorldPanel.Rotation.Right * (bounds.Width * scaleFactor);
-		var p2 = WorldPanel.Position + WorldPanel.Rotation.Up * (bounds.Height * heightScaleModifier * scaleFactor) + WorldPanel.Rotation.Right * (-bounds.Width * scaleFactor);
-		var p3 = WorldPanel.Position + WorldPanel.Rotation.Up * (-bounds.Height * heightScaleModifier * scaleFactor) + WorldPanel.Rotation.Right * (bounds.Width * scaleFactor);
-		var p4 = WorldPanel.Position + WorldPanel.Rotation.Up * (-bounds.Height * heightScaleModifier * scaleFactor) + WorldPanel.Rotation.Right * (-bounds.Width * scaleFactor);
+		var p1 = _worldPanel.Position + _worldPanel.Rotation.Up * (bounds.Height * heightScaleModifier * scaleFactor) + _worldPanel.Rotation.Right * (bounds.Width * scaleFactor);
+		var p2 = _worldPanel.Position + _worldPanel.Rotation.Up * (bounds.Height * heightScaleModifier * scaleFactor) + _worldPanel.Rotation.Right * (-bounds.Width * scaleFactor);
+		var p3 = _worldPanel.Position + _worldPanel.Rotation.Up * (-bounds.Height * heightScaleModifier * scaleFactor) + _worldPanel.Rotation.Right * (bounds.Width * scaleFactor);
+		var p4 = _worldPanel.Position + _worldPanel.Rotation.Up * (-bounds.Height * heightScaleModifier * scaleFactor) + _worldPanel.Rotation.Right * (-bounds.Width * scaleFactor);
 
 		var p1s = p1.ToScreen();
 		var p2s = p2.ToScreen();
@@ -243,11 +243,11 @@ public partial class SGCMonitor : ModelEntity, IUse
 	[GameEvent.Client.Frame]
 	private void RenderLogic()
 	{
-		if ( !WorldPanel.IsValid() )
+		if ( !_worldPanel.IsValid() )
 			return;
 
 		// if we are viewing it on HUD, we don't care about hiding world panel, and also remove HUDPanel if we arent active user
-		if ( HUDPanel.IsValid() )
+		if ( _hudPanel.IsValid() )
 		{
 			if ( CurrentUser != Game.LocalPawn )
 				ViewPanelOnWorld();
@@ -255,7 +255,7 @@ public partial class SGCMonitor : ModelEntity, IUse
 			return;
 		}
 
-		var screenPos = WorldPanel.Position;
+		var screenPos = _worldPanel.Position;
 		var screenDir = Rotation.Forward;
 
 		bool isWorldPanelBehindScreen = IsWorldPanelBehindScreen();
@@ -270,7 +270,7 @@ public partial class SGCMonitor : ModelEntity, IUse
 
 		if ( (!isPlayerBehindMonitor && !isPlayerFarAway && !isWorldPanelOffScreen && !isWorldPanelBehindScreen) && CurrentUser != Game.LocalClient && !CurrentProgram.Parent.IsValid() )
 		{
-			WorldPanel.AddProgram( CurrentProgram );
+			_worldPanel.AddProgram( CurrentProgram );
 		}
 	}
 }

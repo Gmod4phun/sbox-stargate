@@ -17,35 +17,40 @@ partial class StargateAddon
 		if ( !Game.IsServer ) return;
 
 		// todo addon: ideally this would _extend_ the gamemode's collision rules rather than replace them, but I can't find a PhysicsWorld.GetCollisionRules
-		CollisionRules rules = new CollisionRules();
+		CollisionRules rules = new()
+		{
+			Defaults = new Dictionary<string, Result>
+			{
+				["solid"] = Result.Collide,
+				["trigger"] = Result.Trigger,
+				["ladder"] = Result.Ignore,
+				["water"] = Result.Trigger,
+				[StargateTags.FakeWorld] = Result.Ignore
+			}
+		};
 
-		rules.Defaults = new Dictionary<string, Result>();
-		rules.Defaults["solid"] = Result.Collide;
-		rules.Defaults["trigger"] = Result.Trigger;
-		rules.Defaults["ladder"] = Result.Ignore;
-		rules.Defaults["water"] = Result.Trigger;
-		rules.Defaults[StargateTags.FakeWorld] = Result.Ignore;
+		rules.Pairs = new HashSet<Pair>
+		{
+			new( "solid", "solid", Result.Collide ),
+			new( "solid", "trigger", Result.Trigger ),
+			new( "trigger", "glass", Result.Ignore ),
+			new( "debris", "player", Result.Ignore ),
+			new( "player", "glass", Result.Trigger ),
+			new( "glass", "glass", Result.Ignore ),
 
-		rules.Pairs = new HashSet<Pair>();
-		rules.Pairs.Add( new Pair( "solid", "solid", Result.Collide ) );
-		rules.Pairs.Add( new Pair( "solid", "trigger", Result.Trigger ) );
-		rules.Pairs.Add( new Pair( "trigger", "glass", Result.Ignore ) );
-		rules.Pairs.Add( new Pair( "debris", "player", Result.Ignore ) );
-		rules.Pairs.Add( new Pair( "player", "glass", Result.Trigger ) );
-		rules.Pairs.Add( new Pair( "glass", "glass", Result.Ignore ) );
+			new( StargateTags.BehindGate, StargateTags.InBufferFront, Result.Ignore ),
+			new( StargateTags.BehindGate, StargateTags.BeforeGate, Result.Ignore ),
 
-		rules.Pairs.Add( new Pair( StargateTags.BehindGate, StargateTags.InBufferFront, Result.Ignore ) );
-		rules.Pairs.Add( new Pair( StargateTags.BehindGate, StargateTags.BeforeGate, Result.Ignore ) );
+			new( StargateTags.BeforeGate, StargateTags.InBufferBack, Result.Ignore ),
 
-		rules.Pairs.Add( new Pair( StargateTags.BeforeGate, StargateTags.InBufferBack, Result.Ignore ) );
+			new( StargateTags.InBufferFront, StargateTags.FakeWorld, Result.Collide ),
+			new( StargateTags.InBufferFront, "world", Result.Ignore ),
 
-		rules.Pairs.Add( new Pair( StargateTags.InBufferFront, StargateTags.FakeWorld, Result.Collide ) );
-		rules.Pairs.Add( new Pair( StargateTags.InBufferFront, "world", Result.Ignore ) );
+			new( StargateTags.InBufferFront, StargateTags.InBufferBack, Result.Ignore ),
 
-		rules.Pairs.Add( new Pair( StargateTags.InBufferFront, StargateTags.InBufferBack, Result.Ignore ) );
-
-		rules.Pairs.Add( new Pair( StargateTags.InBufferBack, StargateTags.FakeWorld, Result.Collide ) );
-		rules.Pairs.Add( new Pair( StargateTags.InBufferBack, "world", Result.Ignore ) );
+			new( StargateTags.InBufferBack, StargateTags.FakeWorld, Result.Collide ),
+			new( StargateTags.InBufferBack, "world", Result.Ignore )
+		};
 
 		Game.PhysicsWorld.SetCollisionRules( rules );
 
@@ -60,13 +65,13 @@ partial class StargateAddon
 		var hasSpawnOffsetProperty = entityDesc.GetProperty( "SpawnOffset" ) != null;
 		if ( hasSpawnOffsetProperty ) // spawn offsets for Stargate stuff
 		{
-			var property_spawnoffset = entityDesc.GetProperty( "SpawnOffset" );
-			if ( property_spawnoffset != null ) ent.Position += (Vector3)property_spawnoffset.GetValue( ent );
+			var propertySpawnOffset = entityDesc.GetProperty( "SpawnOffset" );
+			if ( propertySpawnOffset != null ) ent.Position += (Vector3)propertySpawnOffset.GetValue( ent );
 
-			var property_spawnoffset_ang = entityDesc.GetProperty( "SpawnOffsetAng" );
-			if ( property_spawnoffset_ang != null )
+			var propertySpawnOffsetAng = entityDesc.GetProperty( "SpawnOffsetAng" );
+			if ( propertySpawnOffsetAng != null )
 			{
-				var ang = (Angles)property_spawnoffset_ang.GetValue( ent );
+				var ang = (Angles)propertySpawnOffsetAng.GetValue( ent );
 				var newRot = (ent.Rotation.Angles() + ang).ToRotation();
 				ent.Rotation = newRot;
 			}

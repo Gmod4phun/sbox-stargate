@@ -2,8 +2,8 @@ using Sandbox;
 
 public partial class StargateIrisAtlantis : StargateIris
 {
-	protected Sound IrisLoop;
-	private readonly float OpenCloseDleay = 1f;
+	private const float OpenCloseDelay = 1f;
+	protected Sound IrisLoop { get; set; }
 
 	public override void Spawn()
 	{
@@ -29,7 +29,7 @@ public partial class StargateIrisAtlantis : StargateIris
 		EnableDrawing = true;
 		Sound.FromEntity( "stargate.iris.atlantis.close", this );
 
-		await GameTask.DelaySeconds( OpenCloseDleay );
+		await GameTask.DelaySeconds( OpenCloseDelay );
 		if ( !this.IsValid() ) return;
 
 		Busy = false;
@@ -56,7 +56,7 @@ public partial class StargateIrisAtlantis : StargateIris
 		EnableDrawing = false;
 		Sound.FromEntity( "stargate.iris.atlantis.open", this );
 
-		await GameTask.DelaySeconds( OpenCloseDleay );
+		await GameTask.DelaySeconds( OpenCloseDelay );
 		if ( !this.IsValid() ) return;
 
 		Busy = false;

@@ -7,7 +7,7 @@ public partial class StargateNoxHands : Weapon
 	/// <summary>
 	/// in the future when all settings are globalized, there is this value so that the gate opening distance can be adjusted.
 	/// </summary>
-	public static float MaxDistance = 1500;
+	public static float MaxDistance { get; set; } = 1500;
 
 	//later add a hand model
 	//public override string ViewModelPath => "hand model";

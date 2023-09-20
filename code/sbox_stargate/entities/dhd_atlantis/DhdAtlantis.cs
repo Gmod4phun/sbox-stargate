@@ -2,11 +2,11 @@ using System.Collections.Generic;
 using Sandbox;
 using Editor;
 
-[HammerEntity, SupportsSolid, EditorModel( MODEL )]
+[HammerEntity, SupportsSolid, EditorModel( Model )]
 [Title( "DHD (Atlantis)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class DhdAtlantis : Dhd
 {
-	public const string MODEL = "models/sbox_stargate/dhd_atlantis/dhd_atlantis.vmdl";
+	public const string Model = "models/sbox_stargate/dhd_atlantis/dhd_atlantis.vmdl";
 
 	public DhdAtlantis()
 	{
@@ -68,7 +68,7 @@ public partial class DhdAtlantis : Dhd
 		base.Spawn();
 
 		Transmit = TransmitType.Always;
-		SetModel( MODEL );
+		SetModel( Model );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
 		PhysicsBody.BodyType = PhysicsBodyType.Static;
 

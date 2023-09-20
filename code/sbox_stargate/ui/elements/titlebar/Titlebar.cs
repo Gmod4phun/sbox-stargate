@@ -28,8 +28,8 @@ public class MouseDragPanel : Panel
 
 public class Titlebar : MouseDragPanel
 {
-	protected Button CloseButton = null;
-	protected Button Title = null;
+	protected Button CloseButton { get; set; } = null;
+	protected Button Title { get; set; } = null;
 
 	public Titlebar()
 	{

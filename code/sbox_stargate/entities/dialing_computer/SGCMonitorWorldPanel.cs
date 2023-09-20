@@ -3,44 +3,45 @@ using Sandbox.UI;
 
 public class SGCMonitorWorldPanel : WorldPanel
 {
-	public float RenderSize = 1600;
-	public float ActualSize = 496;
-	private SGCMonitor Monitor;
+	private SGCMonitor _monitor;
 
-	private Panel ProgramScreen = null;
+	private Panel _programScreen = null;
 
 	public SGCMonitorWorldPanel( SGCMonitor monitor, SGCProgram program )
 	{
 		StyleSheet.Load( "sbox_stargate/entities/dialing_computer/SGCMonitorWorldPanel.scss" );
 
-		Monitor = monitor;
+		_monitor = monitor;
 
 		PanelBounds = new Rect( -RenderSize / 2, -RenderSize / 2, RenderSize, RenderSize );
 
 		Add.Panel( "background" );
-		ProgramScreen = Add.Panel( "programscreen" );
+		_programScreen = Add.Panel( "programscreen" );
 
 		AddClass( "SGCMonitorWorldPanel" );
 		AddProgram( program );
 	}
 
+	public float RenderSize { get; set; } = 1600;
+	public float ActualSize { get; set; } = 496;
+
 	public void AddProgram( SGCProgram program )
 	{
-		ProgramScreen.AddChild( program );
+		_programScreen.AddChild( program );
 	}
 
 	public override void Tick()
 	{
 		base.Tick();
 
-		if ( !Monitor.IsValid() )
+		if ( !_monitor.IsValid() )
 		{
 			Delete();
 			return;
 		}
 
-		Position = Monitor.Position;
-		Rotation = Monitor.Rotation;
+		Position = _monitor.Position;
+		Rotation = _monitor.Rotation;
 
 		var scaleFactor = ActualSize / RenderSize;
 

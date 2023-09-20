@@ -2,9 +2,8 @@ using Sandbox;
 
 public partial class StargateIris : AnimatedEntity
 {
-	public bool Busy = false;
-
-	private float OpenCloseDleay = 3f;
+	private float _openCloseDelay = 3f;
+	public bool Busy { get; set; } = false;
 
 	[Net]
 	public Stargate Gate { get; set; } = null;
@@ -37,7 +36,7 @@ public partial class StargateIris : AnimatedEntity
 		CurrentSequence.Name = "iris_close";
 		Sound.FromEntity( "stargate.iris.close", this );
 
-		await GameTask.DelaySeconds( OpenCloseDleay );
+		await GameTask.DelaySeconds( _openCloseDelay );
 		if ( !this.IsValid() ) return;
 
 		Busy = false;
@@ -54,7 +53,7 @@ public partial class StargateIris : AnimatedEntity
 		CurrentSequence.Name = "iris_open";
 		Sound.FromEntity( "stargate.iris.open", this );
 
-		await GameTask.DelaySeconds( OpenCloseDleay );
+		await GameTask.DelaySeconds( _openCloseDelay );
 		if ( !this.IsValid() ) return;
 
 		Busy = false;

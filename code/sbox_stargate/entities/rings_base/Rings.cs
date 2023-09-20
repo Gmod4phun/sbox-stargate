@@ -11,15 +11,8 @@ public partial class Rings : AnimatedEntity, IUse
 	public const string Symbols = "12345";
 
 	protected const int AmountOfRings = 5;
-	public static readonly float MAX_RING_RANGE = 1024f;
 
-	protected int returnedRings = 0;
-
-	protected List<RingRing> ChildRings = new();
-
-	protected Rings DestinationRings;
-
-	protected Vector3 EndPos;
+	public static readonly float MaxRingRange = 1024f;
 
 	[Net]
 	public string Address { get; protected set; }
@@ -43,10 +36,15 @@ public partial class Rings : AnimatedEntity, IUse
 
 	public bool RingsDeployed { get; protected set; } = false;
 
-	protected bool IsUpsideDown
-	{
-		get => Rotation.Up.Dot( new Vector3( 0, 0, -1 ) ) > 1 / Math.Sqrt( 2 );
-	}
+	protected int returnedRings { get; set; } = 0;
+
+	protected List<RingRing> ChildRings { get; set; } = new();
+
+	protected Rings DestinationRings { get; set; }
+
+	protected Vector3 EndPos { get; set; }
+
+	protected bool IsUpsideDown => Rotation.Up.Dot( new Vector3( 0, 0, -1 ) ) > 1 / Math.Sqrt( 2 );
 
 	public static bool IsAddressValid( string address )
 	{
@@ -271,7 +269,7 @@ public partial class Rings : AnimatedEntity, IUse
 
 		// Avoid making a calculation 2 times foreach ring
 		var isUpDown = IsUpsideDown;
-		var tr = Trace.Sweep( PhysicsBody, Transform.WithPosition( Position + Rotation.Up * 110 ), Transform.WithPosition( Position + Rotation.Up * MAX_RING_RANGE ) ).Ignore( this ).Run();
+		var tr = Trace.Sweep( PhysicsBody, Transform.WithPosition( Position + Rotation.Up * 110 ), Transform.WithPosition( Position + Rotation.Up * MaxRingRange ) ).Ignore( this ).Run();
 		var hitGround = isUpDown && tr.Hit;
 
 		for ( int i = 0; i < 5; i++ )
@@ -283,10 +281,10 @@ public partial class Rings : AnimatedEntity, IUse
 			RingRing r = new();
 			r.RingParent = this;
 			r.SetParent( this );
-			r.isUpsideDown = isUpDown;
+			r.IsUpsideDown = isUpDown;
 			r.Position = Position;
 			r.Rotation = Rotation;
-			if ( r.isUpsideDown ) r.Rotation = Rotation.RotateAroundAxis( Vector3.Left, 180f );
+			if ( r.IsUpsideDown ) r.Rotation = Rotation.RotateAroundAxis( Vector3.Left, 180f );
 			r.Scale = Scale;
 			r.Transmit = TransmitType.Always;
 			r.desiredPos = Transform.PointToLocal( endPos );
@@ -418,7 +416,7 @@ public partial class Rings : AnimatedEntity, IUse
 
 		if ( !IsUpsideDown ) return;
 
-		var tr = Trace.Sweep( PhysicsBody, Transform.WithPosition( Position + Rotation.Up * 110 ), Transform.WithPosition( Position + Rotation.Up * MAX_RING_RANGE ) ).Ignore( this ).Run();
+		var tr = Trace.Sweep( PhysicsBody, Transform.WithPosition( Position + Rotation.Up * 110 ), Transform.WithPosition( Position + Rotation.Up * MaxRingRange ) ).Ignore( this ).Run();
 		DebugOverlay.TraceResult( tr );
 		DebugOverlay.Text( tr.Distance.ToString(), tr.EndPosition - Rotation.Up * 30, Color.Magenta );
 	}

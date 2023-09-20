@@ -5,11 +5,11 @@ namespace Sandbox.Tools
 	[Library( "tool_stargate_spawner", Title = "Stargate", Description = "Use wormholes to transport matter\n\nMOUSE1 - Spawn gate\nE + MOUSE1 - Cycle gate types\nR - copy gate address\n\nMOUSE2 - Close gate/Stop dialling/Fast dial copied address\nSHIFT + MOUSE2 - Slow dial copied address\nCTRL + MOUSE2 - Instant dial copied address\n", Group = "construction" )]
 	public partial class StargateSpawnerTool : BaseTool
 	{
-		static Stargate CopiedGate = null;
-		PreviewEntity previewModel;
+		private static Stargate _copiedGate = null;
+		private PreviewEntity _previewModel;
 
-		private List<string> GateTypes = new() { "StargateMilkyWay", "StargateMovie", "StargatePegasus", "StargateUniverse" };
-		private List<string> GateModels = new() { "models/sbox_stargate/gate_sg1/gate_sg1.vmdl", "models/sbox_stargate/gate_sg1/ring_sg1.vmdl", "models/sbox_stargate/gate_atlantis/gate_atlantis.vmdl", "models/sbox_stargate/gate_universe/gate_universe.vmdl" };
+		private List<string> GateTypes { get; } = new() { "StargateMilkyWay", "StargateMovie", "StargatePegasus", "StargateUniverse" };
+		private List<string> GateModels { get; } = new() { "models/sbox_stargate/gate_sg1/gate_sg1.vmdl", "models/sbox_stargate/gate_sg1/ring_sg1.vmdl", "models/sbox_stargate/gate_atlantis/gate_atlantis.vmdl", "models/sbox_stargate/gate_universe/gate_universe.vmdl" };
 
 		[Net]
 		private string Model { get; set; } = "models/sbox_stargate/gate_sg1/gate_sg1.vmdl";
@@ -19,14 +19,14 @@ namespace Sandbox.Tools
 
 		public override void CreatePreviews()
 		{
-			if ( TryCreatePreview( ref previewModel, Model ) )
+			if ( TryCreatePreview( ref _previewModel, Model ) )
 			{
 				if ( Owner.IsValid() )
 				{
-					previewModel.RelativeToNormal = false;
-					previewModel.OffsetBounds = false;
-					previewModel.PositionOffset = new Vector3( 0, 0, 90 );
-					previewModel.RotationOffset = new Angles( 0, Owner.EyeRotation.Angles().yaw + 180, 0 ).ToRotation();
+					_previewModel.RelativeToNormal = false;
+					_previewModel.OffsetBounds = false;
+					_previewModel.PositionOffset = new Vector3( 0, 0, 90 );
+					_previewModel.RotationOffset = new Angles( 0, Owner.EyeRotation.Angles().yaw + 180, 0 ).ToRotation();
 				}
 			}
 		}
@@ -117,14 +117,14 @@ namespace Sandbox.Tools
 
 					if ( tr.Entity is Stargate gate )
 					{
-						CopiedGate = gate;
+						_copiedGate = gate;
 						return;
 					}
 				}
 
 				if ( Input.Pressed( InputButton.SecondaryAttack ) )
 				{
-					if ( !CopiedGate.IsValid() )
+					if ( !_copiedGate.IsValid() )
 						return;
 
 					var startPos = Owner.EyePosition;
@@ -151,7 +151,7 @@ namespace Sandbox.Tools
 						{
 							if ( !gate.Dialing )
 							{
-								var finalAddress = Stargate.GetOtherGateAddressForMenu( gate, CopiedGate );
+								var finalAddress = Stargate.GetOtherGateAddressForMenu( gate, _copiedGate );
 								Log.Info( $"Dialing {finalAddress}" );
 
 								if ( Input.Down( InputButton.Run ) )

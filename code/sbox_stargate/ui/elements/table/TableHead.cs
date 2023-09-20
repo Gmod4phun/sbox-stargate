@@ -3,7 +3,7 @@ using Sandbox.UI;
 
 public partial class TableHead : Panel
 {
-	public List<Panel> Columns = new();
+	public List<Panel> Columns { get; set; } = new();
 
 	public TableHead()
 	{

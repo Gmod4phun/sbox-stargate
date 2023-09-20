@@ -3,20 +3,20 @@ using System.Text.Json;
 using Editor;
 using Sandbox;
 
-[HammerEntity, SupportsSolid, EditorModel( MODEL )]
+[HammerEntity, SupportsSolid, EditorModel( Model )]
 [Title( "Brick Ramp" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class BrickRamp : Prop, IStargateRamp, IGateSpawner
 {
-	public const string MODEL = "models/sbox_stargate/ramps/brick/brick.vmdl";
+	public const string Model = "models/sbox_stargate/ramps/brick/brick.vmdl";
 
 	[Net]
 	public Vector3 SpawnOffset { get; private set; } = new(0, 0, 70);
 
 	public int AmountOfGates => 1;
 
-	public Vector3[] StargatePositionOffset => new Vector3[] { new Vector3( 0, 0, 95 ) };
+	public Vector3[] StargatePositionOffset => new[] { new Vector3( 0, 0, 95 ) };
 
-	public Angles[] StargateRotationOffset => new Angles[] { Angles.Zero };
+	public Angles[] StargateRotationOffset => new[] { Angles.Zero };
 
 	public List<Stargate> Gate { get; set; } = new();
 
@@ -25,7 +25,7 @@ public partial class BrickRamp : Prop, IStargateRamp, IGateSpawner
 		base.Spawn();
 		Transmit = TransmitType.Default;
 
-		SetModel( MODEL );
+		SetModel( Model );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
 
 		Tags.Add( "solid" );

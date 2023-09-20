@@ -5,14 +5,11 @@ using System.Threading.Tasks;
 using Editor;
 using Sandbox;
 
-[HammerEntity, SupportsSolid, EditorModel( MODEL )]
+[HammerEntity, SupportsSolid, EditorModel( Model )]
 [Title( "Stargate (Universe)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class StargateUniverse : Stargate
 {
-	public const string MODEL = "models/sbox_stargate/gate_universe/gate_universe.vmdl";
-
-	public List<Chevron> EncodedChevronsOrdered = new();
-	public Chevron Chevron;
+	public const string Model = "models/sbox_stargate/gate_universe/gate_universe.vmdl";
 
 	public StargateUniverse()
 	{
@@ -33,6 +30,10 @@ public partial class StargateUniverse : Stargate
 		EventHorizonSkinGroup = 1;
 	}
 
+	public List<Chevron> EncodedChevronsOrdered { get; set; } = new();
+
+	public Chevron Chevron { get; set; }
+
 	[Net]
 	public StargateRingUniverse Ring { get; set; } = null;
 
@@ -48,7 +49,7 @@ public partial class StargateUniverse : Stargate
 		base.Spawn();
 
 		Transmit = TransmitType.Always;
-		SetModel( MODEL );
+		SetModel( Model );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
 		PhysicsBody.BodyType = PhysicsBodyType.Static;
 		SetBodyGroup( 0, 1 ); // hide the base ent, the gate will be a part of the 'ring' (cant disable drawing because parented objects get fucked)

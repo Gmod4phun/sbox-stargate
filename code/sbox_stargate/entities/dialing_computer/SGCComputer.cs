@@ -6,10 +6,10 @@ using Sandbox;
 [Title( "SGC Computer" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class SGCComputer : ModelEntity, IUse
 {
-	public static readonly Color Color_SG_Blue = Color.FromBytes( 0, 170, 185 );
-	public static readonly Color Color_SG_Yellow = Color.FromBytes( 225, 225, 170 );
+	public static readonly Color ColorSgBlue = Color.FromBytes( 0, 170, 185 );
+	public static readonly Color ColorSgYellow = Color.FromBytes( 225, 225, 170 );
 
-	private Sound AlarmSound;
+	private Sound _alarmSound;
 
 	[Net, Change]
 	public Stargate Gate { get; set; } = null;
@@ -89,12 +89,12 @@ public partial class SGCComputer : ModelEntity, IUse
 	private void PlayAlarmSound()
 	{
 		StopAlarmSound();
-		AlarmSound = Sound.FromEntity( "sg.alarm.sgc", this );
+		_alarmSound = Sound.FromEntity( "sg.alarm.sgc", this );
 	}
 
 	private void StopAlarmSound()
 	{
-		AlarmSound.Stop();
+		_alarmSound.Stop();
 	}
 
 	// RPC's

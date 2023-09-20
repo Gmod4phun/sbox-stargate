@@ -4,9 +4,7 @@ using Sandbox.UI.Construct;
 
 public class DhdWorldPanel : WorldPanel
 {
-	public Dhd Dhd;
-
-	private Vector3 SymbolPosition;
+	private Vector3 _symbolPosition;
 
 	public DhdWorldPanel( Dhd dhd, string symbol, Vector3 symbolPosition )
 	{
@@ -24,9 +22,11 @@ public class DhdWorldPanel : WorldPanel
 		SceneObject.Flags.BloomLayer = false;
 
 		Dhd = dhd;
-		SymbolPosition = symbolPosition;
+		_symbolPosition = symbolPosition;
 		MaxInteractionDistance = 64;
 	}
+
+	public Dhd Dhd { get; set; }
 
 	public string Symbol { get; private set; } = "";
 
@@ -40,7 +40,7 @@ public class DhdWorldPanel : WorldPanel
 			return;
 		}
 
-		Position = Dhd.Position + Dhd.Rotation.Forward * SymbolPosition.x + Dhd.Rotation.Left * SymbolPosition.y + Dhd.Rotation.Up * SymbolPosition.z;
+		Position = Dhd.Position + Dhd.Rotation.Forward * _symbolPosition.x + Dhd.Rotation.Left * _symbolPosition.y + Dhd.Rotation.Up * _symbolPosition.z;
 		Rotation = Dhd.Rotation.RotateAroundAxis( Vector3.Right, 90 );
 	}
 }

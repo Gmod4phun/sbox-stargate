@@ -4,11 +4,11 @@ using System.Text.Json;
 using Editor;
 using Sandbox;
 
-[HammerEntity, SupportsSolid, EditorModel( MODEL )]
+[HammerEntity, SupportsSolid, EditorModel( Model )]
 [Title( "Universe Ramp" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class UniverseRamp : Prop, IStargateRamp, IGateSpawner
 {
-	public const string MODEL = "models/sbox_stargate/ramps/sgu_ramp/sgu_ramp.vmdl";
+	public const string Model = "models/sbox_stargate/ramps/sgu_ramp/sgu_ramp.vmdl";
 
 	public List<PointLightEntity> Lights = new();
 	public PointLightEntity CenterLight;
@@ -18,9 +18,9 @@ public partial class UniverseRamp : Prop, IStargateRamp, IGateSpawner
 
 	public int AmountOfGates => 1;
 
-	public Vector3[] StargatePositionOffset => new Vector3[] { new Vector3( 0, 0, 95 ) };
+	public Vector3[] StargatePositionOffset => new[] { new Vector3(0, 0, 95) };
 
-	public Angles[] StargateRotationOffset => new Angles[] { Angles.Zero };
+	public Angles[] StargateRotationOffset => new[] { Angles.Zero };
 
 	public List<Stargate> Gate { get; set; } = new();
 
@@ -31,7 +31,7 @@ public partial class UniverseRamp : Prop, IStargateRamp, IGateSpawner
 		base.Spawn();
 		Transmit = TransmitType.Default;
 
-		SetModel( MODEL );
+		SetModel( Model );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
 
 		Tags.Add( "solid" );
@@ -63,27 +63,31 @@ public partial class UniverseRamp : Prop, IStargateRamp, IGateSpawner
 		for ( var i = 5; i <= 8; i++ )
 		{
 			t = (Transform)GetAttachment( $"light{i}" );
-			light = new RectangleLightEntity();
-			light.Color = LightColor;
-			light.PlaneHeight = 18;
-			light.LightSize = 0.5f;
-			light.Position = t.Position;
-			light.Rotation = t.Rotation;
-			light.Brightness = 0;
+			light = new RectangleLightEntity
+			{
+				Color = LightColor,
+				PlaneHeight = 18,
+				LightSize = 0.5f,
+				Position = t.Position,
+				Rotation = t.Rotation,
+				Brightness = 0
+			};
 			light.SetParent( this );
 			Lights.Add( light );
 		}
 
 		// center ramp light
-		var t_c = (Transform)GetAttachment( $"light9" );
-		var light_c = new PointLightEntity();
-		light_c.Color = LightColor;
-		light_c.LightSize = 0.2f;
-		light_c.Position = t_c.Position;
-		light_c.Rotation = t_c.Rotation;
-		light_c.Brightness = 0;
-		light_c.SetParent( this );
-		CenterLight = light_c;
+		var tC = (Transform)GetAttachment( $"light9" );
+		var lightC = new PointLightEntity
+		{
+			Color = LightColor,
+			LightSize = 0.2f,
+			Position = tC.Position,
+			Rotation = tC.Rotation,
+			Brightness = 0
+		};
+		lightC.SetParent( this );
+		CenterLight = lightC;
 	}
 
 	public void FromJson( JsonElement data )

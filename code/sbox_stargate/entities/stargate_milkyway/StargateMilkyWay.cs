@@ -5,17 +5,15 @@ using System.Threading.Tasks;
 using Editor;
 using Sandbox;
 
-[HammerEntity, SupportsSolid, EditorModel( MODEL )]
+[HammerEntity, SupportsSolid, EditorModel( Model )]
 [Title( "Stargate (Milky Way)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class StargateMilkyWay : Stargate
 {
-	public const string MODEL = "models/sbox_stargate/sg_mw/sg_mw_gate.vmdl";
-
-	public List<Chevron> EncodedChevronsOrdered = new();
+	public const string Model = "models/sbox_stargate/sg_mw/sg_mw_gate.vmdl";
 
 	public StargateMilkyWay()
 	{
-		SoundDict = new()
+		SoundDict = new Dictionary<string, string>
 		{
 			{ "gate_open", "stargate.milkyway.open" },
 			{ "gate_close", "stargate.milkyway.close" },
@@ -29,6 +27,8 @@ public partial class StargateMilkyWay : Stargate
 
 		GateGlyphType = GlyphType.MILKYWAY;
 	}
+
+	public List<Chevron> EncodedChevronsOrdered { get; set; } = new();
 
 	[Net]
 	public StargateRingMilkyWay Ring { get; set; } = null;
@@ -83,7 +83,7 @@ public partial class StargateMilkyWay : Stargate
 		base.Spawn();
 
 		Transmit = TransmitType.Always;
-		SetModel( MODEL );
+		SetModel( Model );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
 		PhysicsBody.BodyType = PhysicsBodyType.Static;
 

@@ -16,6 +16,11 @@ public partial class Rings : IGateSpawner
 
 	public virtual object ToJson()
 	{
-		return new RingsBaseJsonModel { EntityName = ClassName, Position = Position, Rotation = Rotation, Address = Address };
+		return new RingsBaseJsonModel
+			{ EntityName = ClassName,
+				Position = Position,
+				Rotation = Rotation,
+				Address = Address
+			};
 	}
 }

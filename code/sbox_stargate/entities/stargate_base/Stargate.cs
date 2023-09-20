@@ -6,13 +6,14 @@ using Sandbox;
 [Category( "Stargates" )]
 public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInputEntity
 {
-	public int EventHorizonSkinGroup = 0;
+	private StargateWorldPanel _worldPanel;
+	public int EventHorizonSkinGroup { get; set; } = 0;
 
-	public GateBearing Bearing;
+	public GateBearing Bearing { get; set; }
 
-	public float AutoCloseTime = -1;
+	public float AutoCloseTime { get; set; } = -1;
 
-	public Dictionary<string, string> SoundDict = new()
+	public Dictionary<string, string> SoundDict { get; set; } = new()
 	{
 		{ "gate_open", "baseValue" },
 		{ "gate_close", "baseValue" },
@@ -22,12 +23,11 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		{ "dial_fail_noclose", "baseValue" },
 	};
 
-	public TimeSince TimeSinceDialAction = 0f;
-	public float InactiveDialShutdownTime = 20f;
+	public TimeSince TimeSinceDialAction { get; set; } = 0f;
 
-	public IStargateRamp Ramp = null;
+	public float InactiveDialShutdownTime { get; set; } = 20f;
 
-	private StargateWorldPanel WorldPanel;
+	public IStargateRamp Ramp { get; set; } = null;
 
 	[Net]
 	public Vector3 SpawnOffset { get; private set; } = new(0, 0, 95);
