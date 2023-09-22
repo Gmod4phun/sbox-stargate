@@ -34,8 +34,6 @@ public partial class SGCMonitor : ModelEntity, IUse
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
 		PhysicsBody.BodyType = PhysicsBodyType.Static;
 
-		RenderColor = Color.Black;
-
 		Tags.Add( "solid" );
 	}
 

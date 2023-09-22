@@ -73,11 +73,11 @@
 						[
 							{
 								from = "monitor_body.vmat"
-								to = "models/sbox_stargate/puddle_jumper/jumper_metal.vmat"
+								to = "materials/shared/metals/aluminium01.vmat"
 							},
 							{
 								from = "monitor_glass.vmat"
-								to = "models/sbox_stargate/dhd_atlantis/dhd_atlantis_glass.vmat"
+								to = "models/sbox_stargate/invisible_material.vmat"
 							},
 						]
 						use_global_default = false

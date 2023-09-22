@@ -25,15 +25,11 @@ public partial class SGCComputer : ModelEntity, IUse
 	{
 		base.Spawn();
 
-		Scale = 4;
-
 		Transmit = TransmitType.Always;
-		SetModel( "models/editor/ortho.vmdl" );
-		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
-		SetupPhysicsFromOBB( PhysicsMotionType.Dynamic, new Vector3( -5, -5, -5 ), new Vector3( 5, 5, 5 ) );
-		PhysicsBody.BodyType = PhysicsBodyType.Static;
 
-		RenderColor = Color.Black;
+		Model = Cloud.Model( "luke.office_pc" );
+		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
+		PhysicsBody.BodyType = PhysicsBodyType.Static;
 
 		Tags.Add( "solid" );
 	}
