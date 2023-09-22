@@ -8,8 +8,38 @@ using Sandbox;
 using Sandbox.UI;
 
 [Title( "SGC Computer" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
-public partial class SGCComputer : ModelEntity, IUse
+public partial class SGCComputer : ModelEntity, IUse, IWireInputEntity, IWireOutputEntity
 {
+	/* WIRE SUPPORT */
+
+	WirePortData IWireEntity.WirePorts { get; } = new WirePortData();
+
+	public virtual void WireInitialize()
+	{
+		var inputs = ((IWireEntity)this).WirePorts.inputs;
+
+		this.RegisterInputHandler( "Gate", ( Entity value ) =>
+		{
+			if (value is Stargate gate)
+			{
+				LinkToGate( gate );
+			}
+		} );
+	}
+
+	public virtual PortType[] WireGetOutputs()
+	{
+		return new PortType[] {
+			PortType.Entity("Computer"),
+		};
+	}
+
+	[GameEvent.Tick.Server]
+	public void WireThink()
+	{
+		this.WireTriggerOutput( "Computer", this );
+	}
+
 	public static readonly Color Color_SG_Blue = Color.FromBytes( 0, 170, 185 );
 	public static readonly Color Color_SG_Yellow = Color.FromBytes( 225, 225, 170 );
 
@@ -34,14 +64,9 @@ public partial class SGCComputer : ModelEntity, IUse
 		Tags.Add( "solid" );
 	}
 
-	public override void StartTouch( Entity other )
+	public void LinkToGate( Stargate gate )
 	{
-		base.StartTouch( other );
-
-		if ( other is Stargate gate )
-		{
-			Gate = gate;
-		}
+		Gate = gate;
 	}
 
 	public void AddMonitor( SGCMonitor monitor )
@@ -200,7 +225,7 @@ public partial class SGCComputer : ModelEntity, IUse
 	{
 		if ( gate != Gate ) return;
 
-		if ( Gate.CurDialType == Stargate.DialType.SLOW )
+		if ( Gate.CurDialType == Stargate.DialType.SLOW || Gate.CurDialType == Stargate.DialType.MANUAL )
 			DialProgramEncodeBoxMove( To.Everyone, num, false );
 		else
 		{
@@ -218,7 +243,7 @@ public partial class SGCComputer : ModelEntity, IUse
 		if ( gate != Gate ) return;
 
 		if ( valid )
-			if ( Gate.CurDialType == Stargate.DialType.SLOW )
+			if ( Gate.CurDialType == Stargate.DialType.SLOW || Gate.CurDialType == Stargate.DialType.MANUAL )
 				DialProgramEncodeBoxMove( To.Everyone, num, true );
 			else
 			{
@@ -256,7 +281,7 @@ public partial class SGCComputer : ModelEntity, IUse
 	{
 		if ( gate != Gate ) return;
 
-		if ( !Gate.ShouldStopDialing && Gate.CurDialType == Stargate.DialType.SLOW )
+		if ( !Gate.ShouldStopDialing && Gate.CurDialType == Stargate.DialType.SLOW || Gate.CurDialType == Stargate.DialType.MANUAL )
 			DialProgramIndicatorBlink( To.Everyone );
 	}
 
@@ -265,7 +290,7 @@ public partial class SGCComputer : ModelEntity, IUse
 	{
 		if ( gate != Gate ) return;
 
-		if ( Gate.CurDialType == Stargate.DialType.SLOW )
+		if ( Gate.CurDialType == Stargate.DialType.SLOW || Gate.CurDialType == Stargate.DialType.MANUAL )
 			DialProgramEncodeBoxAppear( To.Everyone, sym);
 	}
 

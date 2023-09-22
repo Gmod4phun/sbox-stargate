@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Sandbox;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Net;
 
 [Category( "Stargates" )]
 public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInputEntity
@@ -104,6 +105,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	public virtual PortType[] WireGetOutputs()
 	{
 		return new PortType[] {
+			PortType.Entity("Gate"),
 			PortType.Bool("Idle"),
 			PortType.Bool("Active"),
 			PortType.Bool("Dialing"),
@@ -134,6 +136,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	[GameEvent.Tick.Server]
 	public void WireThink()
 	{
+		this.WireTriggerOutput( "Gate", this );
 		this.WireTriggerOutput( "Idle", Idle );
 		this.WireTriggerOutput( "Active", Active );
 		this.WireTriggerOutput( "Dialing", Dialing );
@@ -739,6 +742,8 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		{
 			CurGateState = GateState.DIALING;
 			CurDialType = DialType.MANUAL;
+
+			Event.Run( StargateEvent.DialBegin, this, "" );
 		}
 
 		TimeSinceDialAction = 0;

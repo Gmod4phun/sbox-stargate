@@ -7,8 +7,25 @@ using Sandbox;
 using Sandbox.UI;
 
 [Title( "SGC Monitor" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
-public partial class SGCMonitor : ModelEntity, IUse
+public partial class SGCMonitor : ModelEntity, IUse, IWireInputEntity
 {
+	/* WIRE SUPPORT */
+
+	WirePortData IWireEntity.WirePorts { get; } = new WirePortData();
+
+	public virtual void WireInitialize()
+	{
+		var inputs = ((IWireEntity)this).WirePorts.inputs;
+
+		this.RegisterInputHandler( "Computer", ( Entity value ) =>
+		{
+			if ( value is SGCComputer computer )
+			{
+				LinkToComputer( computer );
+			}
+		} );
+	}
+
 	[Net]
 	public SGCComputer Computer { get; private set; } = null;
 
@@ -64,11 +81,9 @@ public partial class SGCMonitor : ModelEntity, IUse
 		WorldPanel = new( this, CurrentProgram );
 	}
 
-	public override void StartTouch( Entity other )
+	public void LinkToComputer( SGCComputer computer )
 	{
-		base.StartTouch( other );
-
-		if ( other is SGCComputer computer && Computer != computer)
+		if ( Computer != computer)
 		{
 			Computer = computer;
 			Computer.AddMonitor( this );
