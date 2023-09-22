@@ -12,6 +12,7 @@ public partial class CloudModelList : Panel
 	{
 	}
 
+	/*
 	protected override void PostTemplateApplied()
 	{
 		base.PostTemplateApplied();
@@ -30,6 +31,7 @@ public partial class CloudModelList : Panel
 
 		_ = UpdateItems();
 	}
+	*/
 
 	public async Task UpdateItems( int offset = 0 )
 	{
