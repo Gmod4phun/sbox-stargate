@@ -2,6 +2,8 @@ using Sandbox;
 
 public partial class DhdButton : AnimatedEntity, IUse
 {
+	private float _glowScale = 0;
+
 	[Net]
 	public Dhd DHD { get; set; } = null;
 
@@ -14,8 +16,6 @@ public partial class DhdButton : AnimatedEntity, IUse
 	[Net]
 	public bool Disabled { get; set; } = false;
 
-	float GlowScale = 0;
-
 	public override void Spawn()
 	{
 		base.Spawn();
@@ -25,9 +25,9 @@ public partial class DhdButton : AnimatedEntity, IUse
 
 	public virtual bool OnUse( Entity user )
 	{
-		if ( Time.Now < DHD.lastPressTime + DHD.pressDelay ) return false;
+		if ( Time.Now < DHD.LastPressTime + DHD.PressDelay ) return false;
 
-		DHD.lastPressTime = Time.Now;
+		DHD.LastPressTime = Time.Now;
 		DHD.TriggerAction( Action, user );
 
 		return false;
@@ -51,9 +51,9 @@ public partial class DhdButton : AnimatedEntity, IUse
 		var so = SceneObject;
 		if ( !so.IsValid() ) return;
 
-		GlowScale = GlowScale.LerpTo( On ? 1 : 0, Time.Delta * (On ? 2f : 20f) );
+		_glowScale = _glowScale.LerpTo( On ? 1 : 0, Time.Delta * (On ? 2f : 20f) );
 
 		so.Batchable = false;
-		so.Attributes.Set( "selfillumscale", GlowScale );
+		so.Attributes.Set( "selfillumscale", _glowScale );
 	}
 }

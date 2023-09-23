@@ -1,19 +1,27 @@
 using Editor;
 using Sandbox;
 
-[HammerEntity, SupportsSolid, EditorModel( MODEL )]
+[HammerEntity, SupportsSolid, EditorModel( Model )]
 [Title( "Ring Panel (Goauld)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class RingPanelGoauld : RingPanel
 {
-	public const string MODEL = "models/sbox_stargate/rings_panel/goauld/ring_panel_goauld.vmdl";
+	public const string Model = "models/sbox_stargate/rings_panel/goauld/ring_panel_goauld.vmdl";
 	protected override string[] ButtonsSounds { get; } = { "ringpanel.goauld.button1", "ringpanel.goauld.button2" };
+
+	public static void DrawGizmos( EditorContext context )
+	{
+		for ( var i = 1; i <= 6; i++ )
+		{
+			Gizmo.Draw.Model( $"models/sbox_stargate/rings_panel/goauld/ring_panel_goauld_button_{i}.vmdl" );
+		}
+	}
 
 	public override void Spawn()
 	{
 		base.Spawn();
 
 		Transmit = TransmitType.Always;
-		SetModel( MODEL );
+		SetModel( Model );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, false );
 
 		PhysicsBody.BodyType = PhysicsBodyType.Static;
@@ -41,14 +49,6 @@ public partial class RingPanelGoauld : RingPanel
 			button.Action = action;
 			button.RingPanel = this;
 			Buttons.Add( action, button );
-		}
-	}
-
-	public static void DrawGizmos( EditorContext context )
-	{
-		for ( var i = 1; i <= 6; i++ )
-		{
-			Gizmo.Draw.Model( $"models/sbox_stargate/rings_panel/goauld/ring_panel_goauld_button_{i}.vmdl" );
 		}
 	}
 }

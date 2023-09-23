@@ -1,6 +1,4 @@
-﻿using Sandbox;
-
-public static class StargateTags
+﻿public static class StargateTags
 {
 	public static string BeforeGate => "beforegate";
 	public static string BehindGate => "behindgate";

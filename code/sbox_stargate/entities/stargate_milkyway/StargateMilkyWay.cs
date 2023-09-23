@@ -1,17 +1,52 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using Editor;
 using Sandbox;
 
-[HammerEntity, SupportsSolid, EditorModel( MODEL )]
+[HammerEntity, SupportsSolid, EditorModel( Model )]
 [Title( "Stargate (Milky Way)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class StargateMilkyWay : Stargate
 {
+	public const string Model = "models/sbox_stargate/sg_mw/sg_mw_gate.vmdl";
+
+	public StargateMilkyWay()
+	{
+		SoundDict = new Dictionary<string, string>
+		{
+			{ "gate_open", "stargate.milkyway.open" },
+			{ "gate_close", "stargate.milkyway.close" },
+			{ "chevron_open", "stargate.milkyway.chevron_open" },
+			{ "chevron_close", "stargate.milkyway.chevron_close" },
+			{ "dial_fail", "stargate.milkyway.dial_fail_noclose" },
+			{ "dial_fail_noclose", "stargate.milkyway.dial_fail_noclose" },
+			{ "dial_begin_9chev", "stargate.universe.dial_begin_9chev" },
+			{ "dial_fail_9chev", "stargate.universe.dial_fail_9chev" }
+		};
+
+		GateGlyphType = GlyphType.MILKYWAY;
+	}
+
+	public List<Chevron> EncodedChevronsOrdered { get; set; } = new();
+
+	[Net]
+	public StargateRingMilkyWay Ring { get; set; } = null;
+
+	public bool MovieDialingType { get; set; } = false; // when enabled, encodes the symbol under each chevron like in the movie
+	public bool ChevronLightup { get; set; } = true;
+
+	public static void DrawGizmos( EditorContext context )
+	{
+		Gizmo.Draw.Model( "models/sbox_stargate/sg_mw/sg_mw_ring.vmdl" );
+
+		for ( var i = 0; i < 9; i++ )
+		{
+			Gizmo.Draw.Model( "models/sbox_stargate/sg_mw/sg_mw_chevron.vmdl", new Transform( Vector3.Zero, Rotation.FromRoll( i * 40 ) ) );
+		}
+	}
 	/* WIRE SUPPORT */
-	
+
 	[Event.Hotload]
 	public override void WireInitialize()
 	{
@@ -19,7 +54,7 @@ public partial class StargateMilkyWay : Stargate
 
 		this.RegisterInputHandler( "Rotate Ring", ( bool value ) =>
 		{
-			if (value && !Ring.IsMoving)
+			if ( value && !Ring.IsMoving )
 				Ring.SpinUp();
 			else if ( !value && Ring.IsMoving )
 				Ring.SpinDown();
@@ -43,32 +78,6 @@ public partial class StargateMilkyWay : Stargate
 		} ).ToArray();
 	}
 
-	public const string MODEL = "models/sbox_stargate/sg_mw/sg_mw_gate.vmdl";
-
-	[Net, Category( "Chevrons and Ring" )]
-	public StargateRingMilkyWay Ring { get; set; } = null;
-	public List<Chevron> EncodedChevronsOrdered = new();
-
-	public bool MovieDialingType { get; set; } = false; // when enabled, encodes the symbol under each chevron like in the movie
-	public bool ChevronLightup { get; set; } = true;
-
-	public StargateMilkyWay()
-	{
-		SoundDict = new()
-		{
-			{ "gate_open", "stargate.milkyway.open" },
-			{ "gate_close", "stargate.milkyway.close" },
-			{ "chevron_open", "stargate.milkyway.chevron_open" },
-			{ "chevron_close", "stargate.milkyway.chevron_close" },
-			{ "dial_fail", "stargate.milkyway.dial_fail_noclose" },
-			{ "dial_fail_noclose", "stargate.milkyway.dial_fail_noclose" },
-			{ "dial_begin_9chev", "stargate.universe.dial_begin_9chev" },
-			{ "dial_fail_9chev", "stargate.universe.dial_fail_9chev" }
-		};
-
-		GateGlyphType = GlyphType.MILKYWAY;
-	}
-
 	// SPAWN
 
 	public override void Spawn()
@@ -76,7 +85,7 @@ public partial class StargateMilkyWay : Stargate
 		base.Spawn();
 
 		Transmit = TransmitType.Always;
-		SetModel( MODEL );
+		SetModel( Model );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
 		PhysicsBody.BodyType = PhysicsBodyType.Static;
 
@@ -191,7 +200,7 @@ public partial class StargateMilkyWay : Stargate
 		ChevronAnimUnlockAll();
 	}
 
-	public async override void DoStargateReset()
+	public override async void DoStargateReset()
 	{
 		if ( Dialing )
 		{
@@ -275,7 +284,7 @@ public partial class StargateMilkyWay : Stargate
 	// INDIVIDUAL DIAL TYPES
 
 	// FAST DIAL
-	public async override void BeginDialFast( string address )
+	public override async void BeginDialFast( string address )
 	{
 		base.BeginDialFast( address );
 
@@ -288,7 +297,11 @@ public partial class StargateMilkyWay : Stargate
 			CurGateState = GateState.DIALING;
 			CurDialType = DialType.FAST;
 
-			if ( !IsValidFullAddress( address ) ) { StopDialing(); return; }
+			if ( !IsValidFullAddress( address ) )
+			{
+				StopDialing();
+				return;
+			}
 
 			var target = FindDestinationGateByDialingAddress( this, address );
 			var wasTargetReadyOnStart = false; // if target gate was not available on dial start, dont bother doing anything at the end
@@ -320,7 +333,11 @@ public partial class StargateMilkyWay : Stargate
 			// lets encode each chevron but the last
 			for ( var i = 1; i < addrLen; i++ )
 			{
-				if ( ShouldStopDialing ) { StopDialing(); return; } // check if we should stop dialing
+				if ( ShouldStopDialing )
+				{
+					StopDialing();
+					return;
+				} // check if we should stop dialing
 
 				var chev = GetChevronBasedOnAddressLength( i, addrLen );
 				if ( chev.IsValid() )
@@ -344,11 +361,19 @@ public partial class StargateMilkyWay : Stargate
 				await GameTask.DelaySeconds( chevronDelay );
 			}
 
-			if ( ShouldStopDialing ) { StopDialing(); return; } // check if we should stop dialing
+			if ( ShouldStopDialing )
+			{
+				StopDialing();
+				return;
+			} // check if we should stop dialing
 
 			await GameTask.DelaySeconds( chevronBeforeLastDelay ); // wait before locking the last chevron
 
-			if ( ShouldStopDialing ) { StopDialing(); return; } // check if we should stop dialing
+			if ( ShouldStopDialing )
+			{
+				StopDialing();
+				return;
+			} // check if we should stop dialing
 
 			Busy = true; // gate has to lock last chevron, lets go busy so we cant stop the dialing at this point
 
@@ -384,7 +409,11 @@ public partial class StargateMilkyWay : Stargate
 
 			await GameTask.DelaySeconds( chevronAfterLastDelay ); // wait after the last chevron, then open the gate or fail dial (if gate became invalid/was busy)
 
-			if ( ShouldStopDialing ) { StopDialing(); return; } // check if we should stop dialing
+			if ( ShouldStopDialing )
+			{
+				StopDialing();
+				return;
+			} // check if we should stop dialing
 
 			Busy = false;
 
@@ -405,7 +434,7 @@ public partial class StargateMilkyWay : Stargate
 	}
 
 	// FAST INBOUND
-	public async override void BeginInboundFast( int numChevs )
+	public override async void BeginInboundFast( int numChevs )
 	{
 		base.BeginInboundFast( numChevs );
 
@@ -480,9 +509,8 @@ public partial class StargateMilkyWay : Stargate
 		}
 	}
 
-
 	// SLOW DIAL
-	public async override void BeginDialSlow( string address, float initialDelay=0 )
+	public override async void BeginDialSlow( string address, float initialDelay = 0 )
 	{
 		base.BeginDialSlow( address, initialDelay );
 
@@ -619,7 +647,7 @@ public partial class StargateMilkyWay : Stargate
 	}
 
 	// SLOW INBOUND
-	public async override void BeginInboundSlow( int numChevs )
+	public override async void BeginInboundSlow( int numChevs )
 	{
 		base.BeginInboundSlow( numChevs );
 
@@ -658,7 +686,7 @@ public partial class StargateMilkyWay : Stargate
 		}
 	}
 
-	public async override void BeginDialInstant( string address )
+	public override async void BeginDialInstant( string address )
 	{
 		base.BeginDialInstant( address );
 
@@ -714,8 +742,8 @@ public partial class StargateMilkyWay : Stargate
 
 	// DHD DIAL
 
-	public async override void BeginOpenByDHD( string address )
-	{	
+	public override async void BeginOpenByDHD( string address )
+	{
 		base.BeginOpenByDHD( address );
 
 		if ( !CanStargateStartDial() ) return;
@@ -748,7 +776,7 @@ public partial class StargateMilkyWay : Stargate
 		}
 	}
 
-	public async override void BeginInboundDHD( int numChevs )
+	public override async void BeginInboundDHD( int numChevs )
 	{
 		base.BeginInboundDHD( numChevs );
 
@@ -793,7 +821,6 @@ public partial class StargateMilkyWay : Stargate
 		{
 			ChevronActivate( chev, 0.15f, ChevronLightup );
 		}
-
 	}
 
 	public override void DoDHDChevronLock( char sym ) // only the top chevron locks, always
@@ -816,7 +843,7 @@ public partial class StargateMilkyWay : Stargate
 		}
 	}
 
-	public async override Task<bool> DoManualChevronEncode( char sym )
+	public override async Task<bool> DoManualChevronEncode( char sym )
 	{
 		if ( !await base.DoManualChevronEncode( sym ) )
 			return false;
@@ -866,7 +893,7 @@ public partial class StargateMilkyWay : Stargate
 		return true;
 	}
 
-	public async override Task<bool> DoManualChevronLock( char sym )
+	public override async Task<bool> DoManualChevronLock( char sym )
 	{
 		if ( !await base.DoManualChevronLock( sym ) )
 			return false;
@@ -922,7 +949,7 @@ public partial class StargateMilkyWay : Stargate
 		return true;
 	}
 
-	public async override void BeginManualOpen( string address )
+	public override async void BeginManualOpen( string address )
 	{
 		try
 		{
@@ -947,16 +974,6 @@ public partial class StargateMilkyWay : Stargate
 		catch ( Exception )
 		{
 			if ( this.IsValid() ) StopDialing();
-		}
-	}
-
-	public static void DrawGizmos( EditorContext context )
-	{
-		Gizmo.Draw.Model( "models/sbox_stargate/sg_mw/sg_mw_ring.vmdl" );
-
-		for ( var i = 0; i < 9; i++ )
-		{
-			Gizmo.Draw.Model( "models/sbox_stargate/sg_mw/sg_mw_chevron.vmdl", new Transform( Vector3.Zero, Rotation.FromRoll( i * 40 ) ) );
 		}
 	}
 }

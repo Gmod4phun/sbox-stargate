@@ -1,13 +1,19 @@
 using System.Collections.Generic;
-using System;
 using Sandbox;
 using Editor;
 
-[HammerEntity, SupportsSolid, EditorModel( MODEL )]
+[HammerEntity, SupportsSolid, EditorModel( Model )]
 [Title( "DHD (Atlantis)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class DhdAtlantis : Dhd
 {
-	public const string MODEL = "models/sbox_stargate/dhd_atlantis/dhd_atlantis.vmdl";
+	public const string Model = "models/sbox_stargate/dhd_atlantis/dhd_atlantis.vmdl";
+
+	public DhdAtlantis()
+	{
+		Data = new(0, 1, "dhd.atlantis.press", "dhd.press_dial");
+		DialIsLock = true;
+	}
+
 	protected override string ButtonSymbols => "ABCDEFGHIJKLMNOPQRST123456789UVW0XYZ";
 
 	// Button positions for DhdWorldPanel
@@ -62,18 +68,12 @@ public partial class DhdAtlantis : Dhd
 
 	protected override Vector3 ButtonPositionsOffset => new Vector3( 0, 0, -0.4f );
 
-	public DhdAtlantis()
-	{
-		Data = new ( 0, 1, "dhd.atlantis.press", "dhd.press_dial" );
-		DialIsLock = true;
-	}
-
 	public override void Spawn()
 	{
 		base.Spawn();
 
 		Transmit = TransmitType.Always;
-		SetModel( MODEL );
+		SetModel( Model );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
 		PhysicsBody.BodyType = PhysicsBodyType.Static;
 

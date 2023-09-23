@@ -6,6 +6,17 @@ using System.Text;
 
 public partial class Stargate : Prop, IUse
 {
+	public const string Symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*#@"; // symbol * (Aquila) isnt on the DHD, so gates using that symbol cant be dialed without a computer/other means
+	public const string SymbolsForAddress = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*";
+	public const string SymbolsForGroup = "@";
+	public const char PointOfOrigin = '#';
+
+	public const int AutoCloseTimerDuration = 5;
+
+	public readonly int[] ChevronAngles = { 40, 80, 120, 240, 280, 320, 0, 160, 200 };
+
+	private List<TimedTask> StargateActions = new();
+
 	public enum DialType
 	{
 		SLOW,
@@ -41,85 +52,6 @@ public partial class Stargate : Prop, IUse
 		SET_BUSY
 	}
 
-	// Timed Tasks
-	public struct TimedTask
-	{
-		public TimedTask( float time, Action action, TimedTaskCategory category )
-		{
-			TaskTime = time;
-			TaskAction = action;
-			TaskCategory = category;
-			TaskFinished = false;
-		}
-
-		public void Execute()
-		{
-			TaskAction();
-			TaskFinished = true;
-		}
-
-		public TimedTaskCategory TaskCategory { get; }
-		public float TaskTime { get; }
-		private Action TaskAction { get; }
-		public bool TaskFinished { get; private set; }
-	}
-
-	private List<TimedTask> StargateActions = new();
-
-
-	public const string Symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*#@"; // symbol * (Aquila) isnt on the DHD, so gates using that symbol cant be dialed without a computer/other means
-	public const string SymbolsForAddress = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*";
-	public const string SymbolsForGroup = "@";
-	public const char PointOfOrigin = '#';
-
-	public readonly int[] ChevronAngles = { 40, 80, 120, 240, 280, 320, 0, 160, 200 };
-
-	public const int AutoCloseTimerDuration = 5;
-
-
-	// WIP tasks testing
-
-	public void AddTask(float time, Action task, TimedTaskCategory category)
-	{
-		if ( !Game.IsServer ) return;
-		StargateActions.Add( new TimedTask(time, task, category) );
-	}
-
-	public void ClearTasks()
-	{
-		if ( !Game.IsServer ) return;
-		StargateActions.Clear();
-	}
-
-	public void ClearTasksByCategory(TimedTaskCategory category)
-	{
-		if ( !Game.IsServer ) return;
-		var rem = StargateActions.RemoveAll( task => task.TaskCategory == category );
-	}
-
-	[GameEvent.Tick.Server]
-	private void TaskThink() // dont mind the retarded checks, it prevents ArgumentOutOfRangeException if actions get deleted while the loop runs, probably thread related stuff
-	{
-		if (StargateActions.Count > 0)
-		{
-			for ( var i = StargateActions.Count - 1; i >= 0; i-- )
-			{
-				if ( StargateActions.Count > i )
-				{
-					var task = StargateActions[i];
-					if ( Time.Now >= task.TaskTime )
-					{
-						if ( !task.TaskFinished )
-						{
-							task.Execute();
-							if ( StargateActions.Count > i ) StargateActions.RemoveAt( i );
-						}
-					}
-				}
-			}
-		}
-	}
-
 	// Utility funcs
 
 	/// <summary>
@@ -128,7 +60,7 @@ public partial class Stargate : Prop, IUse
 	/// <returns>Gate Group.</returns>
 	public static string GenerateGateGroup()
 	{
-		StringBuilder symbolsCopy = new( SymbolsForAddress + SymbolsForGroup );
+		StringBuilder symbolsCopy = new(SymbolsForAddress + SymbolsForGroup);
 
 		string generatedGroup = "";
 		for ( int i = 0; i < 2; i++ ) // pick random symbols without repeating
@@ -148,11 +80,11 @@ public partial class Stargate : Prop, IUse
 	/// <returns>Gate Adress.</returns>
 	public static string GenerateGateAddress( string excludeGroup )
 	{
-		StringBuilder symbolsCopy = new( SymbolsForAddress );
+		StringBuilder symbolsCopy = new(SymbolsForAddress);
 
-		foreach ( var c in excludeGroup )  // remove group chars from symbols
+		foreach ( var c in excludeGroup ) // remove group chars from symbols
 		{
-			if ( symbolsCopy.ToString().Contains( c ) )	symbolsCopy = symbolsCopy.Remove( symbolsCopy.ToString().IndexOf( c ), 1 );
+			if ( symbolsCopy.ToString().Contains( c ) ) symbolsCopy = symbolsCopy.Remove( symbolsCopy.ToString().IndexOf( c ), 1 );
 		}
 
 		string generatedAddress = "";
@@ -167,7 +99,7 @@ public partial class Stargate : Prop, IUse
 		return generatedAddress;
 	}
 
-	public static string GetFullGateAddress(Stargate gate, bool only8chev = false)
+	public static string GetFullGateAddress( Stargate gate, bool only8chev = false )
 	{
 		if ( !only8chev ) return gate.GateAddress + gate.GateGroup + PointOfOrigin;
 
@@ -231,13 +163,13 @@ public partial class Stargate : Prop, IUse
 		return true;
 	}
 
-	public static bool IsUniverseGate(Stargate gate)
+	public static bool IsUniverseGate( Stargate gate )
 	{
 		if ( !gate.IsValid() ) return false;
 		return gate is StargateUniverse;
 	}
 
-	public static Stargate FindDestinationGateByDialingAddress(Stargate gate, string address)
+	public static Stargate FindDestinationGateByDialingAddress( Stargate gate, string address )
 	{
 		var addrLen = address.Length;
 		var otherAddress = address.Substring( 0, 6 );
@@ -291,7 +223,7 @@ public partial class Stargate : Prop, IUse
 	{
 		foreach ( Stargate gate in Entity.All.OfType<Stargate>() )
 		{
-			if ( GetFullGateAddress(gate) == address ) return gate;
+			if ( GetFullGateAddress( gate ) == address ) return gate;
 		}
 		return null;
 	}
@@ -324,17 +256,17 @@ public partial class Stargate : Prop, IUse
 		return null;
 	}
 
-	public static string GetSelfAddressBasedOnOtherAddress(Stargate gate, string otherAddress)
+	public static string GetSelfAddressBasedOnOtherAddress( Stargate gate, string otherAddress )
 	{
-		if (otherAddress.Length == 7)
+		if ( otherAddress.Length == 7 )
 		{
 			return gate.GateAddress + PointOfOrigin;
 		}
-		else if (otherAddress.Length == 8)
+		else if ( otherAddress.Length == 8 )
 		{
 			return gate.GateAddress + gate.GateGroup[0] + PointOfOrigin;
 		}
-		else if (otherAddress.Length == 9)
+		else if ( otherAddress.Length == 9 )
 		{
 			return GetFullGateAddress( gate );
 		}
@@ -350,7 +282,7 @@ public partial class Stargate : Prop, IUse
 		if ( !gate.IsValid() || !otherGate.IsValid() )
 			return finalAddress;
 
-		if ( !IsUniverseGate(gate) && !IsUniverseGate(otherGate) ) // none of them are universe gates
+		if ( !IsUniverseGate( gate ) && !IsUniverseGate( otherGate ) ) // none of them are universe gates
 		{
 			if ( gate.GateGroup == otherGate.GateGroup ) // if groups are equal, return address
 			{
@@ -363,7 +295,6 @@ public partial class Stargate : Prop, IUse
 		}
 		else // one or both are universe gates
 		{
-
 			if ( IsUniverseGate( gate ) && IsUniverseGate( otherGate ) ) // both are universe gates
 			{
 				if ( gate.GateGroup == otherGate.GateGroup ) // they have same gate group
@@ -452,7 +383,7 @@ public partial class Stargate : Prop, IUse
 	/// Adds an Iris or Atlantis Gate Shield to the target Stargate if it does not have one yet.
 	/// </summary>
 	/// <returns>The just created, or already existing Iris.</returns>
-	public static StargateIris AddIris(Stargate gate, Entity owner = null, bool atlantis = false)
+	public static StargateIris AddIris( Stargate gate, Entity owner = null, bool atlantis = false )
 	{
 		if ( !gate.HasIris() )
 		{
@@ -471,7 +402,7 @@ public partial class Stargate : Prop, IUse
 	/// Attempts to remove the Iris from the target Stargate.
 	/// </summary>
 	/// <returns>Whether or not the Iris was removed succesfully.</returns>
-	public static bool RemoveIris(Stargate gate)
+	public static bool RemoveIris( Stargate gate )
 	{
 		if ( gate.HasIris() )
 		{
@@ -533,9 +464,9 @@ public partial class Stargate : Prop, IUse
 	/// Attempts to position a Stargate onto a Ramp.
 	/// </summary>
 	/// <returns>Whether or not the Gate was positioned on the Ramp succesfully.</returns>
-	public static bool PutGateOnRamp(Stargate gate, IStargateRamp ramp)
+	public static bool PutGateOnRamp( Stargate gate, IStargateRamp ramp )
 	{
-		var rampEnt = (Entity) ramp;
+		var rampEnt = (Entity)ramp;
 		if ( gate.IsValid() && rampEnt.IsValid() ) // gate ramps
 		{
 			if ( ramp.Gate.Count < ramp.AmountOfGates )
@@ -554,7 +485,6 @@ public partial class Stargate : Prop, IUse
 
 		return false;
 	}
-
 
 	[Event( "trace.prepare" )]
 	public static void OnTracePrepare( Trace trace, Entity ent, Action<Trace> returnFn )
@@ -669,7 +599,72 @@ public partial class Stargate : Prop, IUse
 			var bulletSize = param.bulletSize;
 			weapon.ShootBullet( newPos + offset, newDir, spread, force, damage, bulletSize );
 			eh.GetOther().PlayTeleportSound();
+		}
+	}
 
+	// WIP tasks testing
+
+	public void AddTask( float time, Action task, TimedTaskCategory category )
+	{
+		if ( !Game.IsServer ) return;
+		StargateActions.Add( new TimedTask( time, task, category ) );
+	}
+
+	public void ClearTasks()
+	{
+		if ( !Game.IsServer ) return;
+		StargateActions.Clear();
+	}
+
+	public void ClearTasksByCategory( TimedTaskCategory category )
+	{
+		if ( !Game.IsServer ) return;
+		var rem = StargateActions.RemoveAll( task => task.TaskCategory == category );
+	}
+
+	[GameEvent.Tick.Server]
+	private void TaskThink() // dont mind the retarded checks, it prevents ArgumentOutOfRangeException if actions get deleted while the loop runs, probably thread related stuff
+	{
+		if ( StargateActions.Count > 0 )
+		{
+			for ( var i = StargateActions.Count - 1; i >= 0; i-- )
+			{
+				if ( StargateActions.Count > i )
+				{
+					var task = StargateActions[i];
+					if ( Time.Now >= task.TaskTime )
+					{
+						if ( !task.TaskFinished )
+						{
+							task.Execute();
+							if ( StargateActions.Count > i ) StargateActions.RemoveAt( i );
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Timed Tasks
+	public struct TimedTask
+	{
+		public TimedTask( float time, Action action, TimedTaskCategory category )
+		{
+			TaskTime = time;
+			TaskAction = action;
+			TaskCategory = category;
+			TaskFinished = false;
+		}
+
+		public TimedTaskCategory TaskCategory { get; }
+		public float TaskTime { get; }
+		public bool TaskFinished { get; private set; }
+		private Action TaskAction { get; }
+
+		public void Execute()
+		{
+			TaskAction();
+			TaskFinished = true;
 		}
 	}
 }

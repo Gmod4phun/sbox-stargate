@@ -1,13 +1,11 @@
 using System;
 using Sandbox;
-using Sandbox.Html;
 using Sandbox.UI;
 using Sandbox.UI.Construct;
 
 [Library]
 public class MouseDragPanel : Panel
 {
-
 	public Panel Window => Parent;
 	protected bool IsMoving { get; set; }
 	protected Vector2 InitialPos { get; set; }
@@ -30,40 +28,48 @@ public class MouseDragPanel : Panel
 
 public class Titlebar : MouseDragPanel
 {
-	protected Button CloseButton = null;
-	protected Button Title = null;
+	protected Button CloseButton { get; set; } = null;
+	protected Button Title { get; set; } = null;
 
-	public Titlebar() {
+	public Titlebar()
+	{
 		StyleSheet.Load( "sbox_stargate/ui/elements/titlebar/titlebar.scss" );
 	}
 
-	public void SetCloseButton(bool value, string text = "", Action onClicked = null) {
-		if (value && this.CloseButton == null) {
-			CloseButton = this.Add.Button(text != "" ? text : "Close", "close", onClicked);
+	public void SetCloseButton( bool value, string text = "", Action onClicked = null )
+	{
+		if ( value && this.CloseButton == null )
+		{
+			CloseButton = this.Add.Button( text != "" ? text : "Close", "close", onClicked );
 			return;
 		}
-		if (value && this.CloseButton != null) {
-			CloseButton.Delete(true);
-			CloseButton = this.Add.Button(text != "" ? text : "Close", "close", onClicked);
+		if ( value && this.CloseButton != null )
+		{
+			CloseButton.Delete( true );
+			CloseButton = this.Add.Button( text != "" ? text : "Close", "close", onClicked );
 			return;
 		}
-		if (!value && this.CloseButton != null) {
-			CloseButton.Delete(true);
+		if ( !value && this.CloseButton != null )
+		{
+			CloseButton.Delete( true );
 			CloseButton = null;
 			return;
 		}
 	}
 
-	public void SetTitle(bool value, string title, Action onClicked = null) {
-		if (value) {
+	public void SetTitle( bool value, string title, Action onClicked = null )
+	{
+		if ( value )
+		{
+			if ( this.Title != null )
+				this.Title.Delete( true );
 
-			if (this.Title != null)
-				this.Title.Delete(true);
-
-			Title = this.Add.Button(title, "title", onClicked);
-		} else {
-			if (this.Title != null)
-				this.Title.Delete(true);
+			Title = this.Add.Button( title, "title", onClicked );
+		}
+		else
+		{
+			if ( this.Title != null )
+				this.Title.Delete( true );
 		}
 	}
 

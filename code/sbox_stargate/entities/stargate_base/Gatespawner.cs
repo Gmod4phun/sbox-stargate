@@ -15,7 +15,6 @@ public class StargateJsonModel : JsonModel
 
 public partial class Stargate : IGateSpawner
 {
-
 	public virtual object ToJson()
 	{
 		return new StargateJsonModel
@@ -31,21 +30,20 @@ public partial class Stargate : IGateSpawner
 			Local = GateLocal,
 			OnRamp = Ramp is not null && (Ramp as Entity).IsValid()
 		};
-
 	}
 
-	public async virtual void FromJson( JsonElement data )
+	public virtual async void FromJson( JsonElement data )
 	{
 		Position = Vector3.Parse( data.GetProperty( "Position" ).ToString() );
 		Rotation = Rotation.Parse( data.GetProperty( "Rotation" ).ToString() );
-		GateName = data.GetProperty( nameof( StargateJsonModel.Name ) ).ToString();
-		GateAddress = data.GetProperty( nameof( StargateJsonModel.Address ) ).ToString();
-		GateGroup = data.GetProperty( nameof( StargateJsonModel.Group ) ).ToString();
-		GatePrivate = data.GetProperty( nameof( StargateJsonModel.Private ) ).GetBoolean();
-		AutoClose = data.GetProperty( nameof( StargateJsonModel.AutoClose ) ).GetBoolean();
-		GateLocal = data.GetProperty( nameof( StargateJsonModel.Local ) ).GetBoolean();
+		GateName = data.GetProperty( nameof(StargateJsonModel.Name) ).ToString();
+		GateAddress = data.GetProperty( nameof(StargateJsonModel.Address) ).ToString();
+		GateGroup = data.GetProperty( nameof(StargateJsonModel.Group) ).ToString();
+		GatePrivate = data.GetProperty( nameof(StargateJsonModel.Private) ).GetBoolean();
+		AutoClose = data.GetProperty( nameof(StargateJsonModel.AutoClose) ).GetBoolean();
+		GateLocal = data.GetProperty( nameof(StargateJsonModel.Local) ).GetBoolean();
 
-		var onRamp = data.GetProperty( nameof( StargateJsonModel.OnRamp ) ).GetBoolean();
+		var onRamp = data.GetProperty( nameof(StargateJsonModel.OnRamp) ).GetBoolean();
 		if ( onRamp )
 		{
 			await GameTask.Delay( 1000 );
@@ -54,5 +52,4 @@ public partial class Stargate : IGateSpawner
 				PutGateOnRamp( this, ramp );
 		}
 	}
-
 }

@@ -1,38 +1,32 @@
-using System.Numerics;
-using System;
 using Sandbox;
 using System.Collections.Generic;
 using Editor;
 using System.Text.Json;
 
-[HammerEntity, SupportsSolid, EditorModel( MODEL )]
+[HammerEntity, SupportsSolid, EditorModel( Model )]
 [Title( "SGC Ramp" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class SGCRamp : Prop, IStargateRamp, IGateSpawner
 {
+	public const string Model = "models/sbox_stargate/ramps/sgc_ramp/sgc_ramp.vmdl";
+
 	[Net]
-	public Vector3 SpawnOffset { get; private set; } = new( 0, 0, 148 );
-	public const string MODEL = "models/sbox_stargate/ramps/sgc_ramp/sgc_ramp.vmdl";
+	public Vector3 SpawnOffset { get; private set; } = new(0, 0, 148);
 
 	public int AmountOfGates => 1;
 
-	public Vector3[] StargatePositionOffset => new Vector3[] {
-		Vector3.Zero
-	};
+	public Vector3[] StargatePositionOffset => new[] { Vector3.Zero };
 
-	public Angles[] StargateRotationOffset => new Angles[] {
-		Angles.Zero
-	};
+	public Angles[] StargateRotationOffset => new[] { Angles.Zero };
 
 	public List<Stargate> Gate { get; set; } = new();
 
 	public override void Spawn()
 	{
-
 		base.Spawn();
 
 		Transmit = TransmitType.Default;
 
-		SetModel( MODEL );
+		SetModel( Model );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
 
 		Tags.Add( "solid" );
@@ -50,9 +44,7 @@ public partial class SGCRamp : Prop, IStargateRamp, IGateSpawner
 	{
 		return new JsonModel()
 		{
-			EntityName = ClassName,
-			Position = Position,
-			Rotation = Rotation
+			EntityName = ClassName, Position = Position, Rotation = Rotation
 		};
 	}
 }

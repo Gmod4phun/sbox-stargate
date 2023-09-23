@@ -3,15 +3,15 @@ using Sandbox.UI;
 
 public class WormholeCinematic : Panel
 {
-	readonly ScenePanel scenePanel;
+	private readonly ScenePanel _scenePanel;
 
-	SceneParticles particleObj;
+	private SceneParticles _particleObj;
 
-	private SceneModel WormholeModel;
+	private SceneModel _wormholeModel;
 
-	private TimeSince sinceStarted = 0;
+	private TimeSince _sinceStarted = 0;
 
-	private Sound WormholeSound;
+	private Sound _wormholeSound;
 
 	public WormholeCinematic()
 	{
@@ -21,59 +21,56 @@ public class WormholeCinematic : Panel
 		Style.AlignContent = Align.Center;
 		Style.Padding = 0;
 
-		var world = new SceneWorld()
-		{
-			ClearColor = Color.Black
-		};
-		scenePanel = new ScenePanel();
-		scenePanel.World = world;
-		scenePanel.Camera.FieldOfView = 90;
-		scenePanel.Camera.ZFar = 15000f;
-		scenePanel.Camera.AntiAliasing = true;
+		var world = new SceneWorld() { ClearColor = Color.Black };
+		_scenePanel = new ScenePanel();
+		_scenePanel.World = world;
+		_scenePanel.Camera.FieldOfView = 90;
+		_scenePanel.Camera.ZFar = 15000f;
+		_scenePanel.Camera.AntiAliasing = true;
 
-		scenePanel.Style.Width = Length.Percent( 100 );
-		scenePanel.Style.Height = Length.Percent( 100 );
-		scenePanel.Style.PointerEvents = PointerEvents.All;
-		scenePanel.Style.Cursor = "none";
+		_scenePanel.Style.Width = Length.Percent( 100 );
+		_scenePanel.Style.Height = Length.Percent( 100 );
+		_scenePanel.Style.PointerEvents = PointerEvents.All;
+		_scenePanel.Style.Cursor = "none";
 
-		AddChild( scenePanel );
+		AddChild( _scenePanel );
 
 		new SceneSkyBox( world, Material.Load( "models/sbox_stargate/wormhole/skybox.vmat" ) );
 
-		WormholeModel = new SceneModel( world, "models/sbox_stargate/wormhole/wormhole.vmdl", Transform.Zero );
+		_wormholeModel = new SceneModel( world, "models/sbox_stargate/wormhole/wormhole.vmdl", Transform.Zero );
 
-		var bone = WormholeModel.GetBoneWorldTransform( 1 );
+		var bone = _wormholeModel.GetBoneWorldTransform( 1 );
 
-		scenePanel.Camera.Position = bone.Position;
-		scenePanel.Camera.Rotation = bone.Rotation.RotateAroundAxis( Vector3.Right, -90f );
+		_scenePanel.Camera.Position = bone.Position;
+		_scenePanel.Camera.Rotation = bone.Rotation.RotateAroundAxis( Vector3.Right, -90f );
 
-		sinceStarted = 0;
+		_sinceStarted = 0;
 
-		particleObj = new SceneParticles( world, "particles/sbox_stargate/wormhole/wormhole_end.vpcf" );
+		_particleObj = new SceneParticles( world, "particles/sbox_stargate/wormhole/wormhole_end.vpcf" );
 		new SceneLight( world, Vector3.Zero, 100.0f, Color.White * 20.0f );
 
-		WormholeSound = Sound.FromScreen( "wormhole.sound_travel" );
+		_wormholeSound = Sound.FromScreen( "wormhole.sound_travel" );
 	}
 
 	public override void Tick()
 	{
 		base.Tick();
 
-		WormholeModel.Update( Time.Delta );
+		_wormholeModel.Update( Time.Delta );
 
-		var bone = WormholeModel.GetBoneWorldTransform( 1 );
+		var bone = _wormholeModel.GetBoneWorldTransform( 1 );
 
-		scenePanel.Camera.Position = bone.Position;
-		scenePanel.Camera.Rotation = bone.Rotation.RotateAroundAxis(Vector3.Right, -90f);
+		_scenePanel.Camera.Position = bone.Position;
+		_scenePanel.Camera.Rotation = bone.Rotation.RotateAroundAxis( Vector3.Right, -90f );
 
-		if (sinceStarted.Relative >= 6.0f)
+		if ( _sinceStarted.Relative >= 6.0f )
 		{
-			particleObj?.Simulate( RealTime.Delta );
+			_particleObj?.Simulate( RealTime.Delta );
 		}
 
-		if (Game.LocalPawn.Health <= 0)
+		if ( Game.LocalPawn.Health <= 0 )
 		{
-			WormholeSound.Stop();
+			_wormholeSound.Stop();
 
 			Delete();
 		}

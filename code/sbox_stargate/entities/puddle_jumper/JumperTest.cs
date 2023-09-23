@@ -1,56 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Sandbox;
+﻿using Sandbox;
 
 [Title( "Test Jumper" ), Category( "Stargate" ), Icon( "chair" )]
 public partial class JumperTest : Prop, IUse
 {
-	[Net] public Vector3 SpawnOffset { get; private set; } = new( 0, 0, 65 );
+	private InputState _currentInput;
 
-	[Net] public Player Driver { get; private set; }
+	private MovementState _currentMovement;
 
-	private struct InputState
-	{
-		public bool forward;
-		public bool back;
-		public bool left;
-		public bool right;
-		public bool up;
-		public bool down;
-		public bool boost;
+	[Net]
+	public Vector3 SpawnOffset { get; private set; } = new(0, 0, 65);
 
-		public void Reset()
-		{
-			forward = false;
-			back = false;
-			left = false;
-			right = false;
-			up = false;
-			down = false;
-			boost = false;
-		}
-	}
-
-	private InputState currentInput;
-
-	private struct MovementState
-	{
-		public float accelForward;
-		public float accelRight;
-		public float accelUp;
-
-		public MovementState()
-		{
-			accelForward = 0;
-			accelRight = 0;
-			accelUp = 0;
-		}
-	}
-
-	private MovementState currentMovement;
+	[Net]
+	public Player Driver { get; private set; }
 
 	public override void Spawn()
 	{
@@ -85,77 +46,49 @@ public partial class JumperTest : Prop, IUse
 		float desiredRight = 0;
 		float desiredUp = 0;
 
-		if ( currentInput.forward )
+		if ( _currentInput.Forward )
 			desiredForward = 1;
-		else if ( currentInput.back )
+		else if ( _currentInput.Back )
 			desiredForward = -1;
 
-		if ( currentInput.right )
+		if ( _currentInput.Right )
 			desiredRight = 1;
-		else if ( currentInput.left )
+		else if ( _currentInput.Left )
 			desiredRight = -1;
 
-		if ( currentInput.up )
+		if ( _currentInput.Up )
 			desiredUp = 1;
-		else if ( currentInput.down )
+		else if ( _currentInput.Down )
 			desiredUp = -1;
 
-		if (currentInput.boost)
+		if ( _currentInput.Boost )
 		{
 			desiredForward = desiredForward * 4f;
 		}
 
-		currentMovement.accelForward = currentMovement.accelForward.LerpTo( desiredForward, dt );
-		currentMovement.accelRight = currentMovement.accelRight.LerpTo( desiredRight, dt );
-		currentMovement.accelUp = currentMovement.accelUp.LerpTo( desiredUp, dt );
-		
+		_currentMovement.AccelForward = _currentMovement.AccelForward.LerpTo( desiredForward, dt );
+		_currentMovement.AccelRight = _currentMovement.AccelRight.LerpTo( desiredRight, dt );
+		_currentMovement.AccelUp = _currentMovement.AccelUp.LerpTo( desiredUp, dt );
 
-		if (currentMovement.accelForward > 0.01 || currentMovement.accelForward < -0.01) {
-			body.Position += rot.Forward * currentMovement.accelForward;
-		}
-
-		if ( currentMovement.accelRight > 0.01 || currentMovement.accelRight < -0.01 )
+		if ( _currentMovement.AccelForward > 0.01 || _currentMovement.AccelForward < -0.01 )
 		{
-			body.Position += rot.Right * currentMovement.accelRight;
+			body.Position += rot.Forward * _currentMovement.AccelForward;
 		}
 
-		if ( currentMovement.accelUp > 0.01 || currentMovement.accelUp < -0.01 )
+		if ( _currentMovement.AccelRight > 0.01 || _currentMovement.AccelRight < -0.01 )
 		{
-			body.Position += rot.Up * currentMovement.accelUp;
+			body.Position += rot.Right * _currentMovement.AccelRight;
 		}
 
-
-
+		if ( _currentMovement.AccelUp > 0.01 || _currentMovement.AccelUp < -0.01 )
+		{
+			body.Position += rot.Up * _currentMovement.AccelUp;
+		}
 	}
 
 	public override void Simulate( IClient client )
 	{
 		SimulateDriver( client );
-	}
-
-	void SimulateDriver( IClient client )
-	{
-		if ( !Driver.IsValid() ) return;
-
-		if ( Game.IsServer )
-		{
-			if ( Input.Pressed( InputButton.Use ) )
-			{
-				RemoveDriver( Driver as SandboxPlayer );
-				return;
-			}
-			else
-			{
-				currentInput.Reset();
-				currentInput.forward = Input.Down( InputButton.Forward );
-				currentInput.back = Input.Down( InputButton.Back );
-				currentInput.left = Input.Down( InputButton.Left );
-				currentInput.right = Input.Down( InputButton.Right );
-				currentInput.up = Input.Down( InputButton.Jump );
-				currentInput.down = Input.Down( InputButton.Duck );
-				currentInput.boost = Input.Down( InputButton.Run );
-			}
-		}
 	}
 
 	public override void FrameSimulate( IClient client )
@@ -167,7 +100,7 @@ public partial class JumperTest : Prop, IUse
 
 	public bool OnUse( Entity user )
 	{
-		if (user is SandboxPlayer player)
+		if ( user is SandboxPlayer player )
 		{
 			player.Parent = this;
 			player.LocalPosition = Vector3.Up * -50 + Vector3.Forward * 10;
@@ -189,11 +122,55 @@ public partial class JumperTest : Prop, IUse
 		return !Driver.IsValid();
 	}
 
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+
+		if ( Driver is SandboxPlayer player )
+		{
+			RemoveDriver( player );
+		}
+	}
+
+	[GameEvent.Tick.Server]
+	protected void PlayerAliveCheck()
+	{
+		if ( Driver is SandboxPlayer player && player.LifeState != LifeState.Alive )
+		{
+			RemoveDriver( player );
+		}
+	}
+
+	void SimulateDriver( IClient client )
+	{
+		if ( !Driver.IsValid() ) return;
+
+		if ( Game.IsServer )
+		{
+			if ( Input.Pressed( InputButton.Use ) )
+			{
+				RemoveDriver( Driver as SandboxPlayer );
+				return;
+			}
+			else
+			{
+				_currentInput.Reset();
+				_currentInput.Forward = Input.Down( InputButton.Forward );
+				_currentInput.Back = Input.Down( InputButton.Back );
+				_currentInput.Left = Input.Down( InputButton.Left );
+				_currentInput.Right = Input.Down( InputButton.Right );
+				_currentInput.Up = Input.Down( InputButton.Jump );
+				_currentInput.Down = Input.Down( InputButton.Duck );
+				_currentInput.Boost = Input.Down( InputButton.Run );
+			}
+		}
+	}
+
 	private void RemoveDriver( SandboxPlayer player )
 	{
 		Driver = null;
 
-		currentInput.Reset();
+		_currentInput.Reset();
 
 		if ( !player.IsValid() )
 			return;
@@ -212,22 +189,39 @@ public partial class JumperTest : Prop, IUse
 		PhysicsBody.GravityEnabled = true;
 	}
 
-	protected override void OnDestroy()
+	private struct InputState
 	{
-		base.OnDestroy();
+		public bool Forward { get; set; }
+		public bool Back { get; set; }
+		public bool Left { get; set; }
+		public bool Right { get; set; }
+		public bool Up { get; set; }
+		public bool Down { get; set; }
+		public bool Boost { get; set; }
 
-		if ( Driver is SandboxPlayer player )
+		public void Reset()
 		{
-			RemoveDriver( player );
+			Forward = false;
+			Back = false;
+			Left = false;
+			Right = false;
+			Up = false;
+			Down = false;
+			Boost = false;
 		}
 	}
 
-	[GameEvent.Tick.Server]
-	protected void PlayerAliveCheck()
+	private struct MovementState
 	{
-		if ( Driver is SandboxPlayer player && player.LifeState != LifeState.Alive )
+		public float AccelForward { get; set; }
+		public float AccelRight { get; set; }
+		public float AccelUp { get; set; }
+
+		public MovementState()
 		{
-			RemoveDriver( player );
+			AccelForward = 0;
+			AccelRight = 0;
+			AccelUp = 0;
 		}
 	}
 }

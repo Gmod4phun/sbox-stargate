@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Sandbox;
-using Sandbox.UI;
 
 [Title( "SGC Monitor" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class SGCMonitor : ModelEntity, IUse, IWireInputEntity
 {
+	private SGCMonitorHUDPanel _hudPanel;
+	private SGCMonitorWorldPanel _worldPanel;
+	
 	/* WIRE SUPPORT */
 
 	WirePortData IWireEntity.WirePorts { get; } = new WirePortData();
@@ -29,10 +28,7 @@ public partial class SGCMonitor : ModelEntity, IUse, IWireInputEntity
 	[Net]
 	public SGCComputer Computer { get; private set; } = null;
 
-	private SGCMonitorHUDPanel HUDPanel;
-	private SGCMonitorWorldPanel WorldPanel;
-
-	public List<SGCProgram> Programs { get; private set; } = new();
+	public List<SGCProgram> Programs { get; } = new();
 	public SGCProgram CurrentProgram { get; private set; } = null;
 
 	[Net]
@@ -40,6 +36,30 @@ public partial class SGCMonitor : ModelEntity, IUse, IWireInputEntity
 
 	[Net]
 	public string DialProgramCurrentAddress { get; private set; } = "";
+
+	[ConCmd.Server]
+	public static void KickCurrentUser( int monitorIdent )
+	{
+		var monitor = FindByIndex( monitorIdent ) as SGCMonitor;
+		monitor.OnUse( monitor.CurrentUser );
+	}
+
+	public static bool IsPointBehindPlane( Vector3 point, Vector3 planeOrigin, Vector3 planeNormal )
+	{
+		return (point - planeOrigin).Dot( planeNormal ) < 0;
+	}
+
+	// networking for program shit
+	[ConCmd.Server]
+	public static void ProgramDialUpdateAddressOnServer( int monitorIdent, string address )
+	{
+		var monitor = FindByIndex( monitorIdent ) as SGCMonitor;
+		if ( !monitor.IsValid() )
+			return;
+
+		monitor.DialProgramCurrentAddress = address;
+		monitor.ProgramDialUpdateAddressOnClient( To.Everyone, monitor, address );
+	}
 
 	public override void Spawn()
 	{
@@ -54,22 +74,6 @@ public partial class SGCMonitor : ModelEntity, IUse, IWireInputEntity
 		Tags.Add( "solid" );
 	}
 
-
-	private void CreatePrograms()
-	{
-		Programs.Add( new SGCProgram_Dialing() );
-		Programs.Add( new SGCProgram_Screensaver() );
-	}
-
-	[ClientRpc]
-	private void UpdatePrograms( SGCComputer computer, SGCMonitor monitor )
-	{
-		foreach ( var program in Programs )
-		{
-			program.UpdateProgram( monitor, computer );
-		}
-	}
-
 	public override void ClientSpawn()
 	{
 		base.ClientSpawn();
@@ -78,7 +82,7 @@ public partial class SGCMonitor : ModelEntity, IUse, IWireInputEntity
 		UpdatePrograms( Computer, this );
 
 		CurrentProgram = Programs.First();
-		WorldPanel = new( this, CurrentProgram );
+		_worldPanel = new(this, CurrentProgram);
 	}
 
 	public void LinkToComputer( SGCComputer computer )
@@ -96,40 +100,24 @@ public partial class SGCMonitor : ModelEntity, IUse, IWireInputEntity
 	public void ViewPanelOnHud()
 	{
 		CurrentProgram.Parent = null;
-		HUDPanel = new( this, CurrentProgram );
-		Game.RootPanel.AddChild( HUDPanel );
+		_hudPanel = new(this, CurrentProgram);
+		Game.RootPanel.AddChild( _hudPanel );
 	}
 
 	[ClientRpc]
 	public void ViewPanelOnWorld()
 	{
 		CurrentProgram.Parent = null;
-		HUDPanel?.Delete( true );
-		WorldPanel.AddProgram( CurrentProgram );
+		_hudPanel?.Delete( true );
+		_worldPanel.AddProgram( CurrentProgram );
 	}
 
 	[ClientRpc]
 	public void DeleteBothPanels()
 	{
 		CurrentProgram?.Delete( true );
-		HUDPanel?.Delete( true );
-		WorldPanel?.Delete( true );
-	}
-
-	protected override void OnDestroy()
-	{
-		base.OnDestroy();
-
-		if ( Computer.IsValid() )
-			Computer.RemoveMonitor( this );
-
-		DeleteBothPanels( To.Everyone );
-	}
-
-	[ClientRpc]
-	private void DisableWorldPanel()
-	{
-		CurrentProgram.Parent = null;
+		_hudPanel?.Delete( true );
+		_worldPanel?.Delete( true );
 	}
 
 	public bool OnUse( Entity user )
@@ -154,43 +142,16 @@ public partial class SGCMonitor : ModelEntity, IUse, IWireInputEntity
 		return false;
 	}
 
-	[ConCmd.Server]
-	public static void KickCurrentUser(int monitorIdent)
-	{
-		var monitor = FindByIndex( monitorIdent ) as SGCMonitor;
-		monitor.OnUse( monitor.CurrentUser );
-	}
-
-	[GameEvent.Tick.Server]
-	private void CurrentUserThink()
-	{
-		if ((!CurrentUser.IsValid() || CurrentUser.Health <= 0 || CurrentUser.Position.DistanceSquared(Position) > 120*120) && CurrentUser != null )
-		{
-			CurrentUser = null;
-		}
-	}
-
-	[Event.Hotload]
-	private void Hotloaded()
-	{
-		CurrentUser = null;
-	}
-
-	public static bool IsPointBehindPlane( Vector3 point, Vector3 planeOrigin, Vector3 planeNormal )
-	{
-		return (point - planeOrigin).Dot( planeNormal ) < 0;
-	}
-
 	public bool IsWorldPanelInScreen()
 	{
-		var bounds = WorldPanel.PanelBounds;
-		var scaleFactor = (WorldPanel.ActualSize / WorldPanel.RenderSize) / 40.0f;
+		var bounds = _worldPanel.PanelBounds;
+		var scaleFactor = (_worldPanel.ActualSize / _worldPanel.RenderSize) / 40.0f;
 		var heightScaleModifier = 0.65f;
 
-		var p1 = WorldPanel.Position + WorldPanel.Rotation.Up * (bounds.Height * heightScaleModifier * scaleFactor) + WorldPanel.Rotation.Right * (bounds.Width * scaleFactor);
-		var p2 = WorldPanel.Position + WorldPanel.Rotation.Up * (bounds.Height * heightScaleModifier * scaleFactor) + WorldPanel.Rotation.Right * (-bounds.Width * scaleFactor);
-		var p3 = WorldPanel.Position + WorldPanel.Rotation.Up * (-bounds.Height * heightScaleModifier * scaleFactor) + WorldPanel.Rotation.Right * (bounds.Width * scaleFactor);
-		var p4 = WorldPanel.Position + WorldPanel.Rotation.Up * (-bounds.Height * heightScaleModifier * scaleFactor) + WorldPanel.Rotation.Right * (-bounds.Width * scaleFactor);
+		var p1 = _worldPanel.Position + _worldPanel.Rotation.Up * (bounds.Height * heightScaleModifier * scaleFactor) + _worldPanel.Rotation.Right * (bounds.Width * scaleFactor);
+		var p2 = _worldPanel.Position + _worldPanel.Rotation.Up * (bounds.Height * heightScaleModifier * scaleFactor) + _worldPanel.Rotation.Right * (-bounds.Width * scaleFactor);
+		var p3 = _worldPanel.Position + _worldPanel.Rotation.Up * (-bounds.Height * heightScaleModifier * scaleFactor) + _worldPanel.Rotation.Right * (bounds.Width * scaleFactor);
+		var p4 = _worldPanel.Position + _worldPanel.Rotation.Up * (-bounds.Height * heightScaleModifier * scaleFactor) + _worldPanel.Rotation.Right * (-bounds.Width * scaleFactor);
 
 		var p1s = p1.ToScreen();
 		var p2s = p2.ToScreen();
@@ -198,27 +159,27 @@ public partial class SGCMonitor : ModelEntity, IUse, IWireInputEntity
 		var p4s = p4.ToScreen();
 
 		// check if all points are not in screen, on the same side (so that if we stare at the center and points will be offscreen it won't hide our panel)
-		if ((p1s.x < 0 && p2s.x < 0 && p3s.x < 0 && p4s.x < 0) ||
-			(p1s.x > 1 && p2s.x > 1 && p3s.x > 1 && p4s.x > 1) ||
-			(p1s.y < 0 && p2s.y < 0 && p3s.y < 0 && p4s.y < 0) ||
-			(p1s.y > 1 && p2s.y > 1 && p3s.y > 1 && p4s.y > 1))
-			{
-				return false;
-			}
+		if ( (p1s.x < 0 && p2s.x < 0 && p3s.x < 0 && p4s.x < 0) ||
+		    (p1s.x > 1 && p2s.x > 1 && p3s.x > 1 && p4s.x > 1) ||
+		    (p1s.y < 0 && p2s.y < 0 && p3s.y < 0 && p4s.y < 0) ||
+		    (p1s.y > 1 && p2s.y > 1 && p3s.y > 1 && p4s.y > 1) )
+		{
+			return false;
+		}
 
 		return true;
 	}
 
 	public bool IsWorldPanelBehindScreen()
 	{
-		var bounds = WorldPanel.PanelBounds;
-		var scaleFactor = (WorldPanel.ActualSize / WorldPanel.RenderSize) / 40.0f;
+		var bounds = _worldPanel.PanelBounds;
+		var scaleFactor = (_worldPanel.ActualSize / _worldPanel.RenderSize) / 40.0f;
 		var heightScaleModifier = 0.65f;
 
-		var p1 = WorldPanel.Position + WorldPanel.Rotation.Up * (bounds.Height * heightScaleModifier * scaleFactor) + WorldPanel.Rotation.Right * (bounds.Width * scaleFactor);
-		var p2 = WorldPanel.Position + WorldPanel.Rotation.Up * (bounds.Height * heightScaleModifier * scaleFactor) + WorldPanel.Rotation.Right * (-bounds.Width * scaleFactor);
-		var p3 = WorldPanel.Position + WorldPanel.Rotation.Up * (-bounds.Height * heightScaleModifier * scaleFactor) + WorldPanel.Rotation.Right * (bounds.Width * scaleFactor);
-		var p4 = WorldPanel.Position + WorldPanel.Rotation.Up * (-bounds.Height * heightScaleModifier * scaleFactor) + WorldPanel.Rotation.Right * (-bounds.Width * scaleFactor);
+		var p1 = _worldPanel.Position + _worldPanel.Rotation.Up * (bounds.Height * heightScaleModifier * scaleFactor) + _worldPanel.Rotation.Right * (bounds.Width * scaleFactor);
+		var p2 = _worldPanel.Position + _worldPanel.Rotation.Up * (bounds.Height * heightScaleModifier * scaleFactor) + _worldPanel.Rotation.Right * (-bounds.Width * scaleFactor);
+		var p3 = _worldPanel.Position + _worldPanel.Rotation.Up * (-bounds.Height * heightScaleModifier * scaleFactor) + _worldPanel.Rotation.Right * (bounds.Width * scaleFactor);
+		var p4 = _worldPanel.Position + _worldPanel.Rotation.Up * (-bounds.Height * heightScaleModifier * scaleFactor) + _worldPanel.Rotation.Right * (-bounds.Width * scaleFactor);
 
 		var p1s = p1.ToScreen();
 		var p2s = p2.ToScreen();
@@ -231,14 +192,75 @@ public partial class SGCMonitor : ModelEntity, IUse, IWireInputEntity
 		return false;
 	}
 
+	public bool IsUsable( Entity user )
+	{
+		return true;
+	}
+
+	[ClientRpc]
+	public void ProgramDialUpdateAddressOnClient( SGCMonitor monitor, string address )
+	{
+		var program = Programs.OfType<SGCProgram_Dialing>().FirstOrDefault();
+		if ( !program.IsValid() )
+			return;
+
+		program.UpdateProgram( this, Computer );
+	}
+
+	protected override void OnDestroy()
+	{
+		base.OnDestroy();
+
+		if ( Computer.IsValid() )
+			Computer.RemoveMonitor( this );
+
+		DeleteBothPanels( To.Everyone );
+	}
+
+	private void CreatePrograms()
+	{
+		Programs.Add( new SGCProgram_Dialing() );
+		Programs.Add( new SGCProgram_Screensaver() );
+	}
+
+	[ClientRpc]
+	private void UpdatePrograms( SGCComputer computer, SGCMonitor monitor )
+	{
+		foreach ( var program in Programs )
+		{
+			program.UpdateProgram( monitor, computer );
+		}
+	}
+
+	[ClientRpc]
+	private void DisableWorldPanel()
+	{
+		CurrentProgram.Parent = null;
+	}
+
+	[GameEvent.Tick.Server]
+	private void CurrentUserThink()
+	{
+		if ( (!CurrentUser.IsValid() || CurrentUser.Health <= 0 || CurrentUser.Position.DistanceSquared( Position ) > 120 * 120) && CurrentUser != null )
+		{
+			CurrentUser = null;
+		}
+	}
+
+	[Event.Hotload]
+	private void Hotloaded()
+	{
+		CurrentUser = null;
+	}
+
 	[GameEvent.Client.Frame]
 	private void RenderLogic()
 	{
-		if ( !WorldPanel.IsValid() )
+		if ( !_worldPanel.IsValid() )
 			return;
 
 		// if we are viewing it on HUD, we don't care about hiding world panel, and also remove HUDPanel if we arent active user
-		if ( HUDPanel.IsValid() )
+		if ( _hudPanel.IsValid() )
 		{
 			if ( CurrentUser != Game.LocalPawn )
 				ViewPanelOnWorld();
@@ -246,7 +268,7 @@ public partial class SGCMonitor : ModelEntity, IUse, IWireInputEntity
 			return;
 		}
 
-		var screenPos = WorldPanel.Position;
+		var screenPos = _worldPanel.Position;
 		var screenDir = Rotation.Forward;
 
 		bool isWorldPanelBehindScreen = IsWorldPanelBehindScreen();
@@ -261,34 +283,7 @@ public partial class SGCMonitor : ModelEntity, IUse, IWireInputEntity
 
 		if ( (!isPlayerBehindMonitor && !isPlayerFarAway && !isWorldPanelOffScreen && !isWorldPanelBehindScreen) && CurrentUser != Game.LocalClient && !CurrentProgram.Parent.IsValid() )
 		{
-			WorldPanel.AddProgram( CurrentProgram );
+			_worldPanel.AddProgram( CurrentProgram );
 		}
-	}
-
-	public bool IsUsable( Entity user )
-	{
-		return true;
-	}
-
-	// networking for program shit
-	[ConCmd.Server]
-	public static void ProgramDialUpdateAddressOnServer( int monitorIdent, string address )
-	{
-		var monitor = FindByIndex( monitorIdent ) as SGCMonitor;
-		if ( !monitor.IsValid() )
-			return;
-
-		monitor.DialProgramCurrentAddress = address;
-		monitor.ProgramDialUpdateAddressOnClient( To.Everyone, monitor, address );
-	}
-
-	[ClientRpc]
-	public void ProgramDialUpdateAddressOnClient( SGCMonitor monitor, string address )
-	{
-		var program = Programs.OfType<SGCProgram_Dialing>().FirstOrDefault();
-		if ( !program.IsValid() )
-			return;
-
-		program.UpdateProgram( this, Computer );
 	}
 }

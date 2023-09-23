@@ -1,13 +1,11 @@
 ﻿using Sandbox;
 using Sandbox.UI;
-using System;
 
 public class StargateGameLoadingModel : Panel
 {
-	readonly ScenePanel scenePanel;
-
-	private SceneModel GateModel;
-	private SceneModel RingModel;
+	private readonly ScenePanel _scenePanel;
+	private SceneModel _gateModel;
+	private SceneModel _ringModel;
 
 	public StargateGameLoadingModel()
 	{
@@ -17,36 +15,33 @@ public class StargateGameLoadingModel : Panel
 		Style.AlignContent = Align.Center;
 		Style.Padding = 0;
 
-		var world = new SceneWorld()
-		{
-			ClearColor = Color.Black
-		};
+		var world = new SceneWorld() { ClearColor = Color.Black };
 
-		scenePanel = new ScenePanel();
-		scenePanel.World = world;
-		scenePanel.Camera.FieldOfView = 90;
-		scenePanel.Camera.ZFar = 15000f;
-		scenePanel.Camera.AntiAliasing = true;
-		scenePanel.Camera.Ortho = true;
-		scenePanel.Camera.OrthoWidth = 1600;
-		scenePanel.Camera.OrthoHeight = 900;
+		_scenePanel = new ScenePanel();
+		_scenePanel.World = world;
+		_scenePanel.Camera.FieldOfView = 90;
+		_scenePanel.Camera.ZFar = 15000f;
+		_scenePanel.Camera.AntiAliasing = true;
+		_scenePanel.Camera.Ortho = true;
+		_scenePanel.Camera.OrthoWidth = 1600;
+		_scenePanel.Camera.OrthoHeight = 900;
 
-		scenePanel.Style.Width = Length.Percent( 100 );
-		scenePanel.Style.Height = Length.Percent( 100 );
-		scenePanel.Style.PointerEvents = PointerEvents.None;
-		scenePanel.Style.Cursor = "none";
+		_scenePanel.Style.Width = Length.Percent( 100 );
+		_scenePanel.Style.Height = Length.Percent( 100 );
+		_scenePanel.Style.PointerEvents = PointerEvents.None;
+		_scenePanel.Style.Cursor = "none";
 
-		AddChild( scenePanel );
+		AddChild( _scenePanel );
 
 		//new SceneSkyBox( world, Material.Load( "models/sbox_stargate/wormhole/skybox.vmat" ) );
 
-		GateModel = new SceneModel( world, "models/sbox_stargate/sg_mw/sg_mw_gate.vmdl", Transform.Zero );
-		RingModel = new SceneModel( world, "models/sbox_stargate/sg_mw/sg_mw_ring.vmdl", Transform.Zero );
+		_gateModel = new SceneModel( world, "models/sbox_stargate/sg_mw/sg_mw_gate.vmdl", Transform.Zero );
+		_ringModel = new SceneModel( world, "models/sbox_stargate/sg_mw/sg_mw_ring.vmdl", Transform.Zero );
 
-		GateModel.Batchable = false;
-		RingModel.Batchable = false;
+		_gateModel.Batchable = false;
+		_ringModel.Batchable = false;
 
-		for (var i = 0; i < 9; i++)
+		for ( var i = 0; i < 9; i++ )
 		{
 			var t = Transform.Zero;
 			t.Rotation = t.Rotation.RotateAroundAxis( Vector3.Forward, 40 * i );
@@ -60,7 +55,6 @@ public class StargateGameLoadingModel : Panel
 		//scenePanel.Camera.Position = GateModel.Position - GateModel.Rotation.Forward * 512;
 		//scenePanel.Camera.Rotation = GateModel.Rotation; //.RotateAroundAxis( Vector3.Right, -90f );
 
-
 		new SceneLight( world, Vector3.Forward * 128, 512, Color.White * 2.0f );
 		//new SceneLight( world, Vector3.Forward * 64 - Vector3.Up * 256, 1024, Color.Red * 5.0f );
 		//new SceneLight( world, Vector3.Forward * 64 - Vector3.Up * 128 - Vector3.Right * 128, 1024, Color.Green * 5.0f );
@@ -71,22 +65,20 @@ public class StargateGameLoadingModel : Panel
 	{
 		base.Tick();
 
-		RingModel.Rotation = GateModel.Rotation.RotateAroundAxis( Vector3.Forward, Time.Now * -16 );
+		_ringModel.Rotation = _gateModel.Rotation.RotateAroundAxis( Vector3.Forward, Time.Now * -16 );
 
-		
-		scenePanel.Camera.Position = Vector3.Forward * 256;
-		scenePanel.Camera.Rotation = Rotation.From( new Angles( 180, 0, 180 ) );
+		_scenePanel.Camera.Position = Vector3.Forward * 256;
+		_scenePanel.Camera.Rotation = Rotation.From( new Angles( 180, 0, 180 ) );
 
-		scenePanel.Camera.OrthoHeight = 280;
-		scenePanel.Camera.OrthoWidth = scenePanel.Camera.OrthoHeight;
+		_scenePanel.Camera.OrthoHeight = 280;
+		_scenePanel.Camera.OrthoWidth = _scenePanel.Camera.OrthoHeight;
 
 		//scenePanel.Camera.OrthoWidth = 160;
 		//scenePanel.Camera.OrthoHeight = 90;
 
 		//scenePanel.Camera.Ortho = true;
 
-		GateModel.Update( Time.Delta );
-		RingModel.Update( Time.Delta );
+		_gateModel.Update( Time.Delta );
+		_ringModel.Update( Time.Delta );
 	}
-
 }

@@ -1,16 +1,15 @@
 using System.Text.Json;
 
-public interface IGateSpawner {
-
+public interface IGateSpawner
+{
 	object ToJson();
 
-	void FromJson(JsonElement data);
-
+	void FromJson( JsonElement data );
 }
 
-public class JsonModel {
+public class JsonModel
+{
 	public string EntityName { get; set; }
 	public Vector3 Position { get; set; }
 	public Rotation Rotation { get; set; }
-
 }

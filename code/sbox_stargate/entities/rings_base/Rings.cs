@@ -7,28 +7,17 @@ using Sandbox;
 [Category( "Transportation Rings" )]
 public partial class Rings : AnimatedEntity, IUse
 {
+	// public const string Symbols = "0123456789";
+	public const string Symbols = "12345";
 
-	public static readonly float MAX_RING_RANGE = 1024f;
+	protected const int AmountOfRings = 5;
+
+	public static readonly float MaxRingRange = 1024f;
 
 	[Net]
 	public string Address { get; protected set; }
 
-	protected int returnedRings = 0;
-
-	protected const int AmountOfRings = 5;
-
-	protected List<RingRing> ChildRings = new();
-
-	protected Rings DestinationRings;
-
-	protected Vector3 EndPos;
-
 	public bool Busy { get; protected set; }
-
-	protected bool IsUpsideDown
-	{
-		get => Rotation.Up.Dot( new Vector3( 0, 0, -1 ) ) > 1 / Math.Sqrt( 2 );
-	}
 
 	public bool HasAllRingsReachedPosition
 	{
@@ -46,8 +35,16 @@ public partial class Rings : AnimatedEntity, IUse
 	public Output OnRingsRetracted { get; set; }
 
 	public bool RingsDeployed { get; protected set; } = false;
-	// public const string Symbols = "0123456789";
-	public const string Symbols = "12345";
+
+	protected int ReturnedRings { get; set; } = 0;
+
+	protected List<RingRing> ChildRings { get; set; } = new();
+
+	protected Rings DestinationRings { get; set; }
+
+	protected Vector3 EndPos { get; set; }
+
+	protected bool IsUpsideDown => Rotation.Up.Dot( new Vector3( 0, 0, -1 ) ) > 1 / Math.Sqrt( 2 );
 
 	public static bool IsAddressValid( string address )
 	{
@@ -66,7 +63,7 @@ public partial class Rings : AnimatedEntity, IUse
 	{
 		if ( length < 1 || length > 9 ) return "";
 
-		StringBuilder symbolsCopy = new( Symbols );
+		StringBuilder symbolsCopy = new(Symbols);
 
 		string generatedAddress = "";
 		for ( int i = 0; i < length; i++ ) // pick random symbols without repeating
@@ -171,11 +168,11 @@ public partial class Rings : AnimatedEntity, IUse
 
 	public virtual void OnRingReturn()
 	{
-		returnedRings++;
+		ReturnedRings++;
 
-		if ( returnedRings < AmountOfRings ) return;
+		if ( ReturnedRings < AmountOfRings ) return;
 
-		returnedRings = 0;
+		ReturnedRings = 0;
 		ShowBase();
 		EnableAllCollisions = true;
 		Busy = false;
@@ -229,24 +226,10 @@ public partial class Rings : AnimatedEntity, IUse
 		return particle;
 	}
 
-	protected virtual async void HideBase()
-	{
-		CurrentSequence.Name = "idle_down";
-
-		await GameTask.DelaySeconds( 0.25f );
-		RenderColor = RenderColor.WithAlpha( 0 );
-	}
-
-	protected virtual void ShowBase()
-	{
-		RenderColor = RenderColor.WithAlpha( 1 );
-		CurrentSequence.Name = "idle";
-	}
-
 	public bool IsAbleToExpand()
 	{
 		//TraceResult tr = Trace.Ray( Position + Rotation.Up * 10, Position + Rotation.Up * 150 ).Run();
-		var tr = Trace.Sweep( PhysicsBody, Transform.WithPosition( Position + Rotation.Up * 10 ), Transform.WithPosition( Position + Rotation.Up * 110 ) ).WithoutTags("player", "sg_rings_ignore").Ignore( this ).Run();
+		var tr = Trace.Sweep( PhysicsBody, Transform.WithPosition( Position + Rotation.Up * 10 ), Transform.WithPosition( Position + Rotation.Up * 110 ) ).WithoutTags( "player", "sg_rings_ignore" ).Ignore( this ).Run();
 
 		// Object too close, impossible to deploy rings
 		if ( tr.Hit && tr.Distance < 100 ) return false;
@@ -254,7 +237,7 @@ public partial class Rings : AnimatedEntity, IUse
 		return true;
 	}
 
-	public async virtual void DeployRings( bool withTeleport = false )
+	public virtual async void DeployRings( bool withTeleport = false )
 	{
 		Busy = true;
 
@@ -286,7 +269,7 @@ public partial class Rings : AnimatedEntity, IUse
 
 		// Avoid making a calculation 2 times foreach ring
 		var isUpDown = IsUpsideDown;
-		var tr = Trace.Sweep( PhysicsBody, Transform.WithPosition( Position + Rotation.Up * 110 ), Transform.WithPosition( Position + Rotation.Up * MAX_RING_RANGE ) ).Ignore( this ).Run();
+		var tr = Trace.Sweep( PhysicsBody, Transform.WithPosition( Position + Rotation.Up * 110 ), Transform.WithPosition( Position + Rotation.Up * MaxRingRange ) ).Ignore( this ).Run();
 		var hitGround = isUpDown && tr.Hit;
 
 		for ( int i = 0; i < 5; i++ )
@@ -298,13 +281,13 @@ public partial class Rings : AnimatedEntity, IUse
 			RingRing r = new();
 			r.RingParent = this;
 			r.SetParent( this );
-			r.isUpsideDown = isUpDown;
+			r.IsUpsideDown = isUpDown;
 			r.Position = Position;
 			r.Rotation = Rotation;
-			if ( r.isUpsideDown ) r.Rotation = Rotation.RotateAroundAxis( Vector3.Left, 180f );
+			if ( r.IsUpsideDown ) r.Rotation = Rotation.RotateAroundAxis( Vector3.Left, 180f );
 			r.Scale = Scale;
 			r.Transmit = TransmitType.Always;
-			r.desiredPos = Transform.PointToLocal( endPos );
+			r.DesiredPos = Transform.PointToLocal( endPos );
 
 			ChildRings.Add( r );
 		}
@@ -330,7 +313,7 @@ public partial class Rings : AnimatedEntity, IUse
 		if ( withTeleport ) DoTeleport();
 	}
 
-	public async virtual void DoTeleport()
+	public virtual async void DoTeleport()
 	{
 		if ( !DestinationRings.IsValid() )
 		{
@@ -404,7 +387,7 @@ public partial class Rings : AnimatedEntity, IUse
 		EndPos = Vector3.Zero;
 	}
 
-	public async virtual void RetractRings()
+	public virtual async void RetractRings()
 	{
 		PlaySound( "ringtransporter.part2" );
 
@@ -418,7 +401,7 @@ public partial class Rings : AnimatedEntity, IUse
 		{
 			await GameTask.Delay( times[i] );
 
-			r.desiredPos = LocalPosition.z;
+			r.DesiredPos = LocalPosition.z;
 			r.Retract();
 			i++;
 		}
@@ -433,14 +416,27 @@ public partial class Rings : AnimatedEntity, IUse
 
 		if ( !IsUpsideDown ) return;
 
-		var tr = Trace.Sweep( PhysicsBody, Transform.WithPosition( Position + Rotation.Up * 110 ), Transform.WithPosition( Position + Rotation.Up * MAX_RING_RANGE ) ).Ignore( this ).Run();
+		var tr = Trace.Sweep( PhysicsBody, Transform.WithPosition( Position + Rotation.Up * 110 ), Transform.WithPosition( Position + Rotation.Up * MaxRingRange ) ).Ignore( this ).Run();
 		DebugOverlay.TraceResult( tr );
 		DebugOverlay.Text( tr.Distance.ToString(), tr.EndPosition - Rotation.Up * 30, Color.Magenta );
+	}
+
+	protected virtual async void HideBase()
+	{
+		CurrentSequence.Name = "idle_down";
+
+		await GameTask.DelaySeconds( 0.25f );
+		RenderColor = RenderColor.WithAlpha( 0 );
+	}
+
+	protected virtual void ShowBase()
+	{
+		RenderColor = RenderColor.WithAlpha( 1 );
+		CurrentSequence.Name = "idle";
 	}
 
 	protected override void OnDestroy()
 	{
 		if ( DestinationRings.IsValid() ) DestinationRings.RetractRings();
 	}
-
 }

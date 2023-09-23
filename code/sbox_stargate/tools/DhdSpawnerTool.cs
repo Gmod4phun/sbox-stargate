@@ -3,32 +3,21 @@
 	[Library( "tool_dhd_spawner", Title = "DHD", Description = "Used to control a Stargate.\n\nMOUSE1 - Spawn DHD\nMOUSE2 - Update DHD", Group = "construction" )]
 	public partial class DhdSpawnerTool : BaseTool
 	{
-		PreviewEntity previewModel;
+		private PreviewEntity _previewModel;
 
 		private string Model => "models/sbox_stargate/dhd/dhd.vmdl";
-		protected override bool IsPreviewTraceValid( TraceResult tr )
-		{
-			if ( !base.IsPreviewTraceValid( tr ) )
-				return false;
-
-			if ( tr.Entity is Stargate )
-				return false;
-
-			return true;
-		}
 
 		public override void CreatePreviews()
 		{
-			if ( TryCreatePreview( ref previewModel, Model ) )
+			if ( TryCreatePreview( ref _previewModel, Model ) )
 			{
-				if (Owner.IsValid())
+				if ( Owner.IsValid() )
 				{
-					previewModel.RelativeToNormal = false;
-					previewModel.OffsetBounds = false;
-					previewModel.PositionOffset = new Vector3( 0, 0, -5 );
-					previewModel.RotationOffset = new Angles( 15, Owner.EyeRotation.Angles().yaw + 180, 0 ).ToRotation();
+					_previewModel.RelativeToNormal = false;
+					_previewModel.OffsetBounds = false;
+					_previewModel.PositionOffset = new Vector3( 0, 0, -5 );
+					_previewModel.RotationOffset = new Angles( 15, Owner.EyeRotation.Angles().yaw + 180, 0 ).ToRotation();
 				}
-
 			}
 		}
 
@@ -36,7 +25,7 @@
 		{
 			base.OnFrame();
 
-			if ( Owner.IsValid() && Owner.Health > 0)
+			if ( Owner.IsValid() && Owner.Health > 0 )
 			{
 				RefreshPreviewAngles();
 			}
@@ -50,7 +39,6 @@
 					continue;
 
 				preview.Rotation = new Angles( 15, Owner.EyeRotation.Angles().yaw + 180, 0 ).ToRotation();
-
 			}
 		}
 
@@ -92,15 +80,25 @@
 					if ( !tr.Hit || !tr.Entity.IsValid() )
 						return;
 
-					if (tr.Entity is Dhd dhd)
+					if ( tr.Entity is Dhd dhd )
 					{
 						CreateHitEffects( tr.EndPosition );
 
 						dhd.Gate = Stargate.FindNearestGate( dhd );
 					}
 				}
-
 			}
+		}
+
+		protected override bool IsPreviewTraceValid( TraceResult tr )
+		{
+			if ( !base.IsPreviewTraceValid( tr ) )
+				return false;
+
+			if ( tr.Entity is Stargate )
+				return false;
+
+			return true;
 		}
 	}
 }

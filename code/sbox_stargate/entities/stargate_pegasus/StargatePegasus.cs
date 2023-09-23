@@ -1,21 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using Editor;
 using Sandbox;
 
-[HammerEntity, SupportsSolid, EditorModel( MODEL )]
+[HammerEntity, SupportsSolid, EditorModel( Model )]
 [Title( "Stargate (Pegasus)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class StargatePegasus : Stargate
 {
-	public const string MODEL = "models/sbox_stargate/sg_peg/sg_peg_gate.vmdl";
-
-	[Net, Category( "Chevrons and Ring" )]
-	public StargateRingPegasus Ring { get; set; } = null;
-	public List<Chevron> EncodedChevronsOrdered = new ();
+	public const string Model = "models/sbox_stargate/sg_peg/sg_peg_gate.vmdl";
 
 	public StargatePegasus()
 	{
@@ -40,6 +33,20 @@ public partial class StargatePegasus : Stargate
 		EventHorizonSkinGroup = 3;
 	}
 
+	public StargateRingPegasus Ring { get; set; }
+
+	public List<Chevron> EncodedChevronsOrdered { get; set; } = new();
+
+	public static void DrawGizmos( EditorContext context )
+	{
+		Gizmo.Draw.Model( "models/sbox_stargate/sg_peg/sg_peg_ring.vmdl" );
+
+		for ( var i = 0; i < 9; i++ )
+		{
+			Gizmo.Draw.Model( "models/sbox_stargate/sg_peg/sg_peg_chevron.vmdl", new Transform( Vector3.Zero, Rotation.FromRoll( i * 40 ) ) );
+		}
+	}
+
 	// SPAWN
 
 	public override void Spawn()
@@ -47,7 +54,7 @@ public partial class StargatePegasus : Stargate
 		base.Spawn();
 
 		Transmit = TransmitType.Always;
-		SetModel( MODEL );
+		SetModel( Model );
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
 		PhysicsBody.BodyType = PhysicsBodyType.Static;
 
@@ -83,7 +90,7 @@ public partial class StargatePegasus : Stargate
 		var chev = new Chevron();
 		chev.SetModel( "models/sbox_stargate/sg_peg/sg_peg_chevron.vmdl" );
 		chev.Position = Position;
-		chev.Rotation = Rotation.Angles().WithRoll( -ChevronAngles[n-1] ).ToRotation();
+		chev.Rotation = Rotation.Angles().WithRoll( -ChevronAngles[n - 1] ).ToRotation();
 		chev.SetParent( this );
 		chev.Transmit = TransmitType.Always;
 		chev.Gate = this;
@@ -97,7 +104,7 @@ public partial class StargatePegasus : Stargate
 
 	public void CreateAllChevrons()
 	{
-		for (int i = 1; i <= 9; i++ )
+		for ( int i = 1; i <= 9; i++ )
 		{
 			var chev = CreateChevron( i );
 			Chevrons.Add( chev );
@@ -165,15 +172,14 @@ public partial class StargatePegasus : Stargate
 		Ring?.SetRingState( true );
 	}
 
-
 	// CHEVRON ANIMS & SOUNDS
 
 	public void ChevronActivate( Chevron chev, float delay = 0, bool turnon = true, bool chevLock = false, bool longer = false, bool shorter = false, bool nosound = false )
 	{
 		if ( chev.IsValid() )
 		{
-			if (!nosound) Stargate.PlaySound( chev, GetSound( "chevron" + (chevLock ? "_lock" : "") + (Inbound ? "_inbound" : "") + ( longer ? "_longer" : "" ) + (shorter ? "_shorter" : "") ), delay );
-			if (turnon) chev.TurnOn( delay );
+			if ( !nosound ) Stargate.PlaySound( chev, GetSound( "chevron" + (chevLock ? "_lock" : "") + (Inbound ? "_inbound" : "") + (longer ? "_longer" : "") + (shorter ? "_shorter" : "") ), delay );
+			if ( turnon ) chev.TurnOn( delay );
 		}
 	}
 
@@ -202,7 +208,7 @@ public partial class StargatePegasus : Stargate
 	// INDIVIDUAL DIAL TYPES
 
 	// FAST DIAL
-	public override void BeginDialFast(string address)
+	public override void BeginDialFast( string address )
 	{
 		base.BeginDialFast( address );
 
@@ -215,7 +221,11 @@ public partial class StargatePegasus : Stargate
 			CurGateState = GateState.DIALING;
 			CurDialType = DialType.FAST;
 
-			if ( !IsValidFullAddress( address ) ) { StopDialing(); return; }
+			if ( !IsValidFullAddress( address ) )
+			{
+				StopDialing();
+				return;
+			}
 
 			var target = FindDestinationGateByDialingAddress( this, address );
 			var wasTargetReadyOnStart = false; // if target gate was not available on dial start, dont bother doing anything at the end
@@ -249,7 +259,6 @@ public partial class StargatePegasus : Stargate
 			}
 
 			AddTask( startTime + 7, openOrStop, TimedTaskCategory.DIALING );
-
 		}
 		catch ( Exception )
 		{
@@ -277,7 +286,7 @@ public partial class StargatePegasus : Stargate
 			CurGateState = GateState.ACTIVE;
 			Inbound = true;
 
-			PlaySound( this, GetSound("gate_roll_fast"), 0.35f );
+			PlaySound( this, GetSound( "gate_roll_fast" ), 0.35f );
 
 			Ring.RollSymbolsInbound( 5.5f, 1f, numChevs );
 		}
@@ -288,7 +297,7 @@ public partial class StargatePegasus : Stargate
 	}
 
 	// SLOW DIAL
-	public async override void BeginDialSlow( string address, float initialDelay=0 )
+	public override async void BeginDialSlow( string address, float initialDelay = 0 )
 	{
 		base.BeginDialSlow( address, initialDelay );
 
@@ -320,10 +329,10 @@ public partial class StargatePegasus : Stargate
 
 			bool gateValidCheck() { return target.IsValid() && target != this && target.IsStargateReadyForInboundFastEnd(); }
 
-			Ring.RollSymbolsDialSlow(address, gateValidCheck);
+			Ring.RollSymbolsDialSlow( address, gateValidCheck );
 
 			var dialTime = (addrLen == 9) ? 36f : ((addrLen == 8) ? 32f : 26f);
-			
+
 			void startInboundAnim()
 			{
 				//var target = FindDestinationGateByDialingAddress( this, address );
@@ -349,7 +358,8 @@ public partial class StargatePegasus : Stargate
 
 				Busy = false;
 
-				if ( gateValidCheck() )	EstablishWormholeTo( target ); else StopDialing();
+				if ( gateValidCheck() ) EstablishWormholeTo( target );
+				else StopDialing();
 			}
 
 			AddTask( startTime + dialTime, openOrStop, TimedTaskCategory.DIALING );
@@ -393,7 +403,7 @@ public partial class StargatePegasus : Stargate
 		}
 	}
 
-	public async override void BeginDialInstant( string address )
+	public override async void BeginDialInstant( string address )
 	{
 		base.BeginDialInstant( address );
 
@@ -443,7 +453,7 @@ public partial class StargatePegasus : Stargate
 
 	// DHD DIAL
 
-	public async override void BeginOpenByDHD( string address )
+	public override async void BeginOpenByDHD( string address )
 	{
 		base.BeginOpenByDHD( address );
 
@@ -477,7 +487,7 @@ public partial class StargatePegasus : Stargate
 		}
 	}
 
-	public async override void BeginInboundDHD( int numChevs )
+	public override async void BeginInboundDHD( int numChevs )
 	{
 		base.BeginInboundDHD( numChevs );
 
@@ -506,13 +516,13 @@ public partial class StargatePegasus : Stargate
 	}
 
 	// CHEVRON STUFF - DHD DIALING
-	public override void DoDHDChevronEncode(char sym)
+	public override void DoDHDChevronEncode( char sym )
 	{
 		base.DoDHDChevronEncode( sym );
 
 		var clampLen = Math.Clamp( DialingAddress.Length + 1, 7, 9 );
 
-		var chev = GetChevronBasedOnAddressLength(DialingAddress.Length, clampLen );
+		var chev = GetChevronBasedOnAddressLength( DialingAddress.Length, clampLen );
 		EncodedChevronsOrdered.Add( chev );
 
 		Ring.RollSymbolDHDFast( clampLen, () => true, DialingAddress.Length, 0.6f );
@@ -537,7 +547,7 @@ public partial class StargatePegasus : Stargate
 	}
 
 	// Manual encode/lock
-	public async override Task<bool> DoManualChevronEncode( char sym )
+	public override async Task<bool> DoManualChevronEncode( char sym )
 	{
 		if ( !await base.DoManualChevronEncode( sym ) )
 			return false;
@@ -571,7 +581,7 @@ public partial class StargatePegasus : Stargate
 		return true;
 	}
 
-	public async override Task<bool> DoManualChevronLock( char sym )
+	public override async Task<bool> DoManualChevronLock( char sym )
 	{
 		if ( !await base.DoManualChevronLock( sym ) )
 			return false;
@@ -602,7 +612,7 @@ public partial class StargatePegasus : Stargate
 		var chev = GetChevronBasedOnAddressLength( chevNum, DialingAddress.Length );
 		ChevronActivate( chev, 0, isValid, true );
 
-		if (isValid)
+		if ( isValid )
 			ActiveChevrons++;
 
 		Event.Run( StargateEvent.ChevronLocked, this, chevNum, isValid );
@@ -614,7 +624,7 @@ public partial class StargatePegasus : Stargate
 		return true;
 	}
 
-	public async override void BeginManualOpen( string address )
+	public override async void BeginManualOpen( string address )
 	{
 		try
 		{
@@ -639,16 +649,6 @@ public partial class StargatePegasus : Stargate
 		catch ( Exception )
 		{
 			if ( this.IsValid() ) StopDialing();
-		}
-	}
-
-	public static void DrawGizmos( EditorContext context )
-	{
-		Gizmo.Draw.Model( "models/sbox_stargate/sg_peg/sg_peg_ring.vmdl" );
-
-		for ( var i = 0; i < 9; i++ )
-		{
-			Gizmo.Draw.Model( "models/sbox_stargate/sg_peg/sg_peg_chevron.vmdl", new Transform( Vector3.Zero, Rotation.FromRoll( i * 40 ) ) );
 		}
 	}
 }

@@ -1,26 +1,16 @@
 ﻿using Sandbox;
 using Sandbox.UI;
 
-using System;
-using System.Linq;
-
 public class SGCProgram : Panel
 {
-	public SGCMonitor Monitor;
-	public SGCComputer Computer;
+	public SGCMonitor Monitor { get; set; }
+	public SGCComputer Computer { get; set; }
+	protected Stargate Gate { get; set; }
 
-	protected Stargate Gate;
-
-	public virtual void UpdateProgram( SGCMonitor monitor, SGCComputer computer)
+	public virtual void UpdateProgram( SGCMonitor monitor, SGCComputer computer )
 	{
 		Monitor = monitor;
 		Computer = computer;
-	}
-
-	[Event.Hotload]
-	private void UpdateProgram()
-	{
-		UpdateProgram( Monitor, Computer );
 	}
 
 	public override void Tick()
@@ -30,7 +20,13 @@ public class SGCProgram : Panel
 		if ( !Computer.IsValid() )
 			return;
 
-		if (Gate != Computer.Gate)
+		if ( Gate != Computer.Gate )
 			Gate = Computer.Gate;
+	}
+
+	[Event.Hotload]
+	private void UpdateProgram()
+	{
+		UpdateProgram( Monitor, Computer );
 	}
 }

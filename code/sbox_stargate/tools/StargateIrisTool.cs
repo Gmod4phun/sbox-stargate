@@ -3,32 +3,20 @@
 	[Library( "tool_stargate_iris", Title = "Iris", Description = "Used to create the iris on the gate.\n\nMOUSE1 - Spawn Iris\nE + MOUSE1 - Spawn Atlantis Gate Shield\nMOUSE2 - Remove Iris\nR - Toggle Iris", Group = "construction" )]
 	public partial class StargateIrisTool : BaseTool
 	{
-		PreviewEntity previewModel;
+		private PreviewEntity _previewModel;
 		private string Model => "models/sbox_stargate/iris/iris.vmdl";
-
-		protected override bool IsPreviewTraceValid( TraceResult tr )
-		{
-			if ( !base.IsPreviewTraceValid( tr ) )
-				return false;
-
-			if ( tr.Entity is Stargate )
-				return false;
-
-			return true;
-		}
 
 		public override void CreatePreviews()
 		{
-			if ( TryCreatePreview( ref previewModel, Model ) )
+			if ( TryCreatePreview( ref _previewModel, Model ) )
 			{
 				if ( Owner.IsValid() )
 				{
-					previewModel.RelativeToNormal = false;
-					previewModel.OffsetBounds = false;
-					previewModel.PositionOffset = new Vector3( 0, 0, 90 );
-					previewModel.RotationOffset = new Angles( 0, Owner.EyeRotation.Angles().yaw + 180, 0 ).ToRotation();
+					_previewModel.RelativeToNormal = false;
+					_previewModel.OffsetBounds = false;
+					_previewModel.PositionOffset = new Vector3( 0, 0, 90 );
+					_previewModel.RotationOffset = new Angles( 0, Owner.EyeRotation.Angles().yaw + 180, 0 ).ToRotation();
 				}
-
 			}
 		}
 
@@ -84,13 +72,12 @@
 
 					if ( !tr.Hit || !tr.Entity.IsValid() ) return;
 
-					if ( tr.Entity is Stargate gate && gate.Iris.IsValid())
+					if ( tr.Entity is Stargate gate && gate.Iris.IsValid() )
 					{
 						gate.Iris.Toggle();
 						CreateHitEffects( tr.EndPosition );
 					}
 				}
-
 
 				if ( Input.Pressed( InputButton.SecondaryAttack ) )
 				{
@@ -106,8 +93,18 @@
 						CreateHitEffects( tr.EndPosition );
 					}
 				}
-
 			}
+		}
+
+		protected override bool IsPreviewTraceValid( TraceResult tr )
+		{
+			if ( !base.IsPreviewTraceValid( tr ) )
+				return false;
+
+			if ( tr.Entity is Stargate )
+				return false;
+
+			return true;
 		}
 	}
 }

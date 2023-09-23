@@ -3,32 +3,20 @@
 	[Library( "tool_stargate_bearing", Title = "Gate Bearing", Description = "Used to create a bearing on the Universe gate.\n\nMOUSE1 - Spawn Bearing\nMOUSE2 - Remove Bearing", Group = "construction" )]
 	public partial class GateBearingTool : BaseTool
 	{
-		PreviewEntity previewModel;
+		private PreviewEntity _previewModel;
 		private string Model => "models/sbox_stargate/universe_bearing/universe_bearing.vmdl";
-
-		protected override bool IsPreviewTraceValid( TraceResult tr )
-		{
-			if ( !base.IsPreviewTraceValid( tr ) )
-				return false;
-
-			if ( tr.Entity is StargateUniverse )
-				return false;
-
-			return true;
-		}
 
 		public override void CreatePreviews()
 		{
-			if ( TryCreatePreview( ref previewModel, Model ) )
+			if ( TryCreatePreview( ref _previewModel, Model ) )
 			{
 				if ( Owner.IsValid() )
 				{
-					previewModel.RelativeToNormal = false;
-					previewModel.OffsetBounds = false;
-					previewModel.PositionOffset = new Vector3( 0, 0, 90 );
-					previewModel.RotationOffset = new Angles( 0, Owner.EyeRotation.Angles().yaw + 180, 0 ).ToRotation();
+					_previewModel.RelativeToNormal = false;
+					_previewModel.OffsetBounds = false;
+					_previewModel.PositionOffset = new Vector3( 0, 0, 90 );
+					_previewModel.RotationOffset = new Angles( 0, Owner.EyeRotation.Angles().yaw + 180, 0 ).ToRotation();
 				}
-
 			}
 		}
 
@@ -89,8 +77,18 @@
 						CreateHitEffects( tr.EndPosition );
 					}
 				}
-
 			}
+		}
+
+		protected override bool IsPreviewTraceValid( TraceResult tr )
+		{
+			if ( !base.IsPreviewTraceValid( tr ) )
+				return false;
+
+			if ( tr.Entity is StargateUniverse )
+				return false;
+
+			return true;
 		}
 	}
 }

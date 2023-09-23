@@ -1,15 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Sandbox;
 
 public partial class GateSpawner
 {
+	public static List<Entity> GateSpawnerEntites { get; set; } = new();
+
 	[ConVar.Replicated( "gatespawner_enabled" )]
 	public static bool Enabled { get; set; }
-
-	public static List<Entity> GateSpawnerEntites = new();
 
 	public static void CreateGateSpawner()
 	{
@@ -24,18 +23,18 @@ public partial class GateSpawner
 			model.Entities.Add( e.ToJson() );
 		}
 		FileSystem.Data.WriteAllText( $"data/gatespawner/{fileName}.json", JsonSerializer.Serialize( model, new JsonSerializerOptions() { WriteIndented = true } ) );
-		Log.Info("Created GateSpawner file.");
+		Log.Info( "Created GateSpawner file." );
 	}
 
 	//[Event.Hotload]
-	public static void GetGatespawnerFileByName(string mapName)
+	public static void GetGatespawnerFileByName( string mapName )
 	{
 		var fList = new List<string>();
 		foreach ( var dir in FileSystem.Mounted.FindDirectory( "", recursive: true ) )
 		{
 			foreach ( var file in FileSystem.Mounted.FindFile( dir, $"{mapName}.json", true ) )
 			{
-				var targetName = ( dir + "/" + file );
+				var targetName = (dir + "/" + file);
 				if ( !fList.Contains( targetName ) )
 					fList.Add( targetName );
 			}
@@ -112,19 +111,8 @@ public partial class GateSpawner
 		}
 		GateSpawnerEntites.Clear();
 
-		if (neededUnloading)
+		if ( neededUnloading )
 			SuccessMessage( true );
-	}
-
-	private static void NotEnabledMessage()
-	{
-		Log.Warning("Can't proceed, GateSpawner is not enabled");
-	}
-
-	private static void SuccessMessage(bool unloaded = false)
-	{
-		var action = unloaded ? "unloaded" : "loaded";
-		Log.Warning( $"GateSpawner successfully {action}" );
 	}
 
 	[ConCmd.Server( "gatespawner" )]
@@ -142,6 +130,17 @@ public partial class GateSpawner
 				UnloadGateSpawner();
 				break;
 		}
+	}
+
+	private static void NotEnabledMessage()
+	{
+		Log.Warning( "Can't proceed, GateSpawner is not enabled" );
+	}
+
+	private static void SuccessMessage( bool unloaded = false )
+	{
+		var action = unloaded ? "unloaded" : "loaded";
+		Log.Warning( $"GateSpawner successfully {action}" );
 	}
 
 	[GameEvent.Entity.PostSpawn]

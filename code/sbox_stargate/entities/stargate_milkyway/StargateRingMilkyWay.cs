@@ -1,61 +1,67 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Sandbox;
 
 public partial class StargateRingMilkyWay : StargatePlatformEntity
 {
+	private float _ringCurSpeed = 0f;
+	private int _ringDirection = 1;
+	private bool _shouldAcc = false;
+	private bool _shouldDecc = false;
+	private bool _shouldStopAtAngle = false;
+	private float _curStopAtAngle = 0f;
+	private float _startedAccelAngle = 0f;
+	private float _stoppedAccelAngle = 0f;
+	private bool _hasReachedDialingSymbol = false;
+
+	private TimeSince _lastSpinDown = 0;
+	public string StartSoundName { get; set; } = "stargate.milkyway.ring_start_long";
+
+	public string StopSoundName { get; set; } = "stargate.milkyway.ring_stop";
+
+	public bool StopSoundOnSpinDown { get; set; } = false; // play the stopsound on spindown, or on spin stop
 	// ring variables
 
 	[Net]
 	public Stargate Gate { get; set; } = null;
+
 	[Net]
 	public string RingSymbols { get; set; } = "#0JKNTR3MBZX*H69IGPL @QFS1E4AU85OCW72YVD";
+
 	[Net]
 	public float RingAngle { get; private set; } = 0.0f;
+
 	[Net]
 	public float DesiredRingAngleDifference { get; private set; } = 0.0f;
+
 	[Net]
 	public char CurDialingSymbol { get; private set; } = ' ';
+
 	[Net]
 	public char CurRingSymbol { get; private set; } = ' ';
+
 	public float TargetRingAngle { get; private set; } = 0.0f;
 
-	private float RingCurSpeed = 0f;
-	protected float RingMaxSpeed = 50f;
-	protected float RingAccelStep = 1f;
-	protected float RingDeccelStep = 0.75f;
-	protected float RingAngToRotate = 170f;
-	protected float RingTargetAngleOffset = 0.5f;
+	protected float RingMaxSpeed { get; set; } = 50f;
 
-	private int RingDirection = 1;
-	private bool ShouldAcc = false;
-	private bool ShouldDecc = false;
+	protected float RingAccelStep { get; set; } = 1f;
 
-	private bool ShouldStopAtAngle = false;
-	private float CurStopAtAngle = 0f;
+	protected float RingDeccelStep { get; set; } = 0.75f;
 
-	private float StartedAccelAngle = 0f;
-	private float StoppedAccelAngle = 0f;
+	protected float RingAngToRotate { get; set; } = 170f;
 
-	public string StartSoundName = "stargate.milkyway.ring_start_long";
-	public string StopSoundName = "stargate.milkyway.ring_stop";
+	protected float RingTargetAngleOffset { get; set; } = 0.5f;
 
-	protected Sound? StartSoundInstance;
-	protected Sound? StopSoundInstance;
+	protected Sound? StartSoundInstance { get; set; }
 
-	public bool StopSoundOnSpinDown = false; // play the stopsound on spindown, or on spin stop
-
-	private bool hasReachedDialingSymbol = false;
+	protected Sound? StopSoundInstance { get; set; }
 
 	public override void Spawn()
 	{
 		Transmit = TransmitType.Always;
 
 		SetModel( "models/sbox_stargate/gate_sg1/ring_sg1.vmdl" );
-		
+
 		LoopMovement = true;
 		MoveDirType = PlatformMoveType.RotatingContinious;
 		MoveDirIsLocal = true;
@@ -66,14 +72,6 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 		base.Spawn();
 
 		EnableAllCollisions = false;
-	}
-
-	protected override void OnDestroy()
-	{
-		if ( StartSoundInstance.HasValue ) StartSoundInstance.Value.Stop();
-		if ( StopSoundInstance.HasValue ) StopSoundInstance.Value.Stop();
-
-		base.OnDestroy();
 	}
 
 	// symbol pos/ang
@@ -118,21 +116,20 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 	// spinup/spindown - starts or stops rotating the ring
 	public void SpinUp()
 	{
-		ShouldDecc = false;
-		ShouldAcc = true;
+		_shouldDecc = false;
+		_shouldAcc = true;
 
 		Event.Run( StargateEvent.RingSpinUp, Gate );
 	}
 
-	TimeSince lastSpinDown = 0;
 	public void SpinDown()
 	{
-		if ( lastSpinDown < 1 )
+		if ( _lastSpinDown < 1 )
 			return;
 
-		lastSpinDown = 0;
-		ShouldAcc = false;
-		ShouldDecc = true;
+		_lastSpinDown = 0;
+		_shouldAcc = false;
+		_shouldDecc = true;
 
 		Event.Run( StargateEvent.RingSpinDown, Gate );
 
@@ -150,9 +147,9 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 
 	public void OnStop()
 	{
-		if (Gate.IsValid())
+		if ( Gate.IsValid() )
 		{
-			hasReachedDialingSymbol = false;
+			_hasReachedDialingSymbol = false;
 			Event.Run( StargateEvent.RingStopped, Gate );
 			if ( !StopSoundOnSpinDown )
 			{
@@ -166,7 +163,7 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 	public virtual void RotateRingTo( float targetAng ) // starts rotating the ring and stops (hopefully) at the specified angle
 	{
 		TargetRingAngle = targetAng;
-		ShouldStopAtAngle = true;
+		_shouldStopAtAngle = true;
 		SpinUp();
 	}
 
@@ -200,11 +197,11 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 
 		// angle differences are setup, choose based on the direction of ring rotation
 		// if the required angle to too small, spin it around once
-		var angToRotate = (RingDirection == -1) ? D_CCW : D_CW;
+		var angToRotate = (_ringDirection == -1) ? D_CCW : D_CW;
 		if ( angToRotate < RingAngToRotate ) angToRotate += 360f;
 
 		// set the final angle to the current angle + the angle needed to rotate, also considering ring direction
-		var finalAng = RingAngle + (angToRotate * RingDirection);
+		var finalAng = RingAngle + (angToRotate * _ringDirection);
 
 		//Log.Info($"Sym = {sym}, RingAng = {RingAngle}, SymPos = {symPos}, D_CCW = {D_CCW}, D_CW = {D_CW}, finalAng = {finalAng}" );
 
@@ -219,7 +216,7 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 
 		await GameTask.DelaySeconds( Game.TickInterval ); // wait, otherwise it hasnt started moving yet and can cause issues
 
-		while (IsMoving)
+		while ( IsMoving )
 		{
 			await GameTask.DelaySeconds( Game.TickInterval ); // wait here, too, otherwise game hangs :)
 			if ( !this.IsValid() ) return false;
@@ -237,9 +234,9 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 	public void RingSymbolThink() // keeps track of the current symbol under the top chevron
 	{
 		var symRange = 360f / RingSymbols.Length;
-		var symCoverage = (RingAngle + symRange/2f).UnsignedMod( symRange );
-		var symIndex = ((int) Math.Round((-RingAngle + Gate.CurRingSymbolOffset) / ( symRange ))).UnsignedMod( RingSymbols.Length );
-		
+		var symCoverage = (RingAngle + symRange / 2f).UnsignedMod( symRange );
+		var symIndex = ((int)Math.Round( (-RingAngle + Gate.CurRingSymbolOffset) / (symRange) )).UnsignedMod( RingSymbols.Length );
+
 		CurRingSymbol = (symCoverage < 8 && symCoverage > 1) ? RingSymbols[symIndex] : ' ';
 		Gate.CurRingSymbol = CurRingSymbol;
 	}
@@ -250,52 +247,52 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 
 		if ( IsMoving && Gate.ShouldStopDialing )
 		{
-			if ( !ShouldDecc )
+			if ( !_shouldDecc )
 			{
 				Gate.StopDialing();
 			}
 		}
 
-		if ( ShouldAcc )
+		if ( _shouldAcc )
 		{
 			if ( !IsMoving )
 			{
-				StartedAccelAngle = RingAngle;
+				_startedAccelAngle = RingAngle;
 				StartMoving();
 				OnStart();
 			}
 
-			if ( RingCurSpeed < RingMaxSpeed )
+			if ( _ringCurSpeed < RingMaxSpeed )
 			{
-				RingCurSpeed += RingAccelStep;
+				_ringCurSpeed += RingAccelStep;
 			}
 			else
 			{
-				RingCurSpeed = RingMaxSpeed;
-				ShouldAcc = false;
-				StoppedAccelAngle = MathF.Abs( RingAngle - StartedAccelAngle ) + RingTargetAngleOffset;
-				CurStopAtAngle = TargetRingAngle - (StoppedAccelAngle * RingDirection * (RingAccelStep / RingDeccelStep));
+				_ringCurSpeed = RingMaxSpeed;
+				_shouldAcc = false;
+				_stoppedAccelAngle = MathF.Abs( RingAngle - _startedAccelAngle ) + RingTargetAngleOffset;
+				_curStopAtAngle = TargetRingAngle - (_stoppedAccelAngle * _ringDirection * (RingAccelStep / RingDeccelStep));
 			}
 		}
-		else if ( ShouldDecc )
+		else if ( _shouldDecc )
 		{
-			if ( RingCurSpeed > 0 )
+			if ( _ringCurSpeed > 0 )
 			{
-				RingCurSpeed -= RingDeccelStep;
+				_ringCurSpeed -= RingDeccelStep;
 
-				if (!hasReachedDialingSymbol)
+				if ( !_hasReachedDialingSymbol )
 				{
 					if ( CurRingSymbol == CurDialingSymbol && Gate.Dialing )
 					{
-						hasReachedDialingSymbol = true;
+						_hasReachedDialingSymbol = true;
 						Event.Run( StargateEvent.ReachedDialingSymbol, Gate, CurDialingSymbol );
 					}
 				}
 			}
 			else
 			{
-				RingCurSpeed = 0;
-				ShouldDecc = false;
+				_ringCurSpeed = 0;
+				_shouldDecc = false;
 				StopMoving();
 				OnStop();
 
@@ -304,25 +301,25 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 			}
 		}
 
-		SetSpeed( RingCurSpeed );
+		SetSpeed( _ringCurSpeed );
 
-		if ( ShouldStopAtAngle && IsMoving )
+		if ( _shouldStopAtAngle && IsMoving )
 		{
-			if ( !ShouldAcc && !ShouldDecc )
+			if ( !_shouldAcc && !_shouldDecc )
 			{
-				var angDiff = MathF.Abs( CurrentRotation - CurStopAtAngle );
+				var angDiff = MathF.Abs( CurrentRotation - _curStopAtAngle );
 				//Log.Info( $"RingAng={RingAngle}, AngDiff={angDiff}" );
 				DesiredRingAngleDifference = angDiff;
 				if ( angDiff < 1f ) // if the angle difference is smal enough, start spindown
 				{
 					SpinDown();
-					ShouldStopAtAngle = false;
+					_shouldStopAtAngle = false;
 				}
 			}
 		}
 
 		RingAngle = CurrentRotation;
-		RingDirection = IsMovingForwards ? 1 : -1;
+		_ringDirection = IsMovingForwards ? 1 : -1;
 
 		//Log.Info( $"Speed={RingCurSpeed}, Ang={RingAngle}" );
 
@@ -349,7 +346,7 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 			var pos = Position + newRot.Forward * 4 + newRot.Up * 117.5f;
 			//if ( sym == CurDialingSymbol )
 			//{
-				DebugOverlay.Text( sym.ToString(), pos, sym == CurDialingSymbol ? Color.Green : Color.Yellow );
+			DebugOverlay.Text( sym.ToString(), pos, sym == CurDialingSymbol ? Color.Green : Color.Yellow );
 			//}
 			i++;
 		}
@@ -361,5 +358,13 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 	public void RingSymbolsDebug()
 	{
 		DrawSymbols();
+	}
+
+	protected override void OnDestroy()
+	{
+		if ( StartSoundInstance.HasValue ) StartSoundInstance.Value.Stop();
+		if ( StopSoundInstance.HasValue ) StopSoundInstance.Value.Stop();
+
+		base.OnDestroy();
 	}
 }

@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Sandbox;
-using Sandbox.UI;
 
 [Title( "SGC Computer" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
 public partial class SGCComputer : ModelEntity, IUse, IWireInputEntity, IWireOutputEntity
@@ -40,8 +36,10 @@ public partial class SGCComputer : ModelEntity, IUse, IWireInputEntity, IWireOut
 		this.WireTriggerOutput( "Computer", this );
 	}
 
-	public static readonly Color Color_SG_Blue = Color.FromBytes( 0, 170, 185 );
-	public static readonly Color Color_SG_Yellow = Color.FromBytes( 225, 225, 170 );
+	public static readonly Color ColorSgBlue = Color.FromBytes( 0, 170, 185 );
+	public static readonly Color ColorSgYellow = Color.FromBytes( 225, 225, 170 );
+
+	private Sound _alarmSound;
 
 	[Net, Change]
 	public Stargate Gate { get; set; } = null;
@@ -49,7 +47,11 @@ public partial class SGCComputer : ModelEntity, IUse, IWireInputEntity, IWireOut
 	[Net]
 	public IList<SGCMonitor> Monitors { get; private set; } = new();
 
-	private Sound AlarmSound;
+	public static float GetSinFromTime()
+	{
+		var s = (float)Math.Sin( Time.Now );
+		return s * s;
+	}
 
 	public override void Spawn()
 	{
@@ -80,11 +82,6 @@ public partial class SGCComputer : ModelEntity, IUse, IWireInputEntity, IWireOut
 		Monitors.Remove( monitor );
 	}
 
-	private void OnGateChanged( Stargate oldGate, Stargate newGate )
-	{
-		// update monitors?
-	}
-
 	public bool OnUse( Entity user )
 	{
 		// turn on/off?
@@ -104,22 +101,21 @@ public partial class SGCComputer : ModelEntity, IUse, IWireInputEntity, IWireOut
 		StopAlarmSound();
 	}
 
-	public static float GetSinFromTime()
+	private void OnGateChanged( Stargate oldGate, Stargate newGate )
 	{
-		var s = (float)Math.Sin( Time.Now );
-		return s * s;
+		// update monitors?
 	}
 
 	// Alarm sound
 	private void PlayAlarmSound()
 	{
 		StopAlarmSound();
-		AlarmSound = Sound.FromEntity( "sg.alarm.sgc", this );
+		_alarmSound = Sound.FromEntity( "sg.alarm.sgc", this );
 	}
 
 	private void StopAlarmSound()
 	{
-		AlarmSound.Stop();
+		_alarmSound.Stop();
 	}
 
 	// RPC's
@@ -197,7 +193,7 @@ public partial class SGCComputer : ModelEntity, IUse, IWireInputEntity, IWireOut
 	}
 
 	[ClientRpc]
-	private void DialProgramBox_89_Appear(int num)
+	private void DialProgramBox_89_Appear( int num )
 	{
 		foreach ( var monitor in Monitors )
 		{
@@ -207,7 +203,6 @@ public partial class SGCComputer : ModelEntity, IUse, IWireInputEntity, IWireOut
 			}
 		}
 	}
-
 
 	// Events
 
@@ -231,8 +226,8 @@ public partial class SGCComputer : ModelEntity, IUse, IWireInputEntity, IWireOut
 		{
 			DialProgramAddGlyph( To.Everyone, Gate.CurDialingSymbol );
 			if ( num == 7 )
-				DialProgramBox_89_Appear(To.Everyone, 8 );
-			else if (num == 8)
+				DialProgramBox_89_Appear( To.Everyone, 8 );
+			else if ( num == 8 )
 				DialProgramBox_89_Appear( To.Everyone, 9 );
 		}
 	}
@@ -295,7 +290,7 @@ public partial class SGCComputer : ModelEntity, IUse, IWireInputEntity, IWireOut
 	}
 
 	[StargateEvent.DialBegin]
-	private void DialBegin(Stargate gate, string address)
+	private void DialBegin( Stargate gate, string address )
 	{
 		if ( gate != Gate ) return;
 
@@ -329,5 +324,4 @@ public partial class SGCComputer : ModelEntity, IUse, IWireInputEntity, IWireOut
 		StopAlarmSound();
 		DialProgramReturnToIdle( To.Everyone );
 	}
-
 }
