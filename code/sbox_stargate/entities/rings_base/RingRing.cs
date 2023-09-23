@@ -28,7 +28,7 @@ public partial class RingRing : KeyframeEntity {
 
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
 		PhysicsBody.BodyType = PhysicsBodyType.Static;
-		EnableAllCollisions = true;
+		EnableAllCollisions = false;
 		RenderColor = RenderColor.WithAlpha( 0 );
 	}
 
@@ -50,6 +50,7 @@ public partial class RingRing : KeyframeEntity {
 
 	public void MoveUp() {
 		RenderColor = RenderColor.WithAlpha(1);
+		EnableAllCollisions = true;
 		ShouldRetract = false;
 		Move();
 	}
