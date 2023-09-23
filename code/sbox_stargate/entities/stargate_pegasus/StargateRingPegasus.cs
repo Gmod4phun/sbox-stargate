@@ -164,18 +164,7 @@ public partial class StargateRingPegasus : ModelEntity
 				SetSymbolState( 0, true );
 			}
 
-			var pegasusSymbolChevrons = new Dictionary<int, int>()
-			{
-				{ 3, 1 },
-				{ 7, 2 },
-				{ 11, 3 },
-				{ 15, 8 },
-				{ 19, 9 },
-				{ 23, 4 },
-				{ 27, 5 },
-				{ 31, 6 },
-				{ 35, 7 }
-			};
+			var pegasusSymbolChevrons = new Dictionary<int, int>() { { 3, 1 },{ 7, 2 },{ 11, 3 },{ 15, 8 },{ 19, 9 },{ 23, 4 },{ 27, 5 },{ 31, 6 },{ 35, 7 } };
 
 			var delay = time / 35f;
 			for ( int i = 0; i <= 35; i++ )
@@ -366,39 +355,9 @@ public partial class StargateRingPegasus : ModelEntity
 			var symRollTime = 5f / chevCount;
 			var delayBetweenSymbols = 1.5f / (chevCount - 1);
 
-			var dataSymbols7 = new List<int>()
-			{
-				27,
-				19,
-				35,
-				35,
-				15,
-				7,
-				23
-			};
-			var dataSymbols8 = new List<int>()
-			{
-				27,
-				19,
-				35,
-				35,
-				15,
-				7,
-				3,
-				11
-			};
-			var dataSymbols9 = new List<int>()
-			{
-				27,
-				19,
-				35,
-				35,
-				15,
-				7,
-				3,
-				31,
-				23
-			};
+			var dataSymbols7 = new List<int>() { 27, 19, 35, 35, 15, 7, 23 };
+			var dataSymbols8 = new List<int>() { 27, 19, 35, 35, 15, 7, 3, 11 };
+			var dataSymbols9 = new List<int>() { 27, 19, 35, 35, 15, 7, 3, 31, 23 };
 
 			var data = (chevCount == 9) ? dataSymbols9 : ((chevCount == 8) ? dataSymbols8 : dataSymbols7);
 
@@ -440,39 +399,9 @@ public partial class StargateRingPegasus : ModelEntity
 		{
 			SetRingState( false );
 
-			var dataSymbols7 = new List<int>()
-			{
-				27,
-				19,
-				35,
-				35,
-				15,
-				7,
-				23
-			};
-			var dataSymbols8 = new List<int>()
-			{
-				27,
-				19,
-				35,
-				35,
-				15,
-				7,
-				3,
-				11
-			};
-			var dataSymbols9 = new List<int>()
-			{
-				27,
-				19,
-				35,
-				35,
-				15,
-				7,
-				3,
-				31,
-				23
-			};
+			var dataSymbols7 = new List<int>() { 27, 19, 35, 35, 15, 7, 23 };
+			var dataSymbols8 = new List<int>() { 27, 19, 35, 35, 15, 7, 3, 11 };
+			var dataSymbols9 = new List<int>() { 27, 19, 35, 35, 15, 7, 3, 31, 23 };
 
 			var data = (chevCount == 9) ? dataSymbols9 : ((chevCount == 8) ? dataSymbols8 : dataSymbols7);
 
