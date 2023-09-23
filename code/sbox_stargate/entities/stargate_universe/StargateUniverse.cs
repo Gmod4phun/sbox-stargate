@@ -588,13 +588,13 @@ public partial class StargateUniverse : Stargate
 	}
 
 	// CHEVRON STUFF - DHD DIALING
-	public override void DoDHDChevronEncode( char symbols )
+	public override void DoDHDChevronEncode( char symbol )
 	{
-		base.DoDHDChevronEncode( symbols );
+		base.DoDHDChevronEncode( symbol );
 
 		if ( DialingAddress.Length == 1 ) DoPreRoll();
 
-		AddTask( Time.Now + 0.25f, () => SymbolOn( symbols, DialingAddress.Length == 1 ), TimedTaskCategory.DIALING );
+		AddTask( Time.Now + 0.25f, () => SymbolOn( symbol, DialingAddress.Length == 1 ), TimedTaskCategory.DIALING );
 	}
 
 	public override void DoDHDChevronLock( char symbols ) // only the top chevron locks, always

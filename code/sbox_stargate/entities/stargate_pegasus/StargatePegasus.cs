@@ -505,9 +505,9 @@ public partial class StargatePegasus : Stargate
 	}
 
 	// CHEVRON STUFF - DHD DIALING
-	public override void DoDHDChevronEncode(char symbols)
+	public override void DoDHDChevronEncode(char symbol)
 	{
-		base.DoDHDChevronEncode( symbols );
+		base.DoDHDChevronEncode( symbol );
 
 		var clampLen = Math.Clamp( DialingAddress.Length + 1, 7, 9 );
 

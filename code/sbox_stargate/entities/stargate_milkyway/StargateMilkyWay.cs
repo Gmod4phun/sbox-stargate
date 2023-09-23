@@ -773,9 +773,9 @@ public partial class StargateMilkyWay : Stargate
 	}
 
 	// CHEVRON STUFF - DHD DIALING
-	public override void DoDHDChevronEncode( char symbols )
+	public override void DoDHDChevronEncode( char symbol )
 	{
-		base.DoDHDChevronEncode( symbols );
+		base.DoDHDChevronEncode( symbol );
 
 		var chev = GetChevronBasedOnAddressLength( DialingAddress.Length, 9 );
 		EncodedChevronsOrdered.Add( chev );

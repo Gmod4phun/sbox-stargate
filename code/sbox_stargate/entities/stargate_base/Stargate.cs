@@ -676,9 +676,9 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	}
 
 	// DHD/Fast Chevron Encode/Lock
-	public virtual void DoDHDChevronEncode(char symbols)
+	public virtual void DoDHDChevronEncode(char symbol)
 	{
-		if ( DialingAddress.Contains( symbols ) )
+		if ( DialingAddress.Contains( symbol ) )
 			return;
 
 		// if we were already dialing but not via DHD, dont do anything
@@ -693,8 +693,8 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 			CurDialType = DialType.DHD;
 		}
 
-		DialingAddress += symbols;
-		StargateEventManager.DHDChevronEncoded( gate: this, symbols );
+		DialingAddress += symbol;
+		StargateEventManager.DHDChevronEncoded( gate: this, symbol );
 	}
 
 	public virtual void DoDHDChevronLock( char symbols )
@@ -731,7 +731,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 			DoManualChevronLock( sym );
 			return false;
 		}
-			
+
 		if ( !CanStargateStartManualDial() )
 			return false;
 
