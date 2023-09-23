@@ -399,7 +399,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 
 	public bool CanStargateStartDial()
 	{
-		return ( Idle && !Busy && !Dialing && !Inbound && !Open && !Opening && !Closing && !IsLocked );
+		return ( Idle && !Busy && !Dialing && !Inbound && !Open && !Opening && !Closing && ( IsManualDialInProgress ? !IsLocked : true ) );
 	}
 
 	public bool CanStargateStopDial()
