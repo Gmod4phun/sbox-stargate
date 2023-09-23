@@ -144,6 +144,11 @@ public partial class EventHorizon : AnimatedEntity
 		}
 
 		WormholeLoop.Stop();
+
+		await GameTask.DelaySeconds( 0.5f );
+		if ( !this.IsValid() ) return;
+
+		EnableAllCollisions = false;
 	}
 
 	// UTILITY
