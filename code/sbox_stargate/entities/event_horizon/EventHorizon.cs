@@ -604,7 +604,6 @@ public partial class EventHorizon : AnimatedEntity
 	public bool ShouldTeleportInstantly( Entity ent )
 	{
 		if ( ent is Player ) return true;
-		if ( ent is EnergyProjectile ) return true;
 
 		return false;
 	}
