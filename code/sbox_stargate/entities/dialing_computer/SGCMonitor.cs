@@ -3,10 +3,27 @@ using System.Linq;
 using Sandbox;
 
 [Title( "SGC Monitor" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
-public partial class SGCMonitor : ModelEntity, IUse
+public partial class SGCMonitor : ModelEntity, IUse, IWireInputEntity
 {
 	private SGCMonitorHUDPanel _hudPanel;
 	private SGCMonitorWorldPanel _worldPanel;
+	
+	/* WIRE SUPPORT */
+
+	WirePortData IWireEntity.WirePorts { get; } = new WirePortData();
+
+	public virtual void WireInitialize()
+	{
+		var inputs = ((IWireEntity)this).WirePorts.inputs;
+
+		this.RegisterInputHandler( "Computer", ( Entity value ) =>
+		{
+			if ( value is SGCComputer computer )
+			{
+				LinkToComputer( computer );
+			}
+		} );
+	}
 
 	[Net]
 	public SGCComputer Computer { get; private set; } = null;
@@ -54,8 +71,6 @@ public partial class SGCMonitor : ModelEntity, IUse
 		SetupPhysicsFromModel( PhysicsMotionType.Dynamic, true );
 		PhysicsBody.BodyType = PhysicsBodyType.Static;
 
-		RenderColor = Color.Black;
-
 		Tags.Add( "solid" );
 	}
 
@@ -70,11 +85,9 @@ public partial class SGCMonitor : ModelEntity, IUse
 		_worldPanel = new(this, CurrentProgram);
 	}
 
-	public override void StartTouch( Entity other )
+	public void LinkToComputer( SGCComputer computer )
 	{
-		base.StartTouch( other );
-
-		if ( other is SGCComputer computer && Computer != computer )
+		if ( Computer != computer)
 		{
 			Computer = computer;
 			Computer.AddMonitor( this );

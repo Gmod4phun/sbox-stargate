@@ -73,7 +73,9 @@ public partial class StargateMilkyWay : Stargate
 
 	public override PortType[] WireGetOutputs()
 	{
-		return base.WireGetOutputs().Concat( new PortType[] { PortType.String( "Ring Symbol" ) } ).ToArray();
+		return base.WireGetOutputs().Concat( new PortType[] {
+			PortType.String("Ring Symbol")
+		} ).ToArray();
 	}
 
 	// SPAWN
@@ -442,7 +444,13 @@ public partial class StargateMilkyWay : Stargate
 
 		try
 		{
-			if ( Dialing ) DoStargateReset();
+			if ( Dialing )
+			{
+				StopDialing( true );
+				ShouldStopDialing = true;
+				await GameTask.DelaySeconds( Game.TickInterval * 4 );
+				ShouldStopDialing = false;
+			}
 
 			CurGateState = GateState.ACTIVE;
 			Inbound = true;

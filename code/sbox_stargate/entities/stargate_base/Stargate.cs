@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Sandbox;
@@ -398,12 +399,39 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 
 	public virtual PortType[] WireGetOutputs()
 	{
-		return new PortType[] { PortType.Bool( "Idle" ), PortType.Bool( "Active" ), PortType.Bool( "Dialing" ), PortType.Bool( "Opening" ), PortType.Bool( "Open" ), PortType.Bool( "Closing" ), PortType.Bool( "Inbound" ), PortType.Int( "Chevrons Encoded" ), PortType.Bool( "Last Chevron Locked" ), PortType.String( "Gate Address" ), PortType.String( "Gate Group" ), PortType.String( "Gate Point of Origin" ), PortType.String( "Gate Full Address" ), PortType.String( "Gate Full Address 8" ), PortType.String( "Gate Full Address 9" ), PortType.String( "Gate Name" ), PortType.String( "Gate Local" ), PortType.String( "Gate Private" ), PortType.String( "Dialing Address" ), PortType.String( "Dialing Symbol" ), PortType.String( "Dialed Symbol" ), PortType.String( "Ring Symbol" ), PortType.Float( "Ring Angle" ), PortType.Bool( "Iris Closed" ) };
+		return new PortType[] {
+			PortType.Entity("Gate"),
+			PortType.Bool("Idle"),
+			PortType.Bool("Active"),
+			PortType.Bool("Dialing"),
+			PortType.Bool("Opening"),
+			PortType.Bool("Open"),
+			PortType.Bool("Closing"),
+			PortType.Bool("Inbound"),
+			PortType.Int("Chevrons Encoded"),
+			PortType.Bool("Last Chevron Locked"),
+			PortType.String("Gate Address"),
+			PortType.String("Gate Group"),
+			PortType.String("Gate Point of Origin"),
+			PortType.String("Gate Full Address"),
+			PortType.String("Gate Full Address 8"),
+			PortType.String("Gate Full Address 9"),
+			PortType.String("Gate Name"),
+			PortType.String("Gate Local"),
+			PortType.String("Gate Private"),
+			PortType.String("Dialing Address"),
+			PortType.String("Dialing Symbol"),
+			PortType.String("Dialed Symbol"),
+			PortType.String("Ring Symbol"),
+			PortType.Float("Ring Angle"),
+			PortType.Bool("Iris Closed")
+		};
 	}
 
 	[GameEvent.Tick.Server]
 	public void WireThink()
 	{
+		this.WireTriggerOutput( "Gate", this );
 		this.WireTriggerOutput( "Idle", Idle );
 		this.WireTriggerOutput( "Active", Active );
 		this.WireTriggerOutput( "Dialing", Dialing );
@@ -675,12 +703,12 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	// begin inbound
 	public virtual void BeginInboundFast( int numChevs )
 	{
-		if ( Inbound && !Dialing ) StopDialing();
+		if ( Inbound && !Dialing ) StopDialing(true);
 	}
 
 	public virtual void BeginInboundSlow( int numChevs ) // this can be used with Instant dial, too
 	{
-		if ( Inbound && !Dialing ) StopDialing();
+		if ( Inbound && !Dialing ) StopDialing(true);
 	}
 
 	// DHD DIAL
@@ -688,13 +716,18 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	public virtual void BeginInboundDHD( int numChevs ) { } // when a dhd dialing gate locks onto another gate
 
 	// stop dial
-	public async void StopDialing()
+	public async void StopDialing(bool immediate = false)
 	{
 		if ( !CanStargateStopDial() ) return;
 
 		OnStopDialingBegin();
 
-		await GameTask.DelaySeconds( 1.25f );
+		if ( !immediate )
+		{
+			await GameTask.DelaySeconds( 1.25f );
+			if ( !this.IsValid() ) return;
+		}
+			
 
 		OnStopDialingFinish();
 	}
@@ -910,6 +943,8 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		{
 			CurGateState = GateState.DIALING;
 			CurDialType = DialType.MANUAL;
+
+			Event.Run( StargateEvent.DialBegin, this, "" );
 		}
 
 		TimeSinceDialAction = 0;

@@ -311,7 +311,7 @@ public partial class StargateUniverse : Stargate
 	}
 
 	// FAST INBOUND
-	public override void BeginInboundFast( int numChevs )
+	public async override void BeginInboundFast( int numChevs )
 	{
 		base.BeginInboundFast( numChevs );
 
@@ -321,7 +321,13 @@ public partial class StargateUniverse : Stargate
 
 		try
 		{
-			if ( Dialing ) DoStargateReset();
+			if ( Dialing )
+			{
+				StopDialing( true );
+				ShouldStopDialing = true;
+				await GameTask.DelaySeconds( Game.TickInterval * 4 );
+				ShouldStopDialing = false;
+			}
 
 			CurGateState = GateState.ACTIVE;
 			Inbound = true;
