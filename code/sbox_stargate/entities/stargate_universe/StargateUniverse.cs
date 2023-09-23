@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Editor;
 using Sandbox;
-using Sandbox.sbox_stargate.code;
+using Sandbox.StargateAddon.code;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 [HammerEntity, SupportsSolid, EditorModel( MODEL )]

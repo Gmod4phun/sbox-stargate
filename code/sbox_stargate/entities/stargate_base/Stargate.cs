@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Sandbox;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Net;
-using Sandbox.sbox_stargate.code;
+using Sandbox.StargateAddon.code;
 
 [Category( "Stargates" )]
 public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInputEntity

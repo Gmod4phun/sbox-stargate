@@ -6,7 +6,7 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
 using Sandbox;
-using Sandbox.sbox_stargate.code;
+using Sandbox.StargateAddon.code;
 
 public partial class StargateRingPegasus : ModelEntity
 {

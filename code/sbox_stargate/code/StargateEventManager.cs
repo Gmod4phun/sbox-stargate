@@ -1,4 +1,4 @@
-﻿namespace Sandbox.sbox_stargate.code
+﻿namespace Sandbox.StargateAddon.code
 {
 	public class StargateEventManager
 	{

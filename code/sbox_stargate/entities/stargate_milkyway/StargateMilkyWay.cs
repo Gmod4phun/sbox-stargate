@@ -5,7 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Editor;
 using Sandbox;
-using Sandbox.sbox_stargate.code;
+using Sandbox.StargateAddon.code;
 
 [HammerEntity, SupportsSolid, EditorModel( MODEL )]
 [Title( "Stargate (Milky Way)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
