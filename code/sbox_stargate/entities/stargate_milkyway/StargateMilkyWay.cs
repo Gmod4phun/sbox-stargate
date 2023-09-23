@@ -45,7 +45,7 @@ public partial class StargateMilkyWay : Stargate
 
 	public const string MODEL = "models/sbox_stargate/sg_mw/sg_mw_gate.vmdl";
 
-	[Net]
+	[Net, Category( "Chevrons and Ring" )]
 	public StargateRingMilkyWay Ring { get; set; } = null;
 	public List<Chevron> EncodedChevronsOrdered = new();
 
@@ -202,7 +202,6 @@ public partial class StargateMilkyWay : Stargate
 		base.DoStargateReset();
 		SetChevronsGlowState( false );
 	}
-
 
 	// CHEVRON ANIMS & SOUNDS
 
@@ -416,7 +415,13 @@ public partial class StargateMilkyWay : Stargate
 
 		try
 		{
-			if ( Dialing ) DoStargateReset();
+			if ( Dialing )
+			{
+				StopDialing( true );
+				ShouldStopDialing = true;
+				await GameTask.DelaySeconds( Game.TickInterval * 4 );
+				ShouldStopDialing = false;
+			}
 
 			CurGateState = GateState.ACTIVE;
 			Inbound = true;

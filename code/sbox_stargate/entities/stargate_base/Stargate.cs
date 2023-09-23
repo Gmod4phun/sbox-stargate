@@ -1,12 +1,9 @@
-﻿using System.Collections;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Sandbox;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Net;
 
 [Category( "Stargates" )]
 public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInputEntity
@@ -165,7 +162,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 
 	[Net] public Vector3 SpawnOffset { get; private set; } = new( 0, 0, 95 );
 
-	[Net]
+	[Net, Category("Chevrons and Ring")]
 	public IList<Chevron> Chevrons { get; set; } = new();
 
 	[Net]
@@ -506,12 +503,12 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	// begin inbound
 	public virtual void BeginInboundFast( int numChevs )
 	{
-		if ( Inbound && !Dialing ) StopDialing();
+		if ( Inbound && !Dialing ) StopDialing(true);
 	}
 
 	public virtual void BeginInboundSlow( int numChevs ) // this can be used with Instant dial, too
 	{
-		if ( Inbound && !Dialing ) StopDialing();
+		if ( Inbound && !Dialing ) StopDialing(true);
 	}
 
 	// DHD DIAL
@@ -520,13 +517,18 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 
 
 	// stop dial
-	public async void StopDialing()
+	public async void StopDialing(bool immediate = false)
 	{
 		if ( !CanStargateStopDial() ) return;
 
 		OnStopDialingBegin();
 
-		await GameTask.DelaySeconds( 1.25f );
+		if ( !immediate )
+		{
+			await GameTask.DelaySeconds( 1.25f );
+			if ( !this.IsValid() ) return;
+		}
+			
 
 		OnStopDialingFinish();
 	}

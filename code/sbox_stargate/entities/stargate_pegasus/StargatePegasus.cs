@@ -13,7 +13,8 @@ public partial class StargatePegasus : Stargate
 {
 	public const string MODEL = "models/sbox_stargate/sg_peg/sg_peg_gate.vmdl";
 
-	public StargateRingPegasus Ring;
+	[Net, Category( "Chevrons and Ring" )]
+	public StargateRingPegasus Ring { get; set; } = null;
 	public List<Chevron> EncodedChevronsOrdered = new ();
 
 	public StargatePegasus()

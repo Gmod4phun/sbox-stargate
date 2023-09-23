@@ -13,9 +13,11 @@ public partial class StargateUniverse : Stargate
 {
 	public const string MODEL = "models/sbox_stargate/gate_universe/gate_universe.vmdl";
 
-	[Net]
+	[Net, Category( "Chevrons and Ring" )]
 	public StargateRingUniverse Ring { get; set; } = null;
 	public List<Chevron> EncodedChevronsOrdered = new ();
+
+	[Category( "Chevrons and Ring" )]
 	public Chevron Chevron;
 
 	public StargateUniverse()
@@ -308,7 +310,7 @@ public partial class StargateUniverse : Stargate
 	}
 
 	// FAST INBOUND
-	public override void BeginInboundFast( int numChevs )
+	public async override void BeginInboundFast( int numChevs )
 	{
 		base.BeginInboundFast( numChevs );
 
@@ -318,7 +320,13 @@ public partial class StargateUniverse : Stargate
 
 		try
 		{
-			if ( Dialing ) DoStargateReset();
+			if ( Dialing )
+			{
+				StopDialing( true );
+				ShouldStopDialing = true;
+				await GameTask.DelaySeconds( Game.TickInterval * 4 );
+				ShouldStopDialing = false;
+			}
 
 			CurGateState = GateState.ACTIVE;
 			Inbound = true;
