@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
 using Editor;
 using Sandbox;
+using Sandbox.sbox_stargate.code;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 [HammerEntity, SupportsSolid, EditorModel( MODEL )]
 [Title( "Stargate (Universe)" ), Category( "Stargate" ), Icon( "chair" ), Spawnable]
@@ -220,7 +223,7 @@ public partial class StargateUniverse : Stargate
 
 		if ( !CanStargateStartDial() ) return;
 
-		Event.Run( StargateEvent.DialBegin, this, address );
+		StargateEventManager.RunDialBeginEvent( gate: this, address );
 
 		try
 		{
@@ -270,7 +273,7 @@ public partial class StargateUniverse : Stargate
 					var isLastChev = i_copy == addrLen - 1;
 					if (!isLastChev)
 					{
-						Event.Run( StargateEvent.ChevronEncoded, this, i_copy + 1 );
+						StargateEventManager.RunChevronEncodedEvent( gate: this, i_copy + 1 );
 					}
 					else
 					{
@@ -279,9 +282,8 @@ public partial class StargateUniverse : Stargate
 						IsLocked = true;
 						IsLockedInvalid = !isValid;
 
-						Event.Run( StargateEvent.ChevronLocked, this, i_copy + 1, isValid );
+						StargateEventManager.RunChevronLockedEvent( gate: this, i_copy + 1, isValid );
 					}
-					
 				}, TimedTaskCategory.DIALING );
 			}
 
@@ -314,7 +316,7 @@ public partial class StargateUniverse : Stargate
 
 		if ( !IsStargateReadyForInboundFast() ) return;
 
-		Event.Run( StargateEvent.InboundBegin, this );
+		StargateEventManager.RunInboundBeginEvent( gate: this);
 
 		try
 		{
@@ -339,13 +341,13 @@ public partial class StargateUniverse : Stargate
 
 
 	// SLOW DIAL
-	public async override void BeginDialSlow( string address, float initialDelay=0 )
+	public override async void BeginDialSlow( string address, float initialDelay=0 )
 	{
 		base.BeginDialSlow( address, initialDelay );
 
 		if ( !CanStargateStartDial() ) return;
 
-		Event.Run( StargateEvent.DialBegin, this, address );
+		StargateEventManager.RunDialBeginEvent( gate: this, address );
 
 		try
 		{
@@ -400,7 +402,7 @@ public partial class StargateUniverse : Stargate
 					return;
 				}
 
-				void symbolAction()
+				void SymbolAction()
 				{
 					SymbolOn( sym );
 					Bearing?.TurnOn(0.1f);
@@ -410,7 +412,8 @@ public partial class StargateUniverse : Stargate
 					if (!isLastChev)
 					{
 						Bearing?.TurnOff( 0.6f );
-						Event.Run( StargateEvent.ChevronEncoded, this, address.IndexOf(sym) + 1 );
+						// TODO: magic number
+						StargateEventManager.RunChevronEncodedEvent( gate: this, address.IndexOf( sym ) + 1 );
 					}
 					else
 					{
@@ -419,18 +422,19 @@ public partial class StargateUniverse : Stargate
 						IsLocked = true;
 						IsLockedInvalid = !isValid;
 
-						Event.Run( StargateEvent.ChevronLocked, this, address.IndexOf( sym ) + 1, isValid );
+						// TODO: magic number
+						StargateEventManager.RunChevronLockedEvent( gate: this, address.IndexOf( sym ) + 1, isValid );
 					}
 				}
 
-				AddTask( Time.Now + 0.65f, symbolAction, TimedTaskCategory.DIALING);
+				AddTask( Time.Now + 0.65f, SymbolAction, TimedTaskCategory.DIALING);
 
 				await GameTask.DelaySeconds( 1.25f );
 
 				if ( isLastChev ) readyForOpen = gateValidCheck();
 			}
 
-			void openOrStop()
+			void OpenOrStop()
 			{
 				if ( readyForOpen ) // if valid, open both gates
 				{
@@ -442,7 +446,7 @@ public partial class StargateUniverse : Stargate
 				}
 			}
 
-			AddTask( Time.Now + 1f, openOrStop, TimedTaskCategory.DIALING );
+			AddTask( Time.Now + 1f, OpenOrStop, TimedTaskCategory.DIALING );
 		}
 		catch ( Exception )
 		{
@@ -457,7 +461,7 @@ public partial class StargateUniverse : Stargate
 
 		if ( !IsStargateReadyForInboundInstantSlow() ) return;
 
-		Event.Run( StargateEvent.InboundBegin, this );
+		StargateEventManager.RunInboundBeginEvent( gate: this );
 
 		try
 		{
@@ -482,7 +486,7 @@ public partial class StargateUniverse : Stargate
 
 		if ( !CanStargateStartDial() ) return;
 
-		Event.Run( StargateEvent.DialBegin, this, address );
+		StargateEventManager.RunDialBeginEvent( gate: this, address );
 
 		try
 		{
@@ -526,7 +530,7 @@ public partial class StargateUniverse : Stargate
 
 	// DHD DIAL
 
-	public async override void BeginOpenByDHD( string address )
+	public override async void BeginOpenByDHD( string address )
 	{
 		base.BeginOpenByDHD( address );
 
@@ -560,13 +564,13 @@ public partial class StargateUniverse : Stargate
 		}
 	}
 
-	public async override void BeginInboundDHD( int numChevs )
+	public override async void BeginInboundDHD( int numChevs )
 	{
 		base.BeginInboundDHD( numChevs );
 
 		if ( !IsStargateReadyForInboundDHD() ) return;
 
-		Event.Run( StargateEvent.InboundBegin, this );
+		StargateEventManager.RunInboundBeginEvent( gate: this );
 
 		try
 		{
@@ -584,23 +588,23 @@ public partial class StargateUniverse : Stargate
 	}
 
 	// CHEVRON STUFF - DHD DIALING
-	public override void DoDHDChevronEncode( char sym )
+	public override void DoDHDChevronEncode( char symbols )
 	{
-		base.DoDHDChevronEncode( sym );
+		base.DoDHDChevronEncode( symbols );
 
 		if ( DialingAddress.Length == 1 ) DoPreRoll();
 
-		AddTask( Time.Now + 0.25f, () => SymbolOn( sym, DialingAddress.Length == 1 ), TimedTaskCategory.DIALING );
+		AddTask( Time.Now + 0.25f, () => SymbolOn( symbols, DialingAddress.Length == 1 ), TimedTaskCategory.DIALING );
 	}
 
-	public override void DoDHDChevronLock( char sym ) // only the top chevron locks, always
+	public override void DoDHDChevronLock( char symbols ) // only the top chevron locks, always
 	{
-		base.DoDHDChevronLock( sym );
+		base.DoDHDChevronLock( symbols );
 
-		AddTask( Time.Now + 0.25f, () => SymbolOn( sym ), TimedTaskCategory.DIALING );
+		AddTask( Time.Now + 0.25f, () => SymbolOn( symbols ), TimedTaskCategory.DIALING );
 	}
 
-	public async override Task<bool> DoManualChevronEncode( char sym )
+	public override async Task<bool> DoManualChevronEncode( char sym )
 	{
 		if ( !await base.DoManualChevronEncode( sym ) )
 			return false;
@@ -632,7 +636,7 @@ public partial class StargateUniverse : Stargate
 			ActiveChevrons++;
 
 			Bearing?.TurnOff( 0.6f );
-			Event.Run( StargateEvent.ChevronEncoded, this, chevNum );
+			StargateEventManager.RunChevronEncodedEvent( gate: this, chevNum );
 		}
 
 		AddTask( Time.Now + 0.65f, symbolAction, TimedTaskCategory.DIALING );
@@ -644,7 +648,7 @@ public partial class StargateUniverse : Stargate
 		return true;
 	}
 
-	public async override Task<bool> DoManualChevronLock( char sym )
+	public override async Task<bool> DoManualChevronLock( char sym )
 	{
 		if ( !await base.DoManualChevronLock( sym ) )
 			return false;
@@ -689,7 +693,7 @@ public partial class StargateUniverse : Stargate
 			IsLocked = true;
 			IsLockedInvalid = !isValid;
 
-			Event.Run( StargateEvent.ChevronLocked, this, DialingAddress.Length, isValid );
+			StargateEventManager.RunChevronLockedEvent( gate: this, DialingAddress.Length, isValid);
 		}
 
 		AddTask( Time.Now + 0.65f, symbolAction, TimedTaskCategory.DIALING );
@@ -701,7 +705,7 @@ public partial class StargateUniverse : Stargate
 		return true;
 	}
 
-	public async override void BeginManualOpen( string address )
+	public override async void BeginManualOpen( string address )
 	{
 		try
 		{

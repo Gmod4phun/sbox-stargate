@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Sandbox;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Net;
+using Sandbox.sbox_stargate.code;
 
 [Category( "Stargates" )]
 public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInputEntity
@@ -16,6 +17,11 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	// self:CreateWireInputs("Dial Address","Dial String [STRING]","Dial Mode","Start String Dial","Close","Disable Autoclose","Disable Menu","Transmit [STRING]");
 
 	WirePortData IWireEntity.WirePorts { get; } = new WirePortData();
+
+	protected Stargate()
+	{
+		StargateEventManager = new StargateEventManager();
+	}
 
 	public virtual void WireInitialize()
 	{
@@ -235,6 +241,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	public IStargateRamp Ramp = null;
 
 	private StargateWorldPanel WorldPanel;
+	protected StargateEventManager StargateEventManager { get; set; }
 
 	// SOUNDS
 	public virtual string GetSound( string key )
@@ -538,11 +545,11 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 
 		if (Inbound)
 		{
-			Event.Run( StargateEvent.InboundAbort, this );
+			StargateEventManager.RunInboundBeginEvent( gate: this );
 		}
 		else
 		{
-			Event.Run( StargateEvent.DialAbort, this );
+			StargateEventManager.RunDialAbortEvent( gate: this );
 		}
 
 		ClearTasksByCategory( TimedTaskCategory.DIALING );
@@ -558,7 +565,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	public virtual void OnStopDialingFinish()
 	{
 		ResetGateVariablesToIdle();
-		Event.Run( StargateEvent.DialAbortFinished, this );
+		StargateEventManager.RunDialAbortFinishedEvent( gate: this );
 	}
 
 	// opening
@@ -566,14 +573,14 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	{
 		CurGateState = GateState.OPENING;
 		Busy = true;
-		Event.Run( StargateEvent.GateOpening, this );
+		StargateEventManager.RunGateOpeningEvent( gate: this );
 	}
 
 	public virtual void OnStargateOpened()
 	{
 		CurGateState = GateState.OPEN;
 		Busy = false;
-		Event.Run( StargateEvent.GateOpen, this );
+		StargateEventManager.RunGateOpenEvent( gate: this );
 	}
 
 	// closing
@@ -583,13 +590,13 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		Busy = true;
 
 		KillAllPlayersInTransit();
-		Event.Run( StargateEvent.GateClosing, this );
+		StargateEventManager.RunGateClosingEvent( gate: this );
 	}
 
 	public virtual void OnStargateClosed()
 	{
 		ResetGateVariablesToIdle();
-		Event.Run( StargateEvent.GateClosed, this);
+		StargateEventManager.RunGateClosedEvent( gate: this );
 	}
 
 	// reset
@@ -598,7 +605,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 		ResetGateVariablesToIdle();
 		ClearTasks();
 
-		Event.Run( StargateEvent.Reset, this );
+		StargateEventManager.RunResetEvent( gate: this );
 	}
 
 	public virtual void EstablishWormholeTo(Stargate target)
@@ -669,9 +676,9 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 	}
 
 	// DHD/Fast Chevron Encode/Lock
-	public virtual void DoDHDChevronEncode(char sym)
+	public virtual void DoDHDChevronEncode(char symbols)
 	{
-		if ( DialingAddress.Contains( sym ) )
+		if ( DialingAddress.Contains( symbols ) )
 			return;
 
 		// if we were already dialing but not via DHD, dont do anything
@@ -686,13 +693,13 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 			CurDialType = DialType.DHD;
 		}
 
-		DialingAddress += sym;
-		Event.Run( StargateEvent.DHDChevronEncoded, this, sym );
+		DialingAddress += symbols;
+		StargateEventManager.RunDHDChevronEncodedEvent( gate: this, symbols );
 	}
 
-	public virtual void DoDHDChevronLock( char sym )
+	public virtual void DoDHDChevronLock( char symbols )
 	{
-		if ( DialingAddress.Contains( sym ) )
+		if ( DialingAddress.Contains( symbols ) )
 			return;
 
 		// if we were already dialing but not via DHD, dont do anything
@@ -701,15 +708,15 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 
 		TimeSinceDialAction = 0;
 
-		DialingAddress += sym;
+		DialingAddress += symbols;
 
 		var gate = FindDestinationGateByDialingAddress( this, DialingAddress );
-		var valid = (gate != this && gate.IsValid() && gate.IsStargateReadyForInboundDHD());
+		var isStargateReadyForInboundDhd = (gate != this && gate.IsValid() && gate.IsStargateReadyForInboundDHD());
 
 		IsLocked = true;
-		IsLockedInvalid = !valid;
+		IsLockedInvalid = !isStargateReadyForInboundDhd;
 
-		Event.Run( StargateEvent.DHDChevronLocked, this, sym, valid );
+		StargateEventManager.RunDHDChevronLockedEvent( gate: this, symbols, isStargateReadyForInboundDhd);
 	}
 
 	// Manual/Slow Chevron Encode/Lock
@@ -743,7 +750,7 @@ public abstract partial class Stargate : Prop, IUse, IWireOutputEntity, IWireInp
 			CurGateState = GateState.DIALING;
 			CurDialType = DialType.MANUAL;
 
-			Event.Run( StargateEvent.DialBegin, this, "" );
+			StargateEventManager.RunDialBeginEvent( gate: this, address: string.Empty );
 		}
 
 		TimeSinceDialAction = 0;

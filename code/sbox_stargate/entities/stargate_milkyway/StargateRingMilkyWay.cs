@@ -4,9 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Sandbox;
+using Sandbox.sbox_stargate.code;
 
 public partial class StargateRingMilkyWay : StargatePlatformEntity
 {
+	public StargateRingMilkyWay()
+	{
+		_stargateEventManager = new StargateEventManager();
+	}
+
 	// ring variables
 
 	[Net]
@@ -23,6 +29,7 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 	public char CurRingSymbol { get; private set; } = ' ';
 	public float TargetRingAngle { get; private set; } = 0.0f;
 
+	private StargateEventManager _stargateEventManager;
 	private float RingCurSpeed = 0f;
 	protected float RingMaxSpeed = 50f;
 	protected float RingAccelStep = 1f;
@@ -121,7 +128,7 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 		ShouldDecc = false;
 		ShouldAcc = true;
 
-		Event.Run( StargateEvent.RingSpinUp, Gate );
+		_stargateEventManager.RunInboundBeginEvent( Gate );
 	}
 
 	TimeSince lastSpinDown = 0;
@@ -134,7 +141,7 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 		ShouldAcc = false;
 		ShouldDecc = true;
 
-		Event.Run( StargateEvent.RingSpinDown, Gate );
+		_stargateEventManager.RunRingSpinDownEvent( Gate );
 
 		if ( StopSoundOnSpinDown )
 		{
@@ -153,7 +160,7 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 		if (Gate.IsValid())
 		{
 			hasReachedDialingSymbol = false;
-			Event.Run( StargateEvent.RingStopped, Gate );
+			_stargateEventManager.RunRingStoppedEvent( Gate );
 			if ( !StopSoundOnSpinDown )
 			{
 				PlayStopSound();
@@ -288,7 +295,7 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 					if ( CurRingSymbol == CurDialingSymbol && Gate.Dialing )
 					{
 						hasReachedDialingSymbol = true;
-						Event.Run( StargateEvent.ReachedDialingSymbol, Gate, CurDialingSymbol );
+						_stargateEventManager.RunReachedDialingSymbolEvent( Gate, CurDialingSymbol );
 					}
 				}
 			}

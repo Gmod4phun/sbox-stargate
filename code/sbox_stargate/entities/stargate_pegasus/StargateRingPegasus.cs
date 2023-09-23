@@ -6,9 +6,15 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
 using Sandbox;
+using Sandbox.sbox_stargate.code;
 
 public partial class StargateRingPegasus : ModelEntity
 {
+	public StargateRingPegasus()
+	{
+		_stargateEventManager = new StargateEventManager();
+	}
+
 	// ring variables
 
 	[Net]
@@ -22,7 +28,7 @@ public partial class StargateRingPegasus : ModelEntity
 	public List<int> DialSequenceActiveSymbols { get; private set; } = new();
 
 	private Sound? RollSound = null;
-
+	private StargateEventManager _stargateEventManager;
 
 	public override void Spawn()
 	{
@@ -337,7 +343,8 @@ public partial class StargateRingPegasus : ModelEntity
 					if ( i_copy < chevCount - 1 )
 					{
 						Gate.ChevronActivateDHD( chev, 0, true );
-						Event.Run( StargateEvent.ChevronEncoded, Gate, i_copy + 1 );
+						// wtf magic number TODO: why plus one?
+						_stargateEventManager.RunChevronEncodedEvent( Gate, i_copy + 1 );
 					}
 					else
 					{
@@ -346,7 +353,8 @@ public partial class StargateRingPegasus : ModelEntity
 						Gate.IsLockedInvalid = !isValid;
 
 						Gate.ChevronActivate( chev, 0, isValid, true );
-						Event.Run( StargateEvent.ChevronLocked, Gate, i_copy + 1, isValid );
+						// wtf magic number TODO: why plus one?
+						_stargateEventManager.RunChevronLockedEvent( Gate, i_copy + 1, isValid );
 					}
 				}
 				Gate.AddTask( chevTaskTime, chevTask, Stargate.TimedTaskCategory.DIALING );
@@ -394,16 +402,15 @@ public partial class StargateRingPegasus : ModelEntity
 					Gate.ChevronActivate( Gate.GetChevronBasedOnAddressLength( i_copy + 1, chevCount ), 0, isLastChev ? validCheck() : true, isLastChev );
 					if (!isLastChev)
 					{
-						Event.Run( StargateEvent.ChevronEncoded, Gate, i_copy + 1 );
+						_stargateEventManager.RunChevronEncodedEvent( Gate, i_copy + 1 );
 					}
 					else
 					{
 						Gate.IsLocked = true;
 						Gate.IsLockedInvalid = !validCheck();
 
-						Event.Run( StargateEvent.ChevronLocked, Gate, i_copy + 1, validCheck() );
+						_stargateEventManager.RunChevronLockedEvent( Gate, i_copy + 1, validCheck() );
 					}
-					
 				}, Stargate.TimedTaskCategory.DIALING );
 			}
 		}

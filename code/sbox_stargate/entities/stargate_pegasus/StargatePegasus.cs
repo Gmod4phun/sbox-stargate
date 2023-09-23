@@ -207,7 +207,7 @@ public partial class StargatePegasus : Stargate
 
 		if ( !CanStargateStartDial() ) return;
 
-		Event.Run( StargateEvent.DialBegin, this, address );
+		StargateEventManager.RunDialBeginEvent( gate: this, address );
 
 		try
 		{
@@ -263,7 +263,7 @@ public partial class StargatePegasus : Stargate
 
 		if ( !IsStargateReadyForInboundFast() ) return;
 
-		Event.Run( StargateEvent.InboundBegin, this );
+		StargateEventManager.RunInboundBeginEvent( gate: this );
 
 		try
 		{
@@ -293,7 +293,7 @@ public partial class StargatePegasus : Stargate
 
 		if ( !CanStargateStartDial() ) return;
 
-		Event.Run( StargateEvent.DialBegin, this, address );
+		StargateEventManager.RunDialBeginEvent( gate: this, address );
 
 		try
 		{
@@ -366,7 +366,7 @@ public partial class StargatePegasus : Stargate
 
 		if ( !IsStargateReadyForInboundInstantSlow() ) return;
 
-		Event.Run( StargateEvent.InboundBegin, this );
+		StargateEventManager.RunInboundBeginEvent( gate: this );
 
 		try
 		{
@@ -398,7 +398,7 @@ public partial class StargatePegasus : Stargate
 
 		if ( !CanStargateStartDial() ) return;
 
-		Event.Run( StargateEvent.DialBegin, this, address );
+		StargateEventManager.RunDialBeginEvent(gate: this, address);
 
 		try
 		{
@@ -482,7 +482,7 @@ public partial class StargatePegasus : Stargate
 
 		if ( !IsStargateReadyForInboundDHD() ) return;
 
-		Event.Run( StargateEvent.InboundBegin, this );
+		StargateEventManager.RunInboundBeginEvent(gate: this);
 
 		try
 		{
@@ -505,9 +505,9 @@ public partial class StargatePegasus : Stargate
 	}
 
 	// CHEVRON STUFF - DHD DIALING
-	public override void DoDHDChevronEncode(char sym)
+	public override void DoDHDChevronEncode(char symbols)
 	{
-		base.DoDHDChevronEncode( sym );
+		base.DoDHDChevronEncode( symbols );
 
 		var clampLen = Math.Clamp( DialingAddress.Length + 1, 7, 9 );
 
@@ -517,9 +517,9 @@ public partial class StargatePegasus : Stargate
 		Ring.RollSymbolDHDFast( clampLen, () => true, DialingAddress.Length, 0.6f );
 	}
 
-	public override void DoDHDChevronLock( char sym ) // only the top chevron locks, always
+	public override void DoDHDChevronLock( char symbols ) // only the top chevron locks, always
 	{
-		base.DoDHDChevronLock( sym );
+		base.DoDHDChevronLock( symbols );
 
 		var chev = GetTopChevron();
 		EncodedChevronsOrdered.Add( chev );
@@ -561,7 +561,7 @@ public partial class StargatePegasus : Stargate
 		//var chev = GetChevronBasedOnAddressLength( 7, 8 );
 		ChevronActivateDHD( chev, 0, true );
 
-		Event.Run( StargateEvent.ChevronEncoded, this, chevNum );
+		StargateEventManager.RunChevronEncodedEvent( gate: this, chevNum );
 
 		IsManualDialInProgress = false;
 
@@ -604,7 +604,7 @@ public partial class StargatePegasus : Stargate
 		if (isValid)
 			ActiveChevrons++;
 
-		Event.Run( StargateEvent.ChevronLocked, this, chevNum, isValid );
+		StargateEventManager.RunChevronLockedEvent( gate: this, chevNum, isValid );
 
 		TimeSinceDialAction = 0;
 
