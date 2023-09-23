@@ -9,7 +9,7 @@ public partial class StargateIris : AnimatedEntity
 	public Stargate Gate { get; set; } = null;
 
 	[Net]
-	public bool Closed { get; private set; } = false;
+	public bool Closed { get; set; } = false;
 
 	public override void Spawn()
 	{

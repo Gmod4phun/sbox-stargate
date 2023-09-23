@@ -80,6 +80,12 @@ public partial class StargateIrisAtlantis : StargateIris
 
 		IrisLoop.Stop();
 
-		if ( Closed ) Sound.FromEntity( "stargate.iris.atlantis.open", this );
+		if ( !Game.IsServer )
+			return;
+
+		if ( Closed )
+		{
+			Sound.FromWorld( "stargate.iris.atlantis.open", this.Position );
+		}
 	}
 }
