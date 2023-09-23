@@ -15,7 +15,7 @@ public partial class SGCComputer : ModelEntity, IUse
 	public Stargate Gate { get; set; } = null;
 
 	[Net]
-	public IList<SGCMonitor> Monitors { get; private set; } = new List<SGCMonitor>();
+	public IList<SGCMonitor> Monitors { get; private set; } = new();
 
 	public static float GetSinFromTime()
 	{

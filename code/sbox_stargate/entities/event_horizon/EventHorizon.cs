@@ -60,10 +60,10 @@ public partial class EventHorizon : AnimatedEntity
 	private static Dictionary<Entity, TimeSince> EntityTimeSinceTeleported { get; } = new Dictionary<Entity, TimeSince>();
 
 	[Net]
-	private IList<Entity> BufferFront { get; set; } = new List<Entity>();
+	private IList<Entity> BufferFront { get; set; } = new();
 
 	[Net]
-	private IList<Entity> BufferBack { get; set; } = new List<Entity>();
+	private IList<Entity> BufferBack { get; set; } = new();
 
 	private List<Entity> InTriggerFront { get; } = new();
 	private List<Entity> InTriggerBack { get; } = new();
