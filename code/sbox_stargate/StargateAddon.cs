@@ -65,13 +65,13 @@ partial class StargateAddon
 		var hasSpawnOffsetProperty = entityDesc.GetProperty( "SpawnOffset" ) != null;
 		if ( hasSpawnOffsetProperty ) // spawn offsets for Stargate stuff
 		{
-			var propertySpawnOffset = entityDesc.GetProperty( "SpawnOffset" );
-			if ( propertySpawnOffset != null ) ent.Position += (Vector3)propertySpawnOffset.GetValue( ent );
+			var spawnOffset = entityDesc.GetProperty( "SpawnOffset" );
+			if ( spawnOffset != null ) ent.Position += (Vector3)spawnOffset.GetValue( ent );
 
-			var propertySpawnOffsetAng = entityDesc.GetProperty( "SpawnOffsetAng" );
-			if ( propertySpawnOffsetAng != null )
+			var spawnOffsetAng = entityDesc.GetProperty( "SpawnOffsetAng" );
+			if ( spawnOffsetAng != null )
 			{
-				var ang = (Angles)propertySpawnOffsetAng.GetValue( ent );
+				var ang = (Angles)spawnOffsetAng.GetValue( ent );
 				var newRot = (ent.Rotation.Angles() + ang).ToRotation();
 				ent.Rotation = newRot;
 			}
