@@ -282,7 +282,7 @@ public partial class StargateMilkyWay : Stargate
 
 		if ( !CanStargateStartDial() ) return;
 
-		StargateEventManager.RunDialBeginEvent( gate: this, address );
+		StargateEventManager.DialBegin( gate: this, address );
 
 		try
 		{
@@ -337,7 +337,7 @@ public partial class StargateMilkyWay : Stargate
 
 					ActiveChevrons++;
 					CurDialingSymbol = address[currentChevronPosition - 1];
-					StargateEventManager.RunChevronEncodedEvent( gate: this, currentChevronPosition );
+					StargateEventManager.ChevronEncoded( gate: this, currentChevronPosition );
 				}
 
 				if ( currentChevronPosition == addrLen - 1 ) Ring.SpinDown(); // stop rotating ring when the last looped chevron locks
@@ -368,7 +368,7 @@ public partial class StargateMilkyWay : Stargate
 
 				CurDialingSymbol = address[addrLen - 1];
 
-				StargateEventManager.RunChevronLockedEvent( gate: this, address.Length, readyForOpen );
+				StargateEventManager.ChevronLocked( gate: this, address.Length, readyForOpen );
 
 				if ( MovieDialingType )
 				{
@@ -412,7 +412,7 @@ public partial class StargateMilkyWay : Stargate
 
 		if ( !IsStargateReadyForInboundFast() ) return;
 
-		StargateEventManager.RunInboundBeginEvent( gate: this );
+		StargateEventManager.InboundBegin( gate: this );
 
 		try
 		{
@@ -483,7 +483,7 @@ public partial class StargateMilkyWay : Stargate
 
 		if ( !CanStargateStartDial() ) return;
 
-		StargateEventManager.RunDialBeginEvent( gate: this, address );
+		StargateEventManager.DialBegin( gate: this, address );
 
 		try
 		{
@@ -552,7 +552,7 @@ public partial class StargateMilkyWay : Stargate
 						if ( ChevronLightup ) chev.TurnOn( 0.5f );
 					}
 
-					StargateEventManager.RunChevronEncodedEvent( gate: this, chevNum);
+					StargateEventManager.ChevronEncoded( gate: this, chevNum);
 				}
 				else
 				{
@@ -569,7 +569,7 @@ public partial class StargateMilkyWay : Stargate
 					IsLocked = true;
 					IsLockedInvalid = !valid;
 
-					StargateEventManager.RunChevronLockedEvent( gate: this, chevNum, valid );
+					StargateEventManager.ChevronLocked( gate: this, chevNum, valid );
 				}
 
 				ActiveChevrons++;
@@ -620,7 +620,7 @@ public partial class StargateMilkyWay : Stargate
 
 		if ( !IsStargateReadyForInboundInstantSlow() ) return;
 
-		StargateEventManager.RunInboundBeginEvent( gate: this );
+		StargateEventManager.InboundBegin( gate: this );
 
 		try
 		{
@@ -659,7 +659,7 @@ public partial class StargateMilkyWay : Stargate
 
 		if ( !CanStargateStartDial() ) return;
 
-		StargateEventManager.RunDialBeginEvent( gate: this, address );
+		StargateEventManager.DialBegin( gate: this, address );
 
 		try
 		{
@@ -749,7 +749,7 @@ public partial class StargateMilkyWay : Stargate
 
 		if ( !IsStargateReadyForInboundDHD() ) return;
 
-		StargateEventManager.RunInboundBeginEvent( gate: this );
+		StargateEventManager.InboundBegin( gate: this );
 
 		try
 		{
@@ -852,7 +852,7 @@ public partial class StargateMilkyWay : Stargate
 		DialingAddress += sym;
 		ActiveChevrons++;
 
-		StargateEventManager.RunChevronEncodedEvent( gate: this, chevNum );
+		StargateEventManager.ChevronEncoded( gate: this, chevNum );
 
 		IsManualDialInProgress = false;
 
@@ -906,7 +906,7 @@ public partial class StargateMilkyWay : Stargate
 		IsLocked = true;
 		IsLockedInvalid = !valid;
 
-		StargateEventManager.RunChevronLockedEvent( gate: this, chevNum, valid );
+		StargateEventManager.ChevronLocked( gate: this, chevNum, valid );
 
 		await GameTask.DelaySeconds( 0.75f );
 

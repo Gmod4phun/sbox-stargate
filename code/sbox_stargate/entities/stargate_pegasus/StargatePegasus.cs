@@ -207,7 +207,7 @@ public partial class StargatePegasus : Stargate
 
 		if ( !CanStargateStartDial() ) return;
 
-		StargateEventManager.RunDialBeginEvent( gate: this, address );
+		StargateEventManager.DialBegin( gate: this, address );
 
 		try
 		{
@@ -263,7 +263,7 @@ public partial class StargatePegasus : Stargate
 
 		if ( !IsStargateReadyForInboundFast() ) return;
 
-		StargateEventManager.RunInboundBeginEvent( gate: this );
+		StargateEventManager.InboundBegin( gate: this );
 
 		try
 		{
@@ -293,7 +293,7 @@ public partial class StargatePegasus : Stargate
 
 		if ( !CanStargateStartDial() ) return;
 
-		StargateEventManager.RunDialBeginEvent( gate: this, address );
+		StargateEventManager.DialBegin( gate: this, address );
 
 		try
 		{
@@ -366,7 +366,7 @@ public partial class StargatePegasus : Stargate
 
 		if ( !IsStargateReadyForInboundInstantSlow() ) return;
 
-		StargateEventManager.RunInboundBeginEvent( gate: this );
+		StargateEventManager.InboundBegin( gate: this );
 
 		try
 		{
@@ -398,7 +398,7 @@ public partial class StargatePegasus : Stargate
 
 		if ( !CanStargateStartDial() ) return;
 
-		StargateEventManager.RunDialBeginEvent(gate: this, address);
+		StargateEventManager.DialBegin(gate: this, address);
 
 		try
 		{
@@ -482,7 +482,7 @@ public partial class StargatePegasus : Stargate
 
 		if ( !IsStargateReadyForInboundDHD() ) return;
 
-		StargateEventManager.RunInboundBeginEvent(gate: this);
+		StargateEventManager.InboundBegin(gate: this);
 
 		try
 		{
@@ -561,7 +561,7 @@ public partial class StargatePegasus : Stargate
 		//var chev = GetChevronBasedOnAddressLength( 7, 8 );
 		ChevronActivateDHD( chev, 0, true );
 
-		StargateEventManager.RunChevronEncodedEvent( gate: this, chevNum );
+		StargateEventManager.ChevronEncoded( gate: this, chevNum );
 
 		IsManualDialInProgress = false;
 
@@ -604,7 +604,7 @@ public partial class StargatePegasus : Stargate
 		if (isValid)
 			ActiveChevrons++;
 
-		StargateEventManager.RunChevronLockedEvent( gate: this, chevNum, isValid );
+		StargateEventManager.ChevronLocked( gate: this, chevNum, isValid );
 
 		TimeSinceDialAction = 0;
 

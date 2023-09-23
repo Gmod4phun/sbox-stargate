@@ -344,7 +344,7 @@ public partial class StargateRingPegasus : ModelEntity
 					{
 						Gate.ChevronActivateDHD( chev, 0, true );
 						// wtf magic number TODO: why plus one?
-						_stargateEventManager.RunChevronEncodedEvent( Gate, i_copy + 1 );
+						_stargateEventManager.ChevronEncoded( Gate, i_copy + 1 );
 					}
 					else
 					{
@@ -354,7 +354,7 @@ public partial class StargateRingPegasus : ModelEntity
 
 						Gate.ChevronActivate( chev, 0, isValid, true );
 						// wtf magic number TODO: why plus one?
-						_stargateEventManager.RunChevronLockedEvent( Gate, i_copy + 1, isValid );
+						_stargateEventManager.ChevronLocked( Gate, i_copy + 1, isValid );
 					}
 				}
 				Gate.AddTask( chevTaskTime, chevTask, Stargate.TimedTaskCategory.DIALING );
@@ -402,14 +402,14 @@ public partial class StargateRingPegasus : ModelEntity
 					Gate.ChevronActivate( Gate.GetChevronBasedOnAddressLength( i_copy + 1, chevCount ), 0, isLastChev ? validCheck() : true, isLastChev );
 					if (!isLastChev)
 					{
-						_stargateEventManager.RunChevronEncodedEvent( Gate, i_copy + 1 );
+						_stargateEventManager.ChevronEncoded( Gate, i_copy + 1 );
 					}
 					else
 					{
 						Gate.IsLocked = true;
 						Gate.IsLockedInvalid = !validCheck();
 
-						_stargateEventManager.RunChevronLockedEvent( Gate, i_copy + 1, validCheck() );
+						_stargateEventManager.ChevronLocked( Gate, i_copy + 1, validCheck() );
 					}
 				}, Stargate.TimedTaskCategory.DIALING );
 			}

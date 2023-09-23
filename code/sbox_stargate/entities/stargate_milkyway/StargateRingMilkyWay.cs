@@ -128,7 +128,7 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 		ShouldDecc = false;
 		ShouldAcc = true;
 
-		_stargateEventManager.RunInboundBeginEvent( Gate );
+		_stargateEventManager.InboundBegin( Gate );
 	}
 
 	TimeSince lastSpinDown = 0;
@@ -141,7 +141,7 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 		ShouldAcc = false;
 		ShouldDecc = true;
 
-		_stargateEventManager.RunRingSpinDownEvent( Gate );
+		_stargateEventManager.RingSpinDown( Gate );
 
 		if ( StopSoundOnSpinDown )
 		{
@@ -160,7 +160,7 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 		if (Gate.IsValid())
 		{
 			hasReachedDialingSymbol = false;
-			_stargateEventManager.RunRingStoppedEvent( Gate );
+			_stargateEventManager.RingStopped( Gate );
 			if ( !StopSoundOnSpinDown )
 			{
 				PlayStopSound();
@@ -295,7 +295,7 @@ public partial class StargateRingMilkyWay : StargatePlatformEntity
 					if ( CurRingSymbol == CurDialingSymbol && Gate.Dialing )
 					{
 						hasReachedDialingSymbol = true;
-						_stargateEventManager.RunReachedDialingSymbolEvent( Gate, CurDialingSymbol );
+						_stargateEventManager.ReachedDialingSymbol( Gate, CurDialingSymbol );
 					}
 				}
 			}

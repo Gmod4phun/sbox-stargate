@@ -223,7 +223,7 @@ public partial class StargateUniverse : Stargate
 
 		if ( !CanStargateStartDial() ) return;
 
-		StargateEventManager.RunDialBeginEvent( gate: this, address );
+		StargateEventManager.DialBegin( gate: this, address );
 
 		try
 		{
@@ -273,7 +273,7 @@ public partial class StargateUniverse : Stargate
 					var isLastChev = i_copy == addrLen - 1;
 					if (!isLastChev)
 					{
-						StargateEventManager.RunChevronEncodedEvent( gate: this, i_copy + 1 );
+						StargateEventManager.ChevronEncoded( gate: this, i_copy + 1 );
 					}
 					else
 					{
@@ -282,7 +282,7 @@ public partial class StargateUniverse : Stargate
 						IsLocked = true;
 						IsLockedInvalid = !isValid;
 
-						StargateEventManager.RunChevronLockedEvent( gate: this, i_copy + 1, isValid );
+						StargateEventManager.ChevronLocked( gate: this, i_copy + 1, isValid );
 					}
 				}, TimedTaskCategory.DIALING );
 			}
@@ -316,7 +316,7 @@ public partial class StargateUniverse : Stargate
 
 		if ( !IsStargateReadyForInboundFast() ) return;
 
-		StargateEventManager.RunInboundBeginEvent( gate: this);
+		StargateEventManager.InboundBegin( gate: this);
 
 		try
 		{
@@ -347,7 +347,7 @@ public partial class StargateUniverse : Stargate
 
 		if ( !CanStargateStartDial() ) return;
 
-		StargateEventManager.RunDialBeginEvent( gate: this, address );
+		StargateEventManager.DialBegin( gate: this, address );
 
 		try
 		{
@@ -413,7 +413,7 @@ public partial class StargateUniverse : Stargate
 					{
 						Bearing?.TurnOff( 0.6f );
 						// TODO: magic number
-						StargateEventManager.RunChevronEncodedEvent( gate: this, address.IndexOf( sym ) + 1 );
+						StargateEventManager.ChevronEncoded( gate: this, address.IndexOf( sym ) + 1 );
 					}
 					else
 					{
@@ -423,7 +423,7 @@ public partial class StargateUniverse : Stargate
 						IsLockedInvalid = !isValid;
 
 						// TODO: magic number
-						StargateEventManager.RunChevronLockedEvent( gate: this, address.IndexOf( sym ) + 1, isValid );
+						StargateEventManager.ChevronLocked( gate: this, address.IndexOf( sym ) + 1, isValid );
 					}
 				}
 
@@ -461,7 +461,7 @@ public partial class StargateUniverse : Stargate
 
 		if ( !IsStargateReadyForInboundInstantSlow() ) return;
 
-		StargateEventManager.RunInboundBeginEvent( gate: this );
+		StargateEventManager.InboundBegin( gate: this );
 
 		try
 		{
@@ -486,7 +486,7 @@ public partial class StargateUniverse : Stargate
 
 		if ( !CanStargateStartDial() ) return;
 
-		StargateEventManager.RunDialBeginEvent( gate: this, address );
+		StargateEventManager.DialBegin( gate: this, address );
 
 		try
 		{
@@ -570,7 +570,7 @@ public partial class StargateUniverse : Stargate
 
 		if ( !IsStargateReadyForInboundDHD() ) return;
 
-		StargateEventManager.RunInboundBeginEvent( gate: this );
+		StargateEventManager.InboundBegin( gate: this );
 
 		try
 		{
@@ -636,7 +636,7 @@ public partial class StargateUniverse : Stargate
 			ActiveChevrons++;
 
 			Bearing?.TurnOff( 0.6f );
-			StargateEventManager.RunChevronEncodedEvent( gate: this, chevNum );
+			StargateEventManager.ChevronEncoded( gate: this, chevNum );
 		}
 
 		AddTask( Time.Now + 0.65f, symbolAction, TimedTaskCategory.DIALING );
@@ -693,7 +693,7 @@ public partial class StargateUniverse : Stargate
 			IsLocked = true;
 			IsLockedInvalid = !isValid;
 
-			StargateEventManager.RunChevronLockedEvent( gate: this, DialingAddress.Length, isValid);
+			StargateEventManager.ChevronLocked( gate: this, DialingAddress.Length, isValid);
 		}
 
 		AddTask( Time.Now + 0.65f, symbolAction, TimedTaskCategory.DIALING );
