@@ -7,7 +7,7 @@ public partial class RingRing : KeyframeEntity
 
 	public bool IsUpsideDown { get; set; } = false;
 
-	public Vector3 desiredPos { get; set; }
+	public Vector3 DesiredPos { get; set; }
 
 	public bool ShouldRetract { get; set; } = false;
 
@@ -57,7 +57,7 @@ public partial class RingRing : KeyframeEntity
 
 	public async void Move()
 	{
-		var targetPos = ShouldRetract ? RingParent.Position : RingParent.Transform.PointToWorld( desiredPos );
+		var targetPos = ShouldRetract ? RingParent.Position : RingParent.Transform.PointToWorld( DesiredPos );
 
 		//Log.Info( $"BasePos = {RingParent.Position}, TargetPos = {targetPos}" );
 

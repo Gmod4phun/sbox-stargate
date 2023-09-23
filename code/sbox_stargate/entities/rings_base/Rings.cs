@@ -36,7 +36,7 @@ public partial class Rings : AnimatedEntity, IUse
 
 	public bool RingsDeployed { get; protected set; } = false;
 
-	protected int returnedRings { get; set; } = 0;
+	protected int ReturnedRings { get; set; } = 0;
 
 	protected List<RingRing> ChildRings { get; set; } = new();
 
@@ -168,11 +168,11 @@ public partial class Rings : AnimatedEntity, IUse
 
 	public virtual void OnRingReturn()
 	{
-		returnedRings++;
+		ReturnedRings++;
 
-		if ( returnedRings < AmountOfRings ) return;
+		if ( ReturnedRings < AmountOfRings ) return;
 
-		returnedRings = 0;
+		ReturnedRings = 0;
 		ShowBase();
 		EnableAllCollisions = true;
 		Busy = false;
@@ -287,7 +287,7 @@ public partial class Rings : AnimatedEntity, IUse
 			if ( r.IsUpsideDown ) r.Rotation = Rotation.RotateAroundAxis( Vector3.Left, 180f );
 			r.Scale = Scale;
 			r.Transmit = TransmitType.Always;
-			r.desiredPos = Transform.PointToLocal( endPos );
+			r.DesiredPos = Transform.PointToLocal( endPos );
 
 			ChildRings.Add( r );
 		}
@@ -401,7 +401,7 @@ public partial class Rings : AnimatedEntity, IUse
 		{
 			await GameTask.Delay( times[i] );
 
-			r.desiredPos = LocalPosition.z;
+			r.DesiredPos = LocalPosition.z;
 			r.Retract();
 			i++;
 		}
