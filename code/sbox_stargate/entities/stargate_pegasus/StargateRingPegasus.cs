@@ -164,7 +164,7 @@ public partial class StargateRingPegasus : ModelEntity
 				SetSymbolState( 0, true );
 			}
 
-			var pegasusSymbolChevrons = new Dictionary<int, int>() { { 3, 1 },{ 7, 2 },{ 11, 3 },{ 15, 8 },{ 19, 9 },{ 23, 4 },{ 27, 5 },{ 31, 6 },{ 35, 7 } };
+			var pegasusSymbolChevrons = new Dictionary<int, int>() { { 3, 1 }, { 7, 2 }, { 11, 3 }, { 15, 8 }, { 19, 9 }, { 23, 4 }, { 27, 5 }, { 31, 6 }, { 35, 7 } };
 
 			var delay = time / 35f;
 			for ( int i = 0; i <= 35; i++ )
