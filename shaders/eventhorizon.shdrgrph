@@ -22,6 +22,7 @@
       "DefaultRoughness": 1,
       "DefaultMetalness": 0,
       "DefaultAmbientOcclusion": 1,
+      "PositionOffset": {},
       "Identifier": "0",
       "Position": "2848,-528"
     },
@@ -31,7 +32,7 @@
         "Identifier": "27",
         "Output": "Result"
       },
-      "Texture": "models/sbox_stargate/event_horizon/src/tex/event_horizon_tga_f2a529f6.generated.vtex",
+      "Image": "materials/dev/white_color.tga",
       "Sampler": {},
       "UI": {
         "Name": "Color",
