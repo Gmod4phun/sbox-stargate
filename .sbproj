@@ -7,7 +7,7 @@
   "Schema": 1,
   "HasAssets": true,
   "AssetsPath": "",
-  "Resources": "entity/*\nvideos/*\nfonts/*\n",
+  "Resources": "entity/*\nvideos/*\nfonts/*\nmaterials/*\nshaders/*\n",
   "MenuResources": "models/sbox_stargate/sg_mw/*.vmat_c\nmodels/sbox_stargate/sg_mw/*.vtex_c\nmodels/sbox_stargate/sg_mw/*.vmdl_c\nsbox_stargate/ui/gamemenu/*\n",
   "HasCode": true,
   "CodePath": "code",
