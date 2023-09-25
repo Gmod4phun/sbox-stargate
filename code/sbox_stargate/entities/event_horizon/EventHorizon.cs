@@ -77,6 +77,10 @@ public partial class EventHorizon : AnimatedEntity
 	{
 		get => new( Position - Camera.Position - Rotation.Forward * 0.75f, -Rotation.Forward.Normal );
 	}
+	private Plane ClipPlaneKawoosh
+	{
+		get => new( Position - Camera.Position + Rotation.Forward * 1f, Rotation.Forward.Normal );
+	}
 
 	public override void Spawn()
 	{
@@ -125,7 +129,7 @@ public partial class EventHorizon : AnimatedEntity
 		if ( !Gate.IsIrisClosed() && doKawoosh )
 			CreateKawooshTrigger( 0.5f );
 
-		await GameTask.DelaySeconds( 1.5f );
+		await GameTask.DelaySeconds( 2.5f );
 		if ( !this.IsValid() ) return;
 
 		WormholeLoop = Sound.FromEntity( "stargate.event_horizon.loop", this );
@@ -241,11 +245,18 @@ public partial class EventHorizon : AnimatedEntity
 			Rotation = Rotation,
 			Parent = Gate,
 			EnableDrawing = false,
-			Scale = Gate.Scale * 1.3f,
+			Scale = Gate.Scale * 1.2f,
 			EnableShadowReceive = false
 		};
 
+		const float kawooshOffset = 50;
+
+		_kawoosh.LocalPosition += Vector3.Backward * Scale * kawooshOffset;
+		OnEntityEntered( _kawoosh, fromBack: false, isKawoosh: true );
+
 		await _kawoosh.RunAnimation();
+
+		BufferFront.Remove( _kawoosh );
 		_kawoosh.Delete();
 	}
 
@@ -442,7 +453,7 @@ public partial class EventHorizon : AnimatedEntity
 		PlayTeleportSound();
 	}
 
-	public void OnEntityEntered( ModelEntity ent, bool fromBack = false )
+	public void OnEntityEntered( ModelEntity ent, bool fromBack = false, bool isKawoosh = false )
 	{
 		if ( !ent.IsValid() )
 			return;
@@ -460,13 +471,20 @@ public partial class EventHorizon : AnimatedEntity
 
 			mdl.Tags.Add( fromBack ? StargateTags.InBufferBack : StargateTags.InBufferFront );
 
-			SetModelClippingForEntity( To.Everyone, mdl, true, fromBack ? ClipPlaneBack : ClipPlaneFront );
+			if ( isKawoosh is false )
+			{
+				SetModelClippingForEntity( To.Everyone, mdl, true, fromBack ? ClipPlaneBack : ClipPlaneFront );
+			}
+			else
+			{
+				SetModelClippingForEntity( To.Everyone, mdl, true, ClipPlaneKawoosh );
+			}
 
 			mdl.RenderColor = mdl.RenderColor.WithAlpha( mdl.RenderColor.a.Clamp( 0, 0.99f ) ); // hack to fix MC (doesnt fix it all the times, job for sbox devs)
 		}
 	}
 
-	public void OnEntityExited( ModelEntity ent, bool fromBack = false )
+	public void OnEntityExited( ModelEntity ent, bool fromBack = false)
 	{
 		if ( !ent.IsValid() )
 			return;
@@ -778,8 +796,17 @@ public partial class EventHorizon : AnimatedEntity
 	[GameEvent.Client.Frame]
 	public void Draw()
 	{
-		foreach ( var e in BufferFront )
-			UpdateClipPlaneForEntity( e, ClipPlaneFront );
+		foreach ( var entity in BufferFront )
+		{
+			if ( entity is Kawoosh )
+			{
+				UpdateClipPlaneForEntity( entity, ClipPlaneKawoosh );
+			}
+			else
+			{
+				UpdateClipPlaneForEntity( entity, ClipPlaneFront );
+			}
+		}
 
 		foreach ( var e in BufferBack )
 			UpdateClipPlaneForEntity( e, ClipPlaneBack );
