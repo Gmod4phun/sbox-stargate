@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Sandbox;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Sandbox;
 
 public partial class EventHorizon : AnimatedEntity
 {
@@ -37,7 +37,7 @@ public partial class EventHorizon : AnimatedEntity
 	private EventHorizonTrigger _backTrigger = null;
 	private EventHorizonTrigger _kawooshTrigger = null;
 	private EventHorizonCollider _colliderFloor = null;
-	private Particles _kawoosh;
+	private Kawoosh _kawoosh;
 	private bool _eventHorizonVideoInitialized = false;
 
 	[Net]
@@ -233,19 +233,23 @@ public partial class EventHorizon : AnimatedEntity
 		SkinEventHorizon();
 	}
 
-	public async void CreateKawoosh()
+	private async void CreateKawoosh()
 	{
-		var a = Rotation.RotateAroundAxis( Vector3.Right, -90 ).Angles();
-		var type = Gate is StargateUniverse ? "_universe" : "";
-		_kawoosh = Particles.Create( $"particles/sbox_stargate/kawoosh{type}.vpcf", Position );
-		_kawoosh.SetPosition( 1, Rotation.Forward );
-		_kawoosh.SetPosition( 2, new Vector3( a.roll, a.pitch, a.yaw ) );
+		_kawoosh = new Kawoosh()
+		{
+			Position = Position + Rotation.Forward * 8,
+			Rotation = Rotation,
+			Parent = Gate,
+			EnableDrawing = false,
+			Scale = Gate.Scale * 1.3f,
+			EnableShadowReceive = false
+		};
 
-		await GameTask.DelaySeconds( 3f );
-		_kawoosh?.Destroy( true );
+		await _kawoosh.RunAnimation();
+		_kawoosh.Delete();
 	}
 
-	public async void ClientAnimLogic()
+	public void ClientAnimLogic()
 	{
 		SceneObject.Batchable = false;
 
