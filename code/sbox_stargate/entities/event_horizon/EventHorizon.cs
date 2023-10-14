@@ -103,15 +103,27 @@ public partial class EventHorizon : AnimatedEntity
 		PostSpawn();
 	}
 
-	public async void CreateKawooshTrigger( float delay )
+	public async void CreateKawoosh( float delay )
 	{
 		await GameTask.DelaySeconds( delay );
 
 		if ( !this.IsValid() ) return;
 
-		_kawooshTrigger = new EventHorizonTrigger(this, "models/sbox_stargate/event_horizon/event_horizon_trigger_kawoosh.vmdl") { Position = Position + Rotation.Forward * 2, Rotation = Rotation, Parent = Gate };
+		_kawoosh = new Kawoosh()
+		{
+			Position = Position,
+			Rotation = Rotation,
+			Parent = Gate,
+			EnableDrawing = false,
+			Scale = Gate.Scale,
+			EnableShadowReceive = false,
+			EventHorizon = this
+		};
 
-		_kawooshTrigger?.DeleteAsync( 2.2f );
+		SetModelClippingForEntity( To.Everyone, _kawoosh, true, ClipPlaneKawoosh );
+
+		_kawoosh.DoKawooshAnimation();
+		_kawoosh?.DeleteAsync( 2f );
 	}
 
 	public virtual void SkinEventHorizon()
@@ -128,7 +140,7 @@ public partial class EventHorizon : AnimatedEntity
 		EstablishClientAnim( To.Everyone ); // clientside animation stuff
 
 		if ( !Gate.IsIrisClosed() && doKawoosh )
-			CreateKawooshTrigger( 0.5f );
+			CreateKawoosh( 0.5f );
 
 		await GameTask.DelaySeconds( 2.5f );
 		if ( !this.IsValid() ) return;
@@ -238,24 +250,6 @@ public partial class EventHorizon : AnimatedEntity
 		SkinEventHorizon();
 	}
 
-	private async void CreateKawoosh()
-	{
-		_kawoosh = new Kawoosh()
-		{
-			Position = Position,
-			Rotation = Rotation,
-			Parent = Gate,
-			EnableDrawing = false,
-			Scale = Gate.Scale,
-			EnableShadowReceive = false
-		};
-
-		SetModelClippingForEntity( To.Everyone, _kawoosh, true, ClipPlaneKawoosh );
-
-		await _kawoosh.RunAnimation();
-		_kawoosh.Delete();
-	}
-
 	public void ClientAnimLogic()
 	{
 		SceneObject.Batchable = false;
@@ -271,11 +265,6 @@ public partial class EventHorizon : AnimatedEntity
 				_shouldEstablish = true;
 				_curBrightness = _maxBrightness;
 				SkinEventHorizon();
-
-				if ( !Gate.IsIrisClosed() )
-				{
-					CreateKawoosh();
-				}
 			}
 		}
 
@@ -555,7 +544,7 @@ public partial class EventHorizon : AnimatedEntity
 			ent.Tags.Add( StargateTags.BeforeGate );
 		}
 
-		else if ( trigger == _kawooshTrigger )
+		else if ( trigger == _kawoosh.Trigger )
 		{
 			DissolveEntity( ent );
 		}

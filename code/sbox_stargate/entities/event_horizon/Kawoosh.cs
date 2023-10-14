@@ -1,127 +1,89 @@
 ﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Sandbox;
 
 public partial class Kawoosh : ModelEntity
 {
-	private const float DurationSec = 1.1f;
-	private readonly string _kawooshModel = "models/sbox_stargate/kawoosh/kawoosh.vmdl";
+	private CapsuleLightEntity _light;
 
-	private readonly CancellationTokenSource _cancellationTokenSource = new();
-	private EventHandler _animationEventHandler;
-	private CapsuleLightEntity _capsuleLightEntity;
+	private bool _isExpanding = false;
+	private float _currentProgress = 0;
+	private static float _minProgress = 0;
+	private static float _maxProgress = 1.5f;
 
-	private float _elapsedTime;
-	private float _startValue = 1.45f;
-	private float _endValue;
-	private bool _isAnimationComplete;
-	private float _lightMovementDistance;
-	private Vector3 _lightMovementDirection = Vector3.Forward;
+	public EventHorizon EventHorizon;
+	public EventHorizonTrigger Trigger;
 
 	public override void Spawn()
 	{
 		base.Spawn();
 
 		Transmit = TransmitType.Always;
+		SetModel( "models/sbox_stargate/kawoosh/kawoosh.vmdl" );
 
-		SetModel( _kawooshModel );
-		SetupPhysicsFromModel( PhysicsMotionType.Static, true );
-
-		Tags.Add( "trigger" );
-
-		EnableAllCollisions = false;
-		EnableTraceAndQueries = false;
-		EnableTouch = true;
-		EnableShadowReceive = false;
-		_lightMovementDistance = 6f * Scale;
-	}
-
-	public override void StartTouch( Entity other )
-	{
-		base.StartTouch( other );
-
-		if ( !Game.IsServer )
-		{
-		}
-	}
-
-	public override void EndTouch( Entity other )
-	{
-		base.EndTouch( other );
-
-		if ( !Game.IsServer )
-		{
-		}
-	}
-
-	[GameEvent.Client.Frame]
-	public void AnimationFrame()
-	{
-		_animationEventHandler?.Invoke( this, null );
+		Morphs.Set( 0, 1 ); // set initial morph value for kawoosh to 1 (retracted)
 	}
 
 	protected override void OnDestroy()
 	{
 		base.OnDestroy();
-		_capsuleLightEntity.Delete();
+		Trigger?.Delete();
+		_light?.Delete();
 	}
 
-	internal async Task RunAnimation()
+	public async void DoKawooshAnimation()
 	{
-		_capsuleLightEntity = new CapsuleLightEntity
-		{
-			Position = Position,
-			Parent = Parent,
-			Rotation = Rotation,
-			Color = new Color( 25, 178, 255 ),
-			LightSize = 10f
-		};
-
-		const float morphInitialValue = 1f;
-		MorphKawoosh( morphInitialValue );
 		EnableDrawing = true;
 
-		_animationEventHandler += OnAnimationEventHandler;
+		Trigger = new EventHorizonTrigger( EventHorizon, "models/sbox_stargate/event_horizon/event_horizon_trigger_kawoosh.vmdl" )
+		{	Position = EventHorizon.Position + EventHorizon.Rotation.Forward * 2,
+			Rotation = EventHorizon.Rotation,
+			Parent = EventHorizon.Gate
+		};
 
-		await WaitForAnimation();
+		KawooshClientAnim( To.Everyone );
+
+		await GameTask.DelaySeconds( 1.5f );
+
+		KawooshClientAnim( To.Everyone, true );
 	}
 
-	private async Task WaitForAnimation()
+	[ClientRpc]
+	public void KawooshClientAnim( bool ending = false )
 	{
-		await Task.RunInThreadAsync( () =>
+		_isExpanding = !ending;
+		if ( _isExpanding )
 		{
-			while ( !_cancellationTokenSource.IsCancellationRequested )
-			{
-			}
+			_currentProgress = 0;
 
-			return System.Threading.Tasks.Task.CompletedTask;
-		} );
+			_light = new CapsuleLightEntity
+			{
+				Position = Position,
+				Parent = this,
+				Rotation = Rotation,
+				Color = Color.FromBytes(25, 150, 250),
+				LightSize = 40f,
+				Brightness = 0.005f,
+				Enabled = true
+			};
+		}
 	}
 
-	private void OnAnimationEventHandler( object sender, EventArgs e )
+	[GameEvent.Client.Frame]
+	private void ClientAnimLogic()
 	{
-		_elapsedTime += RealTime.Delta;
+		var delta = Time.Delta * (_isExpanding ? 1.8f : 3.2f);
+		_currentProgress = _currentProgress.LerpTo(_isExpanding ? _maxProgress : _minProgress, delta);
+		Morphs.Set( 0, CalculateAnimationValue( _maxProgress - _currentProgress ) );
 
-		var fraction = _elapsedTime / DurationSec;
-
-		var currentValue = _startValue.LerpTo( _endValue, fraction );
-
-		MorphKawoosh( CalculateAnimationValue( currentValue ) );
-		_capsuleLightEntity.LocalPosition += _lightMovementDirection * CalculateAnimationValue( Math.Abs( currentValue ) ) * _lightMovementDistance;
-
-		if ( _elapsedTime >= DurationSec )
+		if ( _light.IsValid() )
 		{
-			if ( _isAnimationComplete )
-			{
-				_animationEventHandler -= OnAnimationEventHandler;
-				_cancellationTokenSource.Cancel();
-			}
-			_elapsedTime = 0;
-			_startValue = 0f;
-			_endValue = 1.45f;
-			_isAnimationComplete = true;
-			_lightMovementDirection = Vector3.Backward;
+			var remappedProgress = _currentProgress.Remap( _minProgress, _maxProgress, 0, 1 );
+			var lightLength = 128 * remappedProgress;
+
+			_light.Enabled = true;
+			_light.CapsuleLength = lightLength;
+			_light.Position = Position + Rotation.Forward * lightLength;
+			_light.Brightness = remappedProgress;
 		}
 	}
 
@@ -132,12 +94,6 @@ public partial class Kawoosh : ModelEntity
 	/// <returns>Animation value calculated by applying a sinusoidal function on the cubed input value, scaled by a constant factor.</returns>
 	private float CalculateAnimationValue( float inputValue )
 	{
-		return (float)(1.01f * Math.Sin( 0.5f * Math.Pow( inputValue, 3 ) ));
-	}
-
-	private void MorphKawoosh( float morphValue )
-	{
-		const int shapekeyIndex = 0;
-		Morphs.Set( shapekeyIndex, morphValue );
+		return (float)Math.Sin( 0.5f * Math.Pow( inputValue, 3 ) );
 	}
 }
