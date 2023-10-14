@@ -77,10 +77,6 @@ public partial class EventHorizon : AnimatedEntity
 	{
 		get => new( Position - Camera.Position - Rotation.Forward * 0.75f, -Rotation.Forward.Normal );
 	}
-	private Plane ClipPlaneKawoosh
-	{
-		get => new( Position - Camera.Position + Rotation.Forward * 1f, Rotation.Forward.Normal );
-	}
 
 	public override void Spawn()
 	{
@@ -252,7 +248,7 @@ public partial class EventHorizon : AnimatedEntity
 		const float kawooshOffset = 50;
 
 		_kawoosh.LocalPosition += Vector3.Backward * Scale * kawooshOffset;
-		OnEntityEntered( _kawoosh, fromBack: false, isKawoosh: true );
+		SetModelClippingForEntity( To.Everyone, _kawoosh, true, ClipPlaneFront );
 
 		await _kawoosh.RunAnimation();
 
@@ -453,7 +449,7 @@ public partial class EventHorizon : AnimatedEntity
 		PlayTeleportSound();
 	}
 
-	public void OnEntityEntered( ModelEntity ent, bool fromBack = false, bool isKawoosh = false )
+	public void OnEntityEntered( ModelEntity ent, bool fromBack = false )
 	{
 		if ( !ent.IsValid() )
 			return;
@@ -470,21 +466,11 @@ public partial class EventHorizon : AnimatedEntity
 			(fromBack ? BufferBack : BufferFront).Add( mdl );
 
 			mdl.Tags.Add( fromBack ? StargateTags.InBufferBack : StargateTags.InBufferFront );
-
-			if ( isKawoosh is false )
-			{
-				SetModelClippingForEntity( To.Everyone, mdl, true, fromBack ? ClipPlaneBack : ClipPlaneFront );
-			}
-			else
-			{
-				SetModelClippingForEntity( To.Everyone, mdl, true, ClipPlaneKawoosh );
-			}
-
 			mdl.RenderColor = mdl.RenderColor.WithAlpha( mdl.RenderColor.a.Clamp( 0, 0.99f ) ); // hack to fix MC (doesnt fix it all the times, job for sbox devs)
 		}
 	}
 
-	public void OnEntityExited( ModelEntity ent, bool fromBack = false)
+	public void OnEntityExited( ModelEntity ent, bool fromBack = false )
 	{
 		if ( !ent.IsValid() )
 			return;
@@ -797,19 +783,13 @@ public partial class EventHorizon : AnimatedEntity
 	public void Draw()
 	{
 		foreach ( var entity in BufferFront )
-		{
-			if ( entity is Kawoosh )
-			{
-				UpdateClipPlaneForEntity( entity, ClipPlaneKawoosh );
-			}
-			else
-			{
-				UpdateClipPlaneForEntity( entity, ClipPlaneFront );
-			}
-		}
+			UpdateClipPlaneForEntity( entity, ClipPlaneFront );
 
 		foreach ( var e in BufferBack )
 			UpdateClipPlaneForEntity( e, ClipPlaneBack );
+
+		if (_kawoosh.IsValid())
+			UpdateClipPlaneForEntity( _kawoosh, ClipPlaneFront );
 
 		UseVideoAsTexture();
 	}
