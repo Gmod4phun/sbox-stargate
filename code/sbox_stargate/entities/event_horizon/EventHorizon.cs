@@ -466,6 +466,9 @@ public partial class EventHorizon : AnimatedEntity
 			(fromBack ? BufferBack : BufferFront).Add( mdl );
 
 			mdl.Tags.Add( fromBack ? StargateTags.InBufferBack : StargateTags.InBufferFront );
+
+			SetModelClippingForEntity( To.Everyone, mdl, true, fromBack ? ClipPlaneBack : ClipPlaneFront );
+
 			mdl.RenderColor = mdl.RenderColor.WithAlpha( mdl.RenderColor.a.Clamp( 0, 0.99f ) ); // hack to fix MC (doesnt fix it all the times, job for sbox devs)
 		}
 	}
