@@ -78,6 +78,11 @@ public partial class EventHorizon : AnimatedEntity
 		get => new( Position - Camera.Position - Rotation.Forward * 0.75f, -Rotation.Forward.Normal );
 	}
 
+	private Plane ClipPlaneKawoosh
+	{
+		get => new( Position - Camera.Position + Rotation.Forward * 8f, Rotation.Forward.Normal );
+	}
+
 	public override void Spawn()
 	{
 		base.Spawn();
@@ -237,22 +242,17 @@ public partial class EventHorizon : AnimatedEntity
 	{
 		_kawoosh = new Kawoosh()
 		{
-			Position = Position + Rotation.Forward * 8,
+			Position = Position,
 			Rotation = Rotation,
 			Parent = Gate,
 			EnableDrawing = false,
-			Scale = Gate.Scale * 1.2f,
+			Scale = Gate.Scale,
 			EnableShadowReceive = false
 		};
 
-		const float kawooshOffset = 50;
-
-		_kawoosh.LocalPosition += Vector3.Backward * Scale * kawooshOffset;
-		SetModelClippingForEntity( To.Everyone, _kawoosh, true, ClipPlaneFront );
+		SetModelClippingForEntity( To.Everyone, _kawoosh, true, ClipPlaneKawoosh );
 
 		await _kawoosh.RunAnimation();
-
-		BufferFront.Remove( _kawoosh );
 		_kawoosh.Delete();
 	}
 
@@ -782,14 +782,14 @@ public partial class EventHorizon : AnimatedEntity
 	[GameEvent.Client.Frame]
 	public void Draw()
 	{
-		foreach ( var entity in BufferFront )
-			UpdateClipPlaneForEntity( entity, ClipPlaneFront );
+		foreach ( var e in BufferFront )
+			UpdateClipPlaneForEntity( e, ClipPlaneFront );
 
 		foreach ( var e in BufferBack )
 			UpdateClipPlaneForEntity( e, ClipPlaneBack );
 
 		if (_kawoosh.IsValid())
-			UpdateClipPlaneForEntity( _kawoosh, ClipPlaneFront );
+			UpdateClipPlaneForEntity( _kawoosh, ClipPlaneKawoosh );
 
 		UseVideoAsTexture();
 	}

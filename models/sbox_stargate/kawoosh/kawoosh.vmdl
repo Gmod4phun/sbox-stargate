@@ -75,6 +75,25 @@
 				]
 				default_root_bone_name = ""
 			},
+			{
+				_class = "ModelModifierList"
+				children = 
+				[
+					{
+						_class = "ModelModifier_Translate"
+						translation = [ -4.0, 0.0, 0.0 ]
+					},
+					{
+						_class = "ModelModifier_ScaleAndMirror"
+						scale = 1.2
+						mirror_x = false
+						mirror_y = false
+						mirror_z = false
+						flip_bone_forward = false
+						swap_left_and_right_bones = false
+					},
+				]
+			},
 		]
 		model_archetype = ""
 		primary_associated_entity = ""
