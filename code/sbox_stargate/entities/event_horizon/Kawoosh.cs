@@ -61,8 +61,8 @@ public partial class Kawoosh : ModelEntity
 				Parent = this,
 				Rotation = Rotation,
 				Color = Color.FromBytes(25, 150, 250),
-				LightSize = 40f,
-				Brightness = 0.005f,
+				LightSize = 64f,
+				Brightness = 0,
 				Enabled = true
 			};
 		}
@@ -83,7 +83,7 @@ public partial class Kawoosh : ModelEntity
 			_light.Enabled = true;
 			_light.CapsuleLength = lightLength;
 			_light.Position = Position + Rotation.Forward * lightLength;
-			_light.Brightness = remappedProgress;
+			_light.Brightness = remappedProgress * 0.01f;
 		}
 	}
 
