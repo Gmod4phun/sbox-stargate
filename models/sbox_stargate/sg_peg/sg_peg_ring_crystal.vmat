@@ -11,8 +11,8 @@ Layer0
 	g_bFogEnabled "1"
 
 	//---- Glass ----
-	g_flBlurAmount "0.010"
-	g_flRefractionStrength "1.050"
+	g_flBlurAmount "0.005"
+	g_flRefractionStrength "1.000"
 
 	//---- Material ----
 	g_flTintColor "[1.000000 1.000000 1.000000 0.000000]"

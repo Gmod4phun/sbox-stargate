@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Sandbox;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Sandbox;
 
 public partial class EventHorizon : AnimatedEntity
 {
@@ -37,8 +37,10 @@ public partial class EventHorizon : AnimatedEntity
 	private EventHorizonTrigger _backTrigger = null;
 	private EventHorizonTrigger _kawooshTrigger = null;
 	private EventHorizonCollider _colliderFloor = null;
-	private Particles _kawoosh;
+	private Kawoosh _kawoosh;
 	private bool _eventHorizonVideoInitialized = false;
+	private SpotLightEntity _frontLight;
+	private SpotLightEntity _backLight;
 
 	[Net]
 	public Stargate Gate { get; set; } = null;
@@ -68,12 +70,12 @@ public partial class EventHorizon : AnimatedEntity
 	private List<Entity> InTriggerFront { get; } = new();
 	private List<Entity> InTriggerBack { get; } = new();
 
-	private Plane ClipPlaneFront
+	public Plane ClipPlaneFront
 	{
 		get => new( Position - Camera.Position + Rotation.Forward * 0.75f, Rotation.Forward.Normal );
 	}
 
-	private Plane ClipPlaneBack
+	public Plane ClipPlaneBack
 	{
 		get => new( Position - Camera.Position - Rotation.Forward * 0.75f, -Rotation.Forward.Normal );
 	}
@@ -98,15 +100,25 @@ public partial class EventHorizon : AnimatedEntity
 		PostSpawn();
 	}
 
-	public async void CreateKawooshTrigger( float delay )
+	public async void CreateKawoosh( float delay )
 	{
 		await GameTask.DelaySeconds( delay );
 
 		if ( !this.IsValid() ) return;
 
-		_kawooshTrigger = new EventHorizonTrigger(this, "models/sbox_stargate/event_horizon/event_horizon_trigger_kawoosh.vmdl") { Position = Position + Rotation.Forward * 2, Rotation = Rotation, Parent = Gate };
+		_kawoosh = new Kawoosh()
+		{
+			Position = Position,
+			Rotation = Rotation,
+			Parent = Gate,
+			EnableDrawing = false,
+			Scale = Gate.Scale,
+			EnableShadowReceive = false,
+			EventHorizon = this
+		};
 
-		_kawooshTrigger?.DeleteAsync( 2.2f );
+		_kawoosh.DoKawooshAnimation();
+		_kawoosh?.DeleteAsync( 2f );
 	}
 
 	public virtual void SkinEventHorizon()
@@ -123,9 +135,9 @@ public partial class EventHorizon : AnimatedEntity
 		EstablishClientAnim( To.Everyone ); // clientside animation stuff
 
 		if ( !Gate.IsIrisClosed() && doKawoosh )
-			CreateKawooshTrigger( 0.5f );
+			CreateKawoosh( 0.5f );
 
-		await GameTask.DelaySeconds( 1.5f );
+		await GameTask.DelaySeconds( 2.5f );
 		if ( !this.IsValid() ) return;
 
 		WormholeLoop = Sound.FromEntity( "stargate.event_horizon.loop", this );
@@ -233,19 +245,7 @@ public partial class EventHorizon : AnimatedEntity
 		SkinEventHorizon();
 	}
 
-	public async void CreateKawoosh()
-	{
-		var a = Rotation.RotateAroundAxis( Vector3.Right, -90 ).Angles();
-		var type = Gate is StargateUniverse ? "_universe" : "";
-		_kawoosh = Particles.Create( $"particles/sbox_stargate/kawoosh{type}.vpcf", Position );
-		_kawoosh.SetPosition( 1, Rotation.Forward );
-		_kawoosh.SetPosition( 2, new Vector3( a.roll, a.pitch, a.yaw ) );
-
-		await GameTask.DelaySeconds( 3f );
-		_kawoosh?.Destroy( true );
-	}
-
-	public async void ClientAnimLogic()
+	public void ClientAnimLogic()
 	{
 		SceneObject.Batchable = false;
 
@@ -261,10 +261,27 @@ public partial class EventHorizon : AnimatedEntity
 				_curBrightness = _maxBrightness;
 				SkinEventHorizon();
 
-				if ( !Gate.IsIrisClosed() )
+				_frontLight = new SpotLightEntity
 				{
-					CreateKawoosh();
-				}
+					Position = Position + Rotation.Backward * 1f,
+					Parent = this,
+					Rotation = Rotation,
+					Color = Color.FromBytes( 100, 180, 255 ),
+					Brightness = 10,
+					Enabled = true,
+					//LightCookie = Texture.Load(FileSystem.Mounted, "textures/water/caustic_a/caustic_a.vtex" )
+				};
+
+				_backLight = new SpotLightEntity
+				{
+					Position = Position + Rotation.Backward * 1f,
+					Parent = this,
+					Rotation = Rotation.RotateAroundAxis(Vector3.Up, 180),
+					Color = Color.FromBytes( 100, 180, 255 ),
+					Brightness = 10,
+					Enabled = true,
+					//LightCookie = Texture.Load( FileSystem.Mounted, "textures/water/caustic_a/caustic_a.vtex" )
+				};
 			}
 		}
 
@@ -293,6 +310,8 @@ public partial class EventHorizon : AnimatedEntity
 				_shouldBeOff = true;
 				_curBrightness = _minBrightness;
 				SkinEstablish();
+				_frontLight?.Delete();
+				_backLight?.Delete();
 			}
 		}
 	}
@@ -303,12 +322,32 @@ public partial class EventHorizon : AnimatedEntity
 		RenderColor = RenderColor.WithAlpha( IsCameraBehindEventHorizon() ? 0.6f : 1f );
 	}
 
+	private void ClientLightAnimationLogic()
+	{
+		var brightness = ((float)Math.Abs( Math.Sin( Time.Now * 12 ) )).Remap( 0, 1, 3.5f, 4f );
+
+		if (_frontLight.IsValid())
+		{
+			_frontLight.Brightness = brightness;
+			_frontLight.OuterConeAngle = 150;
+			_frontLight.InnerConeAngle = _frontLight.OuterConeAngle / 3;
+		}
+
+		if ( _backLight.IsValid() )
+		{
+			_backLight.Brightness = brightness;
+			_backLight.OuterConeAngle = 150;
+			_backLight.InnerConeAngle = _backLight.OuterConeAngle / 3;
+		}
+	}
+
 	// CLIENT LOGIC
 	[GameEvent.Client.Frame]
 	public void EventHorizonClientTick()
 	{
 		ClientAnimLogic();
 		ClientAlphaRenderLogic();
+		ClientLightAnimationLogic();
 	}
 
 	public EventHorizon GetOther()
@@ -544,7 +583,7 @@ public partial class EventHorizon : AnimatedEntity
 			ent.Tags.Add( StargateTags.BeforeGate );
 		}
 
-		else if ( trigger == _kawooshTrigger )
+		else if ( trigger == _kawoosh.Trigger )
 		{
 			DissolveEntity( ent );
 		}
@@ -793,6 +832,8 @@ public partial class EventHorizon : AnimatedEntity
 		_backTrigger?.Delete();
 		_colliderFloor?.Delete();
 		_kawooshTrigger?.Delete();
+		_frontLight?.Delete();
+		_backLight?.Delete();
 	}
 
 	[ConCmd.Server]

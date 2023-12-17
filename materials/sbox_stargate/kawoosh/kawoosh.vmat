@@ -1,0 +1,49 @@
+// THIS FILE IS AUTO-GENERATED
+
+Layer0
+{
+	shader "shaders/kawoosh.shader"
+
+	//---- Animation ----
+	F_MORPH_SUPPORTED 1
+
+	//---- Glass ----
+	F_OVERLAY_LAYER 1
+
+	//---- Rendering ----
+	F_DO_NOT_CAST_SHADOWS 1
+	F_RENDER_BACKFACES 1
+
+	//---- Fog ----
+	g_bFogEnabled "1"
+
+	//---- Glass ----
+	g_flBlurAmount "0.500"
+	g_flRefractionStrength "1.025"
+
+	//---- Material ----
+	g_flTintColor "[0.925490 0.925490 0.925490 1.000000]"
+	TextureAmbientOcclusion "[0.500000 0.500000 0.500000 0.000000]"
+	TextureBlendMask "[1.000000 1.000000 1.000000 0.000000]"
+	TextureColor "[0.835294 0.996078 1.000000 1.000000]"
+	TextureMetalness "[0.000000 0.000000 0.000000 0.000000]"
+	TextureNormal "materials/sbox_stargate/kawoosh/waternormal0002.tga"
+	TextureRoughness "[0.050000 0.050000 0.050000 0.000000]"
+	TextureTintMask "[0.130000 0.130000 0.130000 0.000000]"
+	TextureTranslucency "[0.000000 0.000000 0.000000 0.000000]"
+
+	//---- MaterialB ----
+	g_flTintColorB "[0.760784 0.925490 0.925490 1.000000]"
+	TextureAmbientOcclusionB "[1.000000 1.000000 1.000000 0.000000]"
+	TextureBlendMaskB "[1.000000 1.000000 1.000000 0.000000]"
+	TextureColorB "[0.850980 0.956863 0.956863 1.000000]"
+	TextureMetalnessB "[0.000000 0.000000 0.000000 0.000000]"
+	TextureNormalB "materials/sbox_stargate/kawoosh/kawoosh_particle_normal.tga"
+	TextureRoughnessB "[0.500000 0.500000 0.500000 0.000000]"
+	TextureTranslucencyB "[0.200000 0.200000 0.200000 0.000000]"
+
+	//---- Water ----
+	flEmission "0.000"
+	flVoro_1 "4.000"
+	flVoro_2 "6.000"
+}
