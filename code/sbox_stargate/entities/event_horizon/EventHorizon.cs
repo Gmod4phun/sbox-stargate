@@ -39,6 +39,8 @@ public partial class EventHorizon : AnimatedEntity
 	private EventHorizonCollider _colliderFloor = null;
 	private Kawoosh _kawoosh;
 	private bool _eventHorizonVideoInitialized = false;
+	private SpotLightEntity _frontLight;
+	private SpotLightEntity _backLight;
 
 	[Net]
 	public Stargate Gate { get; set; } = null;
@@ -68,19 +70,14 @@ public partial class EventHorizon : AnimatedEntity
 	private List<Entity> InTriggerFront { get; } = new();
 	private List<Entity> InTriggerBack { get; } = new();
 
-	private Plane ClipPlaneFront
+	public Plane ClipPlaneFront
 	{
 		get => new( Position - Camera.Position + Rotation.Forward * 0.75f, Rotation.Forward.Normal );
 	}
 
-	private Plane ClipPlaneBack
+	public Plane ClipPlaneBack
 	{
 		get => new( Position - Camera.Position - Rotation.Forward * 0.75f, -Rotation.Forward.Normal );
-	}
-
-	private Plane ClipPlaneKawoosh
-	{
-		get => new( Position - Camera.Position + Rotation.Forward * 8f, Rotation.Forward.Normal );
 	}
 
 	public override void Spawn()
@@ -119,8 +116,6 @@ public partial class EventHorizon : AnimatedEntity
 			EnableShadowReceive = false,
 			EventHorizon = this
 		};
-
-		SetModelClippingForEntity( To.Everyone, _kawoosh, true, ClipPlaneKawoosh );
 
 		_kawoosh.DoKawooshAnimation();
 		_kawoosh?.DeleteAsync( 2f );
@@ -265,6 +260,28 @@ public partial class EventHorizon : AnimatedEntity
 				_shouldEstablish = true;
 				_curBrightness = _maxBrightness;
 				SkinEventHorizon();
+
+				_frontLight = new SpotLightEntity
+				{
+					Position = Position + Rotation.Backward * 1f,
+					Parent = this,
+					Rotation = Rotation,
+					Color = Color.FromBytes( 100, 180, 255 ),
+					Brightness = 10,
+					Enabled = true,
+					//LightCookie = Texture.Load(FileSystem.Mounted, "textures/water/caustic_a/caustic_a.vtex" )
+				};
+
+				_backLight = new SpotLightEntity
+				{
+					Position = Position + Rotation.Backward * 1f,
+					Parent = this,
+					Rotation = Rotation.RotateAroundAxis(Vector3.Up, 180),
+					Color = Color.FromBytes( 100, 180, 255 ),
+					Brightness = 10,
+					Enabled = true,
+					//LightCookie = Texture.Load( FileSystem.Mounted, "textures/water/caustic_a/caustic_a.vtex" )
+				};
 			}
 		}
 
@@ -293,6 +310,8 @@ public partial class EventHorizon : AnimatedEntity
 				_shouldBeOff = true;
 				_curBrightness = _minBrightness;
 				SkinEstablish();
+				_frontLight?.Delete();
+				_backLight?.Delete();
 			}
 		}
 	}
@@ -303,12 +322,32 @@ public partial class EventHorizon : AnimatedEntity
 		RenderColor = RenderColor.WithAlpha( IsCameraBehindEventHorizon() ? 0.6f : 1f );
 	}
 
+	private void ClientLightAnimationLogic()
+	{
+		var brightness = ((float)Math.Abs( Math.Sin( Time.Now * 12 ) )).Remap( 0, 1, 3.5f, 4f );
+
+		if (_frontLight.IsValid())
+		{
+			_frontLight.Brightness = brightness;
+			_frontLight.OuterConeAngle = 150;
+			_frontLight.InnerConeAngle = _frontLight.OuterConeAngle / 3;
+		}
+
+		if ( _backLight.IsValid() )
+		{
+			_backLight.Brightness = brightness;
+			_backLight.OuterConeAngle = 150;
+			_backLight.InnerConeAngle = _backLight.OuterConeAngle / 3;
+		}
+	}
+
 	// CLIENT LOGIC
 	[GameEvent.Client.Frame]
 	public void EventHorizonClientTick()
 	{
 		ClientAnimLogic();
 		ClientAlphaRenderLogic();
+		ClientLightAnimationLogic();
 	}
 
 	public EventHorizon GetOther()
@@ -780,9 +819,6 @@ public partial class EventHorizon : AnimatedEntity
 		foreach ( var e in BufferBack )
 			UpdateClipPlaneForEntity( e, ClipPlaneBack );
 
-		if (_kawoosh.IsValid())
-			UpdateClipPlaneForEntity( _kawoosh, ClipPlaneKawoosh );
-
 		UseVideoAsTexture();
 	}
 
@@ -796,6 +832,8 @@ public partial class EventHorizon : AnimatedEntity
 		_backTrigger?.Delete();
 		_colliderFloor?.Delete();
 		_kawooshTrigger?.Delete();
+		_frontLight?.Delete();
+		_backLight?.Delete();
 	}
 
 	[ConCmd.Server]

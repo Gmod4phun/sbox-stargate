@@ -21,6 +21,17 @@
 						use_global_default = false
 						global_default_material = ""
 					},
+					{
+						_class = "MaterialGroup"
+						name = "inside"
+						remaps = 
+						[
+							{
+								from = "materials/sbox_stargate/kawoosh/kawoosh.vmat"
+								to = "materials/sbox_stargate/kawoosh/kawoosh_inside.vmat"
+							},
+						]
+					},
 				]
 			},
 			{
@@ -29,7 +40,6 @@
 				[
 					{
 						_class = "RenderMeshFile"
-						name = "collection"
 						filename = "models/sbox_stargate/kawoosh/kawoosh.dmx"
 						import_translation = [ 0.0, 0.0, 0.0 ]
 						import_rotation = [ 0.0, 0.0, 0.0 ]
@@ -37,7 +47,7 @@
 						align_origin_x_type = "None"
 						align_origin_y_type = "None"
 						align_origin_z_type = "None"
-						parent_bone = "Pelwis"
+						parent_bone = ""
 						import_filter = 
 						{
 							exclude_by_default = false
@@ -53,7 +63,7 @@
 					{
 						_class = "AnimFile"
 						name = "ArmatureAction"
-						activity_name = ""
+						activity_name = "ACT_IDLE"
 						activity_weight = 1
 						weight_list_name = ""
 						fade_in_time = 0.2
@@ -65,7 +75,7 @@
 						anim_markup_ordered = false
 						disable_compression = false
 						enable_scale = false
-						source_filename = "models/sbox_stargate/kawoosh/kawooshanimation.dmx"
+						source_filename = "models/sbox_stargate/kawoosh/kawoosh.dmx"
 						start_frame = -1
 						end_frame = -1
 						framerate = -1.0
@@ -81,7 +91,7 @@
 				[
 					{
 						_class = "ModelModifier_Translate"
-						translation = [ -4.0, 0.0, 0.0 ]
+						translation = [ 2.0, 0.0, 0.0 ]
 					},
 					{
 						_class = "ModelModifier_ScaleAndMirror"

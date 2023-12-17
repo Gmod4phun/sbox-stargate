@@ -18,8 +18,8 @@ Layer0
 	g_bFogEnabled "1"
 
 	//---- Glass ----
-	g_flBlurAmount "0.200"
-	g_flRefractionStrength "1.100"
+	g_flBlurAmount "0.500"
+	g_flRefractionStrength "1.025"
 
 	//---- Material ----
 	g_flTintColor "[0.925490 0.925490 0.925490 1.000000]"
@@ -40,10 +40,10 @@ Layer0
 	TextureMetalnessB "[0.000000 0.000000 0.000000 0.000000]"
 	TextureNormalB "materials/sbox_stargate/kawoosh/kawoosh_particle_normal.tga"
 	TextureRoughnessB "[0.500000 0.500000 0.500000 0.000000]"
-	TextureTranslucencyB "[0.150000 0.150000 0.150000 0.000000]"
+	TextureTranslucencyB "[0.200000 0.200000 0.200000 0.000000]"
 
 	//---- Water ----
-	flEmission "0.126"
-	flVoro_1 "6.113"
-	flVoro_2 "10.000"
+	flEmission "0.000"
+	flVoro_1 "4.000"
+	flVoro_2 "6.000"
 }
