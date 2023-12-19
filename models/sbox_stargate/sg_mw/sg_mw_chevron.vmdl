@@ -86,6 +86,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/sg_mw/src/anims/chevron_idle.smd"
 						start_frame = -1
 						end_frame = -1
@@ -107,6 +108,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/sg_mw/src/anims/chevron_idle_locked.smd"
 						start_frame = -1
 						end_frame = -1
@@ -128,6 +130,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/sg_mw/src/anims/chevron_lock.smd"
 						start_frame = -1
 						end_frame = -1
@@ -149,6 +152,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/sg_mw/src/anims/chevron_unlock.smd"
 						start_frame = -1
 						end_frame = 9
@@ -162,7 +166,7 @@
 		]
 		model_archetype = "physics_prop_model"
 		primary_associated_entity = "prop_physics"
-		anim_graph_name = ""
+		anim_graph_name = "models/sbox_stargate/sg_mw/sg_mw_chevron.vanmgrph"
 		base_model_name = ""
 	}
 }
