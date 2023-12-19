@@ -94,6 +94,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/sg_mw/src/anims/chevron_idle.smd"
 						start_frame = -1
 						end_frame = -1
@@ -115,6 +116,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/sg_mw/src/anims/chevron_idle_locked.smd"
 						start_frame = -1
 						end_frame = -1
@@ -136,6 +138,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/sg_mw/src/anims/chevron_lock.smd"
 						start_frame = -1
 						end_frame = -1
@@ -157,6 +160,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/sg_mw/src/anims/chevron_unlock.smd"
 						start_frame = -1
 						end_frame = 9
@@ -166,6 +170,21 @@
 					},
 				]
 				default_root_bone_name = ""
+			},
+			{
+				_class = "AttachmentList"
+				children = 
+				[
+					{
+						_class = "Attachment"
+						name = "light"
+						parent_bone = "chevron_block"
+						relative_origin = [ 0.0, 136.5, 9.5 ]
+						relative_angles = [ 0.0, 0.0, 0.0 ]
+						weight = 1.0
+						ignore_rotation = false
+					},
+				]
 			},
 		]
 		model_archetype = "physics_prop_model"
