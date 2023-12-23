@@ -103,7 +103,7 @@ PS
     StaticCombo( S_OVERLAY_LAYER, F_OVERLAY_LAYER, Sys( ALL ) );
     StaticCombo( S_MODE_DEPTH, 0..1, Sys(ALL) );
 
-    DynamicCombo( D_MULTIVIEW_INSTANCING, 0..1, Sys(PC) );
+    // DynamicCombo( D_MULTIVIEW_INSTANCING, 0..1, Sys(PC) );
     DynamicCombo( D_SKYBOX, 0..1, Sys(PC) );
 
     // Attributes ------------------------------------------------------------------------------------------
@@ -166,9 +166,9 @@ PS
         // Multiview instancing
         //
         uint nView = uint(0);
-        #if (D_MULTIVIEW_INSTANCING)
-                nView = i.nView;
-        #endif
+        // #if (D_MULTIVIEW_INSTANCING)
+        //         nView = i.nView;
+        // #endif
 
         Material m = Material::From( i );
 
@@ -205,7 +205,8 @@ PS
             float3 vRefractRayWs = refract(vViewRayWs, m.Normal, 1.0 / g_flRefractionStrength);
             float3 vRefractWorldPosWs = i.vPositionWithOffsetWs.xyz + vRefractRayWs * flDistanceVs;
 
-            float4 vPositionPs = Position4WsToPsMultiview(nView, float4(vRefractWorldPosWs, 0));
+            // float4 vPositionPs = Position4WsToPsMultiview(nView, float4(vRefractWorldPosWs, 0));
+            float4 vPositionPs = Position4WsToPs(float4(vRefractWorldPosWs, 0));
 
             float2 vPositionSs = vPositionPs.xy / vPositionPs.w;
             vPositionSs = vPositionSs * 0.5 + 0.5;
@@ -222,12 +223,12 @@ PS
             //
             // Multiview
             //
-            #if (D_MULTIVIEW_INSTANCING)
-            {
-                vPositionSs.x *= 0.5;
-                vPositionSs.x += nView * 0.5;
-            }
-            #endif
+            // #if (D_MULTIVIEW_INSTANCING)
+            // {
+            //     vPositionSs.x *= 0.5;
+            //     vPositionSs.x += nView * 0.5;
+            // }
+            // #endif
 
             //
             // Color and blur

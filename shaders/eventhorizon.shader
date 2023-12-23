@@ -14,6 +14,8 @@ MODES
 	VrForward();
 	Depth(); 
 	ToolsVis( S_MODE_TOOLS_VIS );
+	ToolsWireframe( "vr_tools_wireframe.shader" );
+	ToolsShadingComplexity( "tools_shading_complexity.shader" );
 }
 
 COMMON
@@ -80,9 +82,9 @@ PS
 	
 	float4 MainPs( PixelInput i ) : SV_Target0
 	{
-		Material m;
+		Material m = Material::Init();
 		m.Albedo = float3( 1, 1, 1 );
-		m.Normal = TransformNormal( i, float3( 0, 0, 1 ) );
+		m.Normal = float3( 0, 0, 1 );
 		m.Roughness = 1;
 		m.Metalness = 0;
 		m.AmbientOcclusion = 1;
@@ -161,6 +163,14 @@ PS
 		m.Roughness = saturate( m.Roughness );
 		m.Metalness = saturate( m.Metalness );
 		m.Opacity = saturate( m.Opacity );
+
+		// Result node takes normal as tangent space, convert it to world space now
+		m.Normal = TransformNormal( m.Normal, i.vNormalWs, i.vTangentUWs, i.vTangentVWs );
+
+		// for some toolvis shit
+		m.WorldTangentU = i.vTangentUWs;
+		m.WorldTangentV = i.vTangentVWs;
+        m.TextureCoords = i.vTextureCoords.xy;
 		
 		return ShadingModelStandard::Shade( i, m );
 	}
