@@ -106,8 +106,8 @@
 								m_id = 931590895
 							}
 							m_position = [ -304.0, -128.0 ]
-							m_bIsStartState = true
-							m_bIsEndtState = true
+							m_bIsStartState = false
+							m_bIsEndtState = false
 							m_bIsPassthrough = false
 							m_bIsRootMotionExclusive = false
 							m_bAlwaysEvaluate = false
@@ -233,7 +233,7 @@
 								m_id = 34914286
 							}
 							m_position = [ -16.0, -128.0 ]
-							m_bIsStartState = false
+							m_bIsStartState = true
 							m_bIsEndtState = false
 							m_bIsPassthrough = false
 							m_bIsRootMotionExclusive = false
