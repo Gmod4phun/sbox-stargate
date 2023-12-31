@@ -11,7 +11,13 @@
 				[
 					{
 						_class = "DefaultMaterialGroup"
-						remaps = [  ]
+						remaps = 
+						[
+							{
+								from = "sg_peg_glyph_flipbook.vmat"
+								to = "models/sbox_stargate/sg_peg/sg_peg_glyph_flipbook.vmat"
+							},
+						]
 						use_global_default = false
 						global_default_material = ""
 					},
@@ -22,62 +28,20 @@
 				children = 
 				[
 					{
-						_class = "RenderPrimitivePlane"
-						name = "glyph"
+						_class = "RenderMeshFile"
+						filename = "models/sbox_stargate/sg_peg/src/SG_Peg_Ring_Front_Low_Glyph_Flipbook.smd"
+						import_translation = [ 0.0, 0.0, 0.0 ]
+						import_rotation = [ 0.0, 0.0, 0.0 ]
+						import_scale = 1.0
+						align_origin_x_type = "None"
+						align_origin_y_type = "None"
+						align_origin_z_type = "None"
 						parent_bone = ""
-						material_name = "models/sbox_stargate/sg_peg/sg_peg_glyph_flipbook.vmat"
-						origin = [ 4.4, 0.0, 116.300003 ]
-						angles = [ 102.5, 0.0, 0.0 ]
-						max_u = 1.0
-						max_v = 1.0
-						width = 20.0
-						height = 20.0
-						segments_x = 1
-						segments_y = 1
-					},
-				]
-			},
-			{
-				_class = "GameDataList"
-				children = 
-				[
-					{
-						_class = "GenericGameData"
-						game_class = "prop_data"
-						game_keys = 
+						import_filter = 
 						{
-							bakelighting = true
-							health = -1.0
-							min_impact_damage_speed = -1.0
-							impact_damage = -1.0
-							parent_bodygroup_name = ""
-							parent_bodygroup_value = 0
+							exclude_by_default = false
+							exception_list = [  ]
 						}
-					},
-				]
-			},
-			{
-				_class = "BodyGroupList"
-				children = 
-				[
-					{
-						_class = "BodyGroup"
-						name = "glyphs"
-						children = 
-						[
-							{
-								_class = "BodyGroupChoice"
-								meshes = [  ]
-							},
-							{
-								_class = "BodyGroupChoice"
-								meshes = 
-								[
-									"glyphs",
-								]
-							},
-						]
-						hidden_in_tools = false
 					},
 				]
 			},
