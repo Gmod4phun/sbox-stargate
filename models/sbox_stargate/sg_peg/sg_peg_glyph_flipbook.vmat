@@ -1,0 +1,78 @@
+// THIS FILE IS AUTO-GENERATED
+
+Layer0
+{
+	shader "shaders/complex.shader"
+
+	//---- Animation ----
+	F_TEXTURE_ANIMATION 1
+	F_TEXTURE_ANIMATION_MODE 2 // Scripted
+
+	//---- PBR ----
+	F_SELF_ILLUM 1
+	F_SPECULAR 1
+
+	//---- Rendering ----
+	F_DO_NOT_CAST_SHADOWS 1
+
+	//---- Translucent ----
+	F_ALPHA_TEST 1
+
+	//---- Ambient Occlusion ----
+	g_flAmbientOcclusionDirectDiffuse "0.500"
+	g_flAmbientOcclusionDirectSpecular "0.333"
+	TextureAmbientOcclusion "[1.000000 1.000000 1.000000 0.000000]"
+
+	//---- Color ----
+	g_flModelTintAmount "1.000"
+	g_vColorTint "[1.000000 1.000000 1.000000 0.000000]"
+	TextureColor "[1.000000 1.000000 1.000000 0.000000]"
+
+	//---- Fade ----
+	g_flFadeExponent "1.000"
+
+	//---- Fog ----
+	g_bFogEnabled "1"
+
+	//---- Metalness ----
+	g_flMetalness "0.000"
+
+	//---- Normal ----
+	TextureNormal "[0.501961 0.501961 1.000000 0.000000]"
+
+	//---- Roughness ----
+	g_flRoughnessScaleFactor "1.000"
+	TextureRoughness "[1.000000 1.000000 1.000000 0.000000]"
+
+	//---- Self Illum ----
+	g_flSelfIllumAlbedoFactor "1.000"
+	g_flSelfIllumBrightness "10.000"
+	g_flSelfIllumScale "1.000"
+	g_vSelfIllumScrollSpeed "[0.000 0.000]"
+	g_vSelfIllumTint "[0.901961 1.000000 0.992157 0.000000]"
+	TextureSelfIllumMask "models/sbox_stargate/sg_peg/src/tex/sg_peg_glyphs_trans.tga"
+
+	//---- Texture Animation ----
+	g_flAnimationFrame "0.000"
+	g_flAnimationTimeOffset "0.000"
+	g_flAnimationTimePerFrame "0.100"
+	g_nNumAnimationCells "36"
+	g_vAnimationGrid "[6 6]"
+
+	//---- Texture Coordinates ----
+	g_nScaleTexCoordUByModelScaleAxis "0"
+	g_nScaleTexCoordVByModelScaleAxis "0"
+	g_vTexCoordOffset "[0.000 0.000]"
+	g_vTexCoordScale "[1.000 1.000]"
+
+	//---- Translucent ----
+	g_flAlphaTestReference "0.050"
+	g_flAntiAliasedEdgeStrength "0.350"
+	TextureTranslucency "models/sbox_stargate/sg_peg/src/tex/sg_peg_glyphs_trans.tga"
+
+	DynamicParams
+	{
+		g_flSelfIllumBrightness "selfillumbrightness"
+		g_flAnimationFrame "frame"
+	}
+}
