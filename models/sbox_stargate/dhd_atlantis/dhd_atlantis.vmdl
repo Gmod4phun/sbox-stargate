@@ -52,7 +52,6 @@
 				[
 					{
 						_class = "DefaultMaterialGroup"
-						name = "off"
 						remaps = 
 						[
 							{
@@ -75,24 +74,9 @@
 								from = "crystals.vmat"
 								to = "models/sbox_stargate/dhd_atlantis/dhd_atlantis_crystals.vmat"
 							},
-							{
-								from = "glass.vmat"
-								to = "models/sbox_stargate/dhd_atlantis/dhd_atlantis_glass.vmat"
-							},
 						]
 						use_global_default = false
 						global_default_material = ""
-					},
-					{
-						_class = "MaterialGroup"
-						name = "on"
-						remaps = 
-						[
-							{
-								from = "models/sbox_stargate/dhd_atlantis/dhd_atlantis_lights.vmat"
-								to = "models/sbox_stargate/dhd_atlantis/dhd_atlantis_lights_on.vmat"
-							},
-						]
 					},
 				]
 			},

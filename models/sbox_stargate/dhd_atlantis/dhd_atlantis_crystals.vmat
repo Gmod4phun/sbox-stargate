@@ -1,26 +1,37 @@
-"Layer0"
+// THIS FILE IS AUTO-GENERATED
+
+Layer0
 {
-	"shader"		"shaders/complex.shader_c"
-	"F_SPECULAR"		"1"
-	"F_TRANSLUCENT"		"1"
-	"g_flAmbientOcclusionDirectDiffuse"		"0.000000"
-	"g_flAmbientOcclusionDirectSpecular"		"0.000000"
-	"TextureAmbientOcclusion"		"materials/default/default_ao.tga"
-	"g_flModelTintAmount"		"1.000000"
-	"g_vColorTint"		"[1.000000 1.000000 1.000000 0.000000]"
-	"TextureColor"		"models/sbox_stargate/dhd_atlantis/src/tex/dhd_atlantis_crystals_color.tga"
-	"g_flFadeExponent"		"1.000000"
-	"g_bFogEnabled"		"1"
-	"g_flDirectionalLightmapMinZ"		"0.050000"
-	"g_flDirectionalLightmapStrength"		"1.000000"
-	"g_flMetalness"		"0.502000"
-	"TextureNormal"		"[0.501961 0.501961 1.000000 0.000000]"
-	"TextureRoughness"		"[0.160000 0.160000 0.160000 0.000000]"
-	"g_nScaleTexCoordUByModelScaleAxis"		"0"
-	"g_nScaleTexCoordVByModelScaleAxis"		"0"
-	"g_vTexCoordOffset"		"[0.000 0.000]"
-	"g_vTexCoordScale"		"[1.000 1.000]"
-	"g_vTexCoordScrollSpeed"		"[0.000 0.000]"
-	"g_flOpacityScale"		"1.000000"
-	"TextureTranslucency"		"models/sbox_stargate/dhd_atlantis/src/tex/dhd_atlantis_crystals_trans.tga"
+	shader "shaders/glass.shader"
+
+	//---- Glass ----
+	F_OVERLAY_LAYER 1
+
+	//---- Fog ----
+	g_bFogEnabled "1"
+
+	//---- Glass ----
+	g_flBlurAmount "0.000"
+	g_flRefractionStrength "1.005"
+
+	//---- Material ----
+	g_flTintColor "[1.000000 1.000000 1.000000 0.000000]"
+	TextureAmbientOcclusion "materials/default/default_ao.tga"
+	TextureBlendMask "materials/default/default_blend.tga"
+	TextureColor "[1.000000 1.000000 1.000000 0.000000]"
+	TextureMetalness "materials/default/default_metal.tga"
+	TextureNormal "[0.501961 0.501961 1.000000 0.000000]"
+	TextureRoughness "[0.150000 0.150000 0.150000 0.000000]"
+	TextureTintMask "materials/default/default.tga"
+	TextureTranslucency "[1.000000 1.000000 1.000000 0.000000]"
+
+	//---- MaterialB ----
+	g_flTintColorB "[1.000000 1.000000 1.000000 0.000000]"
+	TextureAmbientOcclusionB "materials/default/default_ao.tga"
+	TextureBlendMaskB "materials/default/default_blend.tga"
+	TextureColorB "models/sbox_stargate/dhd_atlantis/src/tex/dhd_atlantis_crystals_trans.tga"
+	TextureMetalnessB "materials/default/default_metal.tga"
+	TextureNormalB "materials/default/default_normal.tga"
+	TextureRoughnessB "[0.979000 0.979000 0.979000 0.000000]"
+	TextureTranslucencyB "models/sbox_stargate/dhd_atlantis/src/tex/dhd_atlantis_crystals_trans.tga"
 }
