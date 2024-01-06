@@ -25,10 +25,6 @@
 								from = "sg_peg_ring_backlight.vmat"
 								to = "materials/sbox_stargate/sg_white.vmat"
 							},
-							{
-								from = "sg_peg_glyphs.vmat"
-								to = "models/sbox_stargate/sg_peg/sg_peg_glyphs_off.vmat"
-							},
 						]
 						use_global_default = false
 						global_default_material = ""
@@ -44,23 +40,6 @@
 						name = "ring"
 						filename = "models/sbox_stargate/sg_peg/src/SG_Peg_Ring_Front_Low_Complete.smd"
 						import_translation = [ 0.0, 0.0, 0.0 ]
-						import_rotation = [ 0.0, 0.0, 0.0 ]
-						import_scale = 1.0
-						align_origin_x_type = "None"
-						align_origin_y_type = "None"
-						align_origin_z_type = "None"
-						parent_bone = ""
-						import_filter = 
-						{
-							exclude_by_default = false
-							exception_list = [  ]
-						}
-					},
-					{
-						_class = "RenderMeshFile"
-						name = "glyphs"
-						filename = "models/sbox_stargate/sg_peg/src/SG_Peg_Ring_Front_Low_Glyphs.smd"
-						import_translation = [ -0.05, 0.0, 0.0 ]
 						import_rotation = [ 0.0, 0.0, 0.0 ]
 						import_scale = 1.0
 						align_origin_x_type = "None"
@@ -91,31 +70,6 @@
 							parent_bodygroup_name = ""
 							parent_bodygroup_value = 0
 						}
-					},
-				]
-			},
-			{
-				_class = "BodyGroupList"
-				children = 
-				[
-					{
-						_class = "BodyGroup"
-						name = "glyphs"
-						children = 
-						[
-							{
-								_class = "BodyGroupChoice"
-								meshes = [  ]
-							},
-							{
-								_class = "BodyGroupChoice"
-								meshes = 
-								[
-									"glyphs",
-								]
-							},
-						]
-						hidden_in_tools = false
 					},
 				]
 			},
