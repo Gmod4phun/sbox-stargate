@@ -81,7 +81,7 @@
 							},
 							{
 								from = "glass.vmat"
-								to = "materials/glass/glass_a.vmat"
+								to = "models/sbox_props/security_light/security_light_glass.vmat"
 							},
 							{
 								from = "desk.vmat"
@@ -119,6 +119,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						frame_count = 1
 						frame_rate = 30
 					},
@@ -136,6 +137,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/puddle_jumper/src/jumper_anims/bcdoorc.smd"
 						start_frame = -1
 						end_frame = -1
@@ -157,6 +159,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/puddle_jumper/src/jumper_anims/bcdooro.smd"
 						start_frame = -1
 						end_frame = -1
@@ -178,6 +181,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/puddle_jumper/src/jumper_anims/bodoorc.smd"
 						start_frame = -1
 						end_frame = -1
@@ -199,6 +203,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/puddle_jumper/src/jumper_anims/bodooro.smd"
 						start_frame = -1
 						end_frame = -1
@@ -220,6 +225,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/puddle_jumper/src/jumper_anims/dcbulkc.smd"
 						start_frame = -1
 						end_frame = -1
@@ -241,6 +247,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/puddle_jumper/src/jumper_anims/dcbulko.smd"
 						start_frame = -1
 						end_frame = -1
@@ -262,6 +269,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/puddle_jumper/src/jumper_anims/dobulkc.smd"
 						start_frame = -1
 						end_frame = -1
@@ -283,6 +291,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/puddle_jumper/src/jumper_anims/dobulko.smd"
 						start_frame = -1
 						end_frame = -1
@@ -304,6 +313,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/puddle_jumper/src/jumper_anims/epodc.smd"
 						start_frame = -1
 						end_frame = -1
@@ -325,6 +335,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/puddle_jumper/src/jumper_anims/epodo.smd"
 						start_frame = -1
 						end_frame = -1
@@ -346,6 +357,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/puddle_jumper/src/jumper_anims/wepc.smd"
 						start_frame = -1
 						end_frame = -1
@@ -367,6 +379,7 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/puddle_jumper/src/jumper_anims/wepo.smd"
 						start_frame = -1
 						end_frame = -1
