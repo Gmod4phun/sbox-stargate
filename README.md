@@ -9,7 +9,7 @@
   * Gmod4phun - Main Dev
   * Matspyder51 - First (current) dialing menu, Ring Transporters, GateSpawner, Ramps
   * Franco D. M. - First (current) Event Horizon help
-  * Lukáš Pavelka / Arwwarr - Various Stargate library functions, New kawoosh
+  * Lukáš Pavelka - Various Stargate library functions, New kawoosh
   * Doctor BLUe - New kawoosh
   * A1steaksa - Some Stargate sounds
   * Facepunch Studios - Sandbox gamemode base code
