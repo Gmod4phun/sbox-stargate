@@ -32,7 +32,7 @@
 						name = "ring_physics"
 						parent_bone = ""
 						surface_prop = "metal"
-						collision_prop = "default"
+						collision_tags = "solid"
 						recenter_on_parent_bone = false
 						offset_origin = [ 0.0, 0.0, 0.0 ]
 						offset_angles = [ 0.0, 0.0, 0.0 ]
@@ -115,10 +115,12 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/rings_ancient/src/cover_anims/idle.smd"
 						start_frame = -1
 						end_frame = -1
 						framerate = -1.0
+						take = 0
 						reverse = false
 					},
 					{
@@ -135,10 +137,12 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/rings_ancient/src/cover_anims/down.smd"
 						start_frame = 10
 						end_frame = -1
 						framerate = -1.0
+						take = 0
 						reverse = false
 					},
 					{
@@ -155,10 +159,12 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/rings_ancient/src/cover_anims/down.smd"
 						start_frame = -1
 						end_frame = -1
 						framerate = -1.0
+						take = 0
 						reverse = false
 					},
 					{
@@ -175,10 +181,12 @@
 						hidden = false
 						anim_markup_ordered = false
 						disable_compression = false
+						enable_scale = false
 						source_filename = "models/sbox_stargate/rings_ancient/src/cover_anims/up.smd"
 						start_frame = -1
 						end_frame = -1
 						framerate = -1.0
+						take = 0
 						reverse = false
 					},
 				]
@@ -187,6 +195,7 @@
 		]
 		model_archetype = "physics_prop_model"
 		primary_associated_entity = "prop_physics"
-		anim_graph_name = ""
+		anim_graph_name = "models/sbox_stargate/rings_ancient/ring_ancient_cover.vanmgrph"
+		base_model_name = ""
 	}
 }
