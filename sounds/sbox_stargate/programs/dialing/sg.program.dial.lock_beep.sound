@@ -1,16 +1,17 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:generic:version{7412167c-06e9-4698-aff2-e63eb59037e7} -->
 {
-	"data":
+	data = 
 	{
-		"UI": false,
-		"Volume": "1.00,1.00,0",
-		"Pitch": "1.00,1.00,0",
-		"Decibels": 50,
-		"SelectionMode": "Random",
-		"Sounds":
+		UI = false
+		Volume = "1.00,1.00,0"
+		Pitch = "1.00,1.00,0"
+		Decibels = 50
+		SelectionMode = "Random"
+		Sounds = 
 		[
-			"sounds/sbox_stargate/programs/dialing/dp_lock.vsnd"
-		],
-		"MaximumDistance": 599.313050,
-		"MinimumDistance": 29.965652
+			resource:"sounds/sbox_stargate/programs/dialing/dp_lock.vsnd",
+		]
+		MaximumDistance = 599.31305
+		MinimumDistance = 29.965652
 	}
 }

@@ -1,25 +1,26 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:generic:version{7412167c-06e9-4698-aff2-e63eb59037e7} -->
 {
-	"data":
+	data = 
 	{
-		"UI": false,
-		"Volume": 1,
-		"VolumeRandom": 0,
-		"Pitch": 1,
-		"PitchRandom": 0,
-		"Decibels": 70,
-		"Sounds":
+		UI = false
+		Volume = 1
+		VolumeRandom = 0
+		Pitch = 1
+		PitchRandom = 0
+		Decibels = 70
+		Sounds = 
 		[
-			"sounds/sbox_stargate/event_horizon/enter1.vsnd",
-			"sounds/sbox_stargate/event_horizon/enter2.vsnd",
-			"sounds/sbox_stargate/event_horizon/enter3.vsnd",
-			"sounds/sbox_stargate/event_horizon/enter4.vsnd",
-			"sounds/sbox_stargate/event_horizon/enter5.vsnd",
-			"sounds/sbox_stargate/event_horizon/enter6.vsnd",
-			"sounds/sbox_stargate/event_horizon/enter7.vsnd",
-			"sounds/sbox_stargate/event_horizon/enter8.vsnd"
-		],
-		"SelectionMode": "RandomExclusive",
-		"MaximumDistance": 1143.933500,
-		"MinimumDistance": 57.196674
+			resource:"sounds/sbox_stargate/event_horizon/enter1.vsnd",
+			resource:"sounds/sbox_stargate/event_horizon/enter2.vsnd",
+			resource:"sounds/sbox_stargate/event_horizon/enter3.vsnd",
+			resource:"sounds/sbox_stargate/event_horizon/enter4.vsnd",
+			resource:"sounds/sbox_stargate/event_horizon/enter5.vsnd",
+			resource:"sounds/sbox_stargate/event_horizon/enter6.vsnd",
+			resource:"sounds/sbox_stargate/event_horizon/enter7.vsnd",
+			resource:"sounds/sbox_stargate/event_horizon/enter8.vsnd",
+		]
+		SelectionMode = "RandomExclusive"
+		MaximumDistance = 1143.9335
+		MinimumDistance = 57.196674
 	}
 }
